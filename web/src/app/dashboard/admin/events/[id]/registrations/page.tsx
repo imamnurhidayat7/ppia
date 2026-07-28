@@ -61,7 +61,9 @@ interface RegistrationRow {
   registeredAt: string;
   checkedInAt?: string;
   user?: Attendee;
-  // Backend sometimes nests the attendee under a different key.
+  /** Prisma relation name used by the API response. */
+  User?: Attendee;
+  // Kept for compatibility with older response shapes.
   attendee?: Attendee;
 }
 
@@ -98,7 +100,7 @@ const STATUS_VARIANT: Record<RegistrationStatus, 'primary' | 'success' | 'danger
 };
 
 function attendeeOf(row: RegistrationRow): Attendee | undefined {
-  return row.user || row.attendee;
+  return row.user || row.User || row.attendee;
 }
 
 function csvValue(value: unknown): string {

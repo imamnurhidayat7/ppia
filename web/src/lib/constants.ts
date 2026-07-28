@@ -33,9 +33,8 @@ export const SOCIALS = [
   { label: "Email", href: "mailto:ppiauckland@gmail.com" },
 ] as const;
 
-// API endpoints
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-export const API_URL = `${API_BASE}/api`;
+// API endpoints — single source of truth lives in ./api-base
+export { API_ORIGIN as API_BASE, API_URL } from "./api-base";
 
 // Reusable Framer Motion variants — replaces repeated initial/animate objects
 export const fadeUp = {

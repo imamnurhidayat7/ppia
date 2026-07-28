@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from 'clsx';
+import { API_ORIGIN as API_BASE_URL } from './api-base';
 
 // Simple clsx implementation without external dependency
 export function cn(...inputs: ClassValue[]): string {
@@ -121,8 +122,6 @@ export function pickText(
   const value = isIndonesian ? indonesian || main : main;
   return value ?? undefined;
 }
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 // Resolve relative image URLs to full API URLs
 export function getImageUrl(url?: string | null): string | undefined {

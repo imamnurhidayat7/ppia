@@ -42,6 +42,13 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
     }
 
     const { entity, action, page = 1, limit = 50 } = req.query;
+    const parsedPage = Number.parseInt(String(page), 10);
+    const parsedLimit = Number.parseInt(String(limit), 10);
+    const pageNum = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const limitNum = Math.min(
+      Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 50,
+      100
+    );
 
     const where: any = {};
 
@@ -53,7 +60,7 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
       where.action = action;
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const skip = (pageNum - 1) * limitNum;
 
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
@@ -69,7 +76,7 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
         },
         orderBy: { createdAt: 'desc' },
         skip,
-        take: Number(limit)
+        take: limitNum
       }),
       prisma.auditLog.count({ where })
     ]);
@@ -77,10 +84,10 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
     res.json({
       logs,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / Number(limit))
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {
@@ -104,25 +111,38 @@ export const getEntityAuditLogs = async (req: Request, res: Response): Promise<v
 
     const entity = String(req.params.entity);
     const entityId = String(req.params.entityId);
+    const parsedPage = Number.parseInt(String(req.query.page ?? ''), 10);
+    const parsedLimit = Number.parseInt(String(req.query.limit ?? ''), 10);
+    const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const limit = Math.min(
+      Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 50,
+      100
+    );
+    const where = { entity, entityId };
 
-    const logs = await prisma.auditLog.findMany({
-      where: {
-        entity,
-        entityId
-      },
-      include: {
-        User: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        include: {
+          User: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
           }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      prisma.auditLog.count({ where })
+    ]);
 
-    res.json({ logs });
+    res.json({
+      logs,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+    });
   } catch (error) {
     console.error('Get entity audit logs error:', error);
     res.status(500).json({ error: 'Internal server error' });

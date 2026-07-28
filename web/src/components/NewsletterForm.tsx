@@ -48,6 +48,7 @@ export default function NewsletterForm() {
           <div className="flex gap-2">
             <input
               type="text"
+              aria-label="Your name (optional)"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name (optional)"
@@ -59,6 +60,7 @@ export default function NewsletterForm() {
               <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="email"
+                aria-label={t('footer.your_email')}
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -68,6 +70,7 @@ export default function NewsletterForm() {
             </div>
             <button
               type="submit"
+              aria-label={isLoading ? 'Subscribing to newsletter' : 'Subscribe to newsletter'}
               disabled={isLoading}
               className="px-5 py-3 bg-[#E8231A] hover:bg-[#c91e16] rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

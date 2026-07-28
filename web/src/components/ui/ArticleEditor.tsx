@@ -1,5 +1,6 @@
 'use client';
 import { sanitizeHtml } from '@/lib/sanitize-html';
+import { API_ORIGIN } from '@/lib/api-base';
 
 import * as React from 'react';
 import {
@@ -54,7 +55,7 @@ function ToolbarButton({ onClick, active, title, children }: ToolbarButtonProps)
   );
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = API_ORIGIN;
 
 export function ArticleEditor({
   value,

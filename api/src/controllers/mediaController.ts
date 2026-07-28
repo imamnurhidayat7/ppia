@@ -18,6 +18,13 @@ export const getAllMedia = async (req: Request, res: Response): Promise<void> =>
     }
 
     const { folder, page = 1, limit = 50, search } = req.query;
+    const parsedPage = Number.parseInt(String(page), 10);
+    const parsedLimit = Number.parseInt(String(limit), 10);
+    const pageNum = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const limitNum = Math.min(
+      Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 50,
+      100
+    );
 
     const where: any = {};
 
@@ -32,14 +39,14 @@ export const getAllMedia = async (req: Request, res: Response): Promise<void> =>
       ];
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const skip = (pageNum - 1) * limitNum;
 
     const [media, total] = await Promise.all([
       prisma.media.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         skip,
-        take: Number(limit)
+        take: limitNum
       }),
       prisma.media.count({ where })
     ]);
@@ -55,10 +62,10 @@ export const getAllMedia = async (req: Request, res: Response): Promise<void> =>
       media,
       folders: folders.map(f => f.folder).filter(Boolean),
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / Number(limit))
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {

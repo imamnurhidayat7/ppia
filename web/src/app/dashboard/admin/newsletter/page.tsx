@@ -164,8 +164,14 @@ export default function AdminNewsletterPage() {
 
     setSending(true);
     try {
-      await api.sendNewsletter(subject.trim(), content);
-      showSuccess(`Newsletter sent to ${stats.active} subscribers`);
+      const result = await api.sendNewsletter(subject.trim(), content) as {
+        message?: string;
+        sent?: number;
+        failed?: number;
+      };
+      const message = result.message || `Newsletter sent to ${result.sent ?? stats.active} subscribers`;
+      if ((result.failed ?? 0) > 0) showError(message);
+      else showSuccess(message);
       setSubject('');
       setContent('');
     } catch (error) {

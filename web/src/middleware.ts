@@ -84,7 +84,33 @@ const buildCsp = (): string => {
 
 const CSP = buildCsp();
 
-export function middleware(request: NextRequest) {
+let maintenanceCache: { enabled: boolean; expiresAt: number } | null = null;
+
+async function maintenanceEnabled(): Promise<boolean> {
+  if (!API_ORIGIN) return false;
+  const now = Date.now();
+  if (maintenanceCache && maintenanceCache.expiresAt > now) {
+    return maintenanceCache.enabled;
+  }
+
+  try {
+    const response = await fetch(`${API_ORIGIN}/api/settings`, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+    if (!response.ok) return false;
+    const data = (await response.json()) as { settings?: { maintenanceMode?: string } };
+    const enabled = data.settings?.maintenanceMode === 'true';
+    maintenanceCache = { enabled, expiresAt: now + 30_000 };
+    return enabled;
+  } catch {
+    // Fail open when the settings service is unavailable; the application has
+    // its own error boundaries and should not be replaced by a false outage.
+    return false;
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Pages loaded inside the preview iframe — skip X-Frame-Options so the
@@ -100,7 +126,14 @@ export function middleware(request: NextRequest) {
   // No `request` option: it was only re-forwarding `request.headers` unchanged,
   // which is what `next()` already does. Passing it makes Next treat this as an
   // internal rewrite for no benefit.
-  const response = NextResponse.next();
+  const maintenanceBypass =
+    pathname === '/maintenance' ||
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/login');
+  const showMaintenance = !maintenanceBypass && await maintenanceEnabled();
+  const response = showMaintenance
+    ? NextResponse.rewrite(new URL('/maintenance', request.url), { status: 503 })
+    : NextResponse.next();
 
   // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');

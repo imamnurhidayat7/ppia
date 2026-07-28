@@ -4,7 +4,14 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Runtime queries use the pooled (PgBouncer, port 6543) connection so
+  // serverless/multiple instances do not exhaust Postgres connections.
   url      = env("DATABASE_URL")
+  // Schema changes (`prisma db push` / `migrate`) need a direct (port 5432)
+  // connection, since DDL and prepared statements do not work through the
+  // transaction pooler. DIRECT_URL is therefore required whenever DATABASE_URL
+  // points at a pooled connection; locally it can contain the same direct URL.
+  directUrl = env("DIRECT_URL")
 }
 
 model Article {

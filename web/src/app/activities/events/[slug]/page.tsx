@@ -12,13 +12,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
   const { slug } = await params;
   const event = await fetchEventBySlug(slug);
 
-  if (!event) {
-    return {
-      title: "Event not found",
-      description: "This event is no longer available on the PPIA Auckland website.",
-      robots: { index: false, follow: true },
-    };
-  }
+  if (!event) notFound();
 
   const canonical = `/activities/events/${slug}`;
   const description = toMetaDescription(

@@ -13,7 +13,7 @@ export default function ElectionTimeline({ phases, currentIndex }: { phases: Pha
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
       <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-5">
-        Timeline Pemilihan
+        Election Timeline
       </h3>
       <div className="relative">
         {/* Vertical connector */}
@@ -56,7 +56,7 @@ export default function ElectionTimeline({ phases, currentIndex }: { phases: Pha
                     {phase.label}
                     {isCurrent && (
                       <span className="ml-2 text-[10px] font-black bg-[#E8231A]/10 text-[#E8231A] px-2 py-0.5 rounded-full align-middle">
-                        Sekarang
+                        Now
                       </span>
                     )}
                   </p>

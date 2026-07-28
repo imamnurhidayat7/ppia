@@ -11,6 +11,18 @@ import MembershipSection from "@/components/sections/MembershipSection";
 import SectionDivider from "@/components/sections/SectionDivider";
 import AnnouncementBanner from "@/components/sections/AnnouncementBanner";
 import Footer from "@/components/Footer";
+import {
+  fetchHomeEvents,
+  fetchHomeArticles,
+  fetchLandingSection,
+} from "@/lib/server-api";
+
+/**
+ * Rebuild the homepage at most once every five minutes (ISR). The public
+ * content changes rarely, so serving a cached, fully-rendered page keeps the
+ * first paint fast while staying current enough for visitors and crawlers.
+ */
+export const revalidate = 300;
 
 /**
  * Homepage composition.
@@ -36,7 +48,17 @@ import Footer from "@/components/Footer";
  * the one place that happens. Everywhere else the tone change is the
  * transition, which reads more deliberately than decorating every seam.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  // Fetch everything the content sections need on the server, in parallel, so
+  // the HTML ships with events and articles already rendered instead of each
+  // section firing its own request from the browser after hydration.
+  const [events, articles, eventsSection, articlesSection] = await Promise.all([
+    fetchHomeEvents(8),
+    fetchHomeArticles(3),
+    fetchLandingSection("events"),
+    fetchLandingSection("articles"),
+  ]);
+
   return (
     <>
       <AnnouncementBanner />
@@ -47,9 +69,9 @@ export default function HomePage() {
         <AboutSection />
         <VideoSection />
         <SectionDivider variant="gradient" className="bg-[#0D1B33]" />
-        <EventsSection />
+        <EventsSection initialEvents={events} initialSection={eventsSection} />
         <TestimonialSection />
-        <ArticlesSection />
+        <ArticlesSection initialArticles={articles} initialSection={articlesSection} />
         <MembershipSection />
         <FAQSection />
       </main>

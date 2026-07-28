@@ -44,10 +44,17 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState<boolean | null>(null);
   const { register, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => { if (user) router.replace('/dashboard'); }, [user, router]);
+  useEffect(() => {
+    api.getSettings()
+      .then((result) => setRegistrationOpen(result?.settings?.allowPublicRegistration !== 'false'))
+      // Fail open in the UI; the API remains the authoritative enforcement.
+      .catch(() => setRegistrationOpen(true));
+  }, []);
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -93,6 +100,31 @@ export default function RegisterPage() {
       setError(err.response?.data?.error || 'Registration failed.');
     } finally { setIsLoading(false); }
   };
+
+  if (registrationOpen === null) {
+    return (
+      <main className="min-h-screen bg-[#F8FAFC] flex items-center justify-center" aria-busy="true">
+        <p className="text-sm text-[#64748B]">Checking registration availability…</p>
+      </main>
+    );
+  }
+
+  if (!registrationOpen) {
+    return (
+      <main className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-6">
+        <div className="max-w-md rounded-2xl border border-[#E2E8F0] bg-white p-8 text-center shadow-sm">
+          <Image src="/Logo-PPIA-2025-White.png" alt="PPIA Auckland" width={140} height={56} className="h-12 w-auto mx-auto invert" priority />
+          <h1 className="mt-6 text-2xl font-black text-[#0F1B33]">Registration is currently closed</h1>
+          <p className="mt-3 text-sm leading-relaxed text-[#64748B]">
+            Public membership applications are temporarily unavailable. Please contact PPIA Auckland if you need assistance.
+          </p>
+          <Link href="/contact" className="mt-6 inline-flex rounded-xl bg-[#E8231A] px-5 py-3 text-sm font-semibold text-white hover:bg-[#c91e16]">
+            Contact us
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -147,8 +179,8 @@ export default function RegisterPage() {
             {/* Step 0: Account */}
             {step === 0 && (<>
               <div><label htmlFor="username" className={labelCls}>Username <span className="text-[#E8231A]">*</span></label><input id="username" name="username" required value={formData.username} onChange={set} className={inputCls} placeholder="Choose a username" autoComplete="username" /></div>
-              <div><label htmlFor="password" className={labelCls}>Password <span className="text-[#E8231A]">*</span></label><div className="relative"><input id="password" name="password" type={showPassword ? 'text' : 'password'} required minLength={6} value={formData.password} onChange={set} className={inputCls + ' pr-11'} placeholder="Min 6 characters" autoComplete="new-password" /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F1B33]">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div></div>
-              <div><label htmlFor="confirmPassword" className={labelCls}>Confirm password <span className="text-[#E8231A]">*</span></label><div className="relative"><input id="confirmPassword" name="confirmPassword" type={showConfirm ? 'text' : 'password'} required value={formData.confirmPassword} onChange={set} className={inputCls + ' pr-11'} placeholder="Re-enter password" autoComplete="new-password" /><button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F1B33]">{showConfirm ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div>{formData.confirmPassword && formData.password === formData.confirmPassword && <p className="mt-1 text-xs text-emerald-600 flex items-center gap-1"><CheckCircle size={13}/>Match</p>}</div>
+              <div><label htmlFor="password" className={labelCls}>Password <span className="text-[#E8231A]">*</span></label><div className="relative"><input id="password" name="password" type={showPassword ? 'text' : 'password'} required minLength={6} value={formData.password} onChange={set} className={inputCls + ' pr-11'} placeholder="Min 6 characters" autoComplete="new-password" /><button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F1B33]">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div></div>
+              <div><label htmlFor="confirmPassword" className={labelCls}>Confirm password <span className="text-[#E8231A]">*</span></label><div className="relative"><input id="confirmPassword" name="confirmPassword" type={showConfirm ? 'text' : 'password'} required value={formData.confirmPassword} onChange={set} className={inputCls + ' pr-11'} placeholder="Re-enter password" autoComplete="new-password" /><button type="button" aria-label={showConfirm ? 'Hide password confirmation' : 'Show password confirmation'} onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F1B33]">{showConfirm ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div>{formData.confirmPassword && formData.password === formData.confirmPassword && <p className="mt-1 text-xs text-emerald-600 flex items-center gap-1"><CheckCircle size={13}/>Match</p>}</div>
             </>)}
 
             {/* Step 1: Personal */}
@@ -165,7 +197,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-2 gap-4"><div><label htmlFor="degree" className={labelCls}>Degree <span className="text-[#E8231A]">*</span></label><select id="degree" name="degree" value={formData.degree} onChange={set} className={selectCls}>{DEGREES.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}</select></div><div><label htmlFor="major" className={labelCls}>Major <span className="text-[#E8231A]">*</span></label><input id="major" name="major" required value={formData.major} onChange={set} className={inputCls} placeholder="Computer Science" /></div></div>
               <div className="grid grid-cols-2 gap-4"><div><DatePicker label="Graduation date *" value={formData.graduationDate} onChange={(d) => setFormData(p=>({...p, graduationDate: d}))} placeholder="Select" /></div><div><label htmlFor="funding" className={labelCls}>Funding</label><select id="funding" name="funding" value={formData.funding} onChange={set} className={selectCls}>{FUNDINGS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}</select></div></div>
               {/* LoA Upload */}
-              <div><label className={labelCls}>LoA / CoE / LoG <span className="text-[#E8231A]">*</span></label><p className="text-xs text-[#94A3B8] mb-2">PDF, max 2 MB</p>{!loaCoeFile ? (<label htmlFor="loaCoe" className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-[#E2E8F0] bg-white py-6 cursor-pointer hover:border-[#E8231A] transition-colors"><Upload size={22} className="text-[#94A3B8]"/><span className="text-xs font-medium text-[#64748B]">Click to upload</span><input type="file" id="loaCoe" accept="application/pdf" onChange={handleLoaCoe} className="hidden"/></label>) : (<div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"><FileText size={18} className="text-emerald-600 shrink-0"/><span className="text-sm truncate flex-1">{loaCoeFile.name}</span><button type="button" onClick={()=>setLoaCoeFile(null)} className="text-[#94A3B8] hover:text-red-500"><X size={16}/></button></div>)}{loaCoeError && <p className="mt-1 text-xs text-red-600">{loaCoeError}</p>}</div>
+              <div><label className={labelCls}>LoA / CoE / LoG <span className="text-[#E8231A]">*</span></label><p className="text-xs text-[#94A3B8] mb-2">PDF, max 2 MB</p>{!loaCoeFile ? (<label htmlFor="loaCoe" className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-[#E2E8F0] bg-white py-6 cursor-pointer hover:border-[#E8231A] transition-colors"><Upload size={22} className="text-[#94A3B8]"/><span className="text-xs font-medium text-[#64748B]">Click to upload</span><input type="file" id="loaCoe" accept="application/pdf" onChange={handleLoaCoe} className="hidden"/></label>) : (<div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"><FileText size={18} className="text-emerald-600 shrink-0"/><span className="text-sm truncate flex-1">{loaCoeFile.name}</span><button type="button" aria-label="Remove uploaded document" onClick={()=>setLoaCoeFile(null)} className="text-[#94A3B8] hover:text-red-500"><X size={16}/></button></div>)}{loaCoeError && <p className="mt-1 text-xs text-red-600">{loaCoeError}</p>}</div>
             </>)}
 
             {/* Step 3: Confirm */}

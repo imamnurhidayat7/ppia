@@ -9,9 +9,7 @@ import PageHeader from "@/components/PageHeader";
 import { SubscribeToCalendarLink } from "@/components/AddToCalendarButton";
 import { Calendar, MapPin, Clock } from "lucide-react";
 import api from "@/lib/api";
-
-// API base URL for constructing full image URLs
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { API_ORIGIN as API_BASE_URL } from "@/lib/api-base";
 
 // Helper to get full image URL
 const getFullImageUrl = (url: string | undefined | null): string | undefined => {

@@ -12,7 +12,7 @@ import {
   renderEmailFallbackLink,
   escapeHtml,
 } from '../lib/mailer';
-import { getWhatsAppGroupLink } from '../lib/settings';
+import { getSetting, getWhatsAppGroupLink } from '../lib/settings';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
@@ -49,6 +49,13 @@ interface LoginRequest extends Request {
 // Register new user
 export const register = async (req: RegisterRequest, res: Response): Promise<void> => {
   try {
+    if ((await getSetting('allowPublicRegistration', 'true')) === 'false') {
+      res.status(403).json({
+        error: 'Public registration is currently closed. Please contact PPIA Auckland.'
+      });
+      return;
+    }
+
     const {
       email,
       password,

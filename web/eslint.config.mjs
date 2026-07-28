@@ -25,17 +25,6 @@ const PRE_EXISTING_DEBT = {
   // file by file with an explanatory comment; setting it to warn centrally says
   // the same thing once.
   "react-hooks/set-state-in-effect": "warn",
-
-  // React Compiler diagnostics. Unlike the rules above these point at real
-  // correctness smells — a component created during render, an impure call
-  // during render, memoization the compiler had to skip — but each needs its own
-  // investigation rather than a mechanical fix, so they are warnings for now:
-  //   src/components/blocks/PageBlockRenderer.tsx      impure call during render
-  //   src/app/opportunities/wiki-ppia/_components/…     component created during render
-  //   src/app/dashboard/articles/[slug]/page.tsx        memoization skipped
-  "react-hooks/purity": "warn",
-  "react-hooks/static-components": "warn",
-  "react-hooks/preserve-manual-memoization": "warn",
 };
 
 const eslintConfig = defineConfig([

@@ -2,11 +2,53 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/lib/language-context';
 import type { PageBlock } from '@/lib/api-types';
 import { CheckCircle } from 'lucide-react';
 import { useBlockData } from '@/hooks/useBlockData';
 import { sanitizeHtml } from '@/lib/sanitize-html';
+
+function CountdownDisplay({ targetDate, isId }: { targetDate?: string | null; isId: boolean }) {
+  const target = targetDate ? new Date(targetDate).getTime() : 0;
+  const [remaining, setRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    const update = () => setRemaining(Math.max(0, target - Date.now()));
+    const initialTimer = window.setTimeout(update, 0);
+    const interval = window.setInterval(update, 1000);
+    return () => {
+      window.clearTimeout(initialTimer);
+      window.clearInterval(interval);
+    };
+  }, [target]);
+
+  if (remaining === 0 || !Number.isFinite(target)) {
+    return <p className="text-xl opacity-90">{isId ? 'Acara telah berakhir' : 'Event has ended'}</p>;
+  }
+
+  const seconds = Math.floor((remaining ?? 0) / 1000);
+  const values = [
+    Math.floor(seconds / 86400),
+    Math.floor((seconds % 86400) / 3600),
+    Math.floor((seconds % 3600) / 60),
+    seconds % 60,
+  ];
+  const labels = isId ? ['Hari', 'Jam', 'Menit', 'Detik'] : ['Days', 'Hours', 'Minutes', 'Seconds'];
+
+  return (
+    <div className="flex flex-wrap justify-center gap-4" data-countdown-target={targetDate || undefined}>
+      {labels.map((label, index) => (
+        <div key={label} className="min-w-20 rounded-xl bg-white/10 px-6 py-4 backdrop-blur">
+          <div className="text-3xl font-bold tabular-nums">
+            {remaining === null ? '--' : String(values[index]).padStart(2, '0')}
+          </div>
+          <div className="mt-1 text-xs uppercase opacity-75">{label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface PageBlockRendererProps {
   block: PageBlock;
@@ -507,7 +549,9 @@ export function PageBlockRenderer({ block }: PageBlockRendererProps) {
             {arr.map((m: any, i: number) => (
               <div key={i} className="text-center">
                 {m.photo ? (
-                  <img src={m.photo} alt={m.name} className="w-32 h-32 rounded-full object-cover mx-auto mb-4 ring-4 ring-slate-100 dark:ring-slate-800" />
+                  <div className="relative mx-auto mb-4 h-32 w-32 overflow-hidden rounded-full ring-4 ring-slate-100 dark:ring-slate-800">
+                    <Image src={m.photo} alt={m.name} fill sizes="128px" className="object-cover" />
+                  </div>
                 ) : (
                   <div className="w-32 h-32 rounded-full bg-slate-200 dark:bg-slate-700 mx-auto mb-4 flex items-center justify-center text-slate-400 text-4xl">{m.name?.[0] || '?'}</div>
                 )}
@@ -579,24 +623,12 @@ export function PageBlockRenderer({ block }: PageBlockRendererProps) {
     case 'COUNTDOWN': {
       const dynEvent = dynamicData && dynamicData.length > 0 ? dynamicData[0] : null;
       const targetDate = dynEvent?.startDate || block.linkUrl;
-      const target = targetDate ? new Date(targetDate).getTime() : 0;
       return (
         <section className="bg-blue-600 text-white py-16">
           <div className="max-w-4xl mx-auto px-6 text-center">
             {block.subtitle && <p className="text-lg mb-2 opacity-90">{block.subtitle}</p>}
             {block.title && <h2 className="text-3xl font-bold mb-8">{block.title}</h2>}
-            {target > Date.now() ? (
-              <div className="flex justify-center gap-4" data-countdown-target={targetDate}>
-                {['Hari', 'Jam', 'Menit', 'Detik'].map((label, i) => (
-                  <div key={i} className="bg-white/10 backdrop-blur rounded-xl px-6 py-4 min-w-20">
-                    <div className="text-3xl font-bold" data-countdown-unit={i}>--</div>
-                    <div className="text-xs uppercase opacity-75 mt-1">{label}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xl opacity-90">Event telah berakhir</p>
-            )}
+            <CountdownDisplay targetDate={targetDate} isId={isId} />
           </div>
         </section>
       );
@@ -614,7 +646,11 @@ export function PageBlockRenderer({ block }: PageBlockRendererProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
             {arr.map((s: any, i: number) => (
               <a key={i} href={s.link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-4 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
-                {s.logo ? <img src={s.logo} alt={s.name} className="max-h-16 max-w-full object-contain" /> : <span className="text-slate-400 font-medium">{s.name}</span>}
+                {s.logo ? (
+                  <span className="relative block h-16 w-full">
+                    <Image src={s.logo} alt={s.name} fill sizes="(min-width: 768px) 25vw, 50vw" className="object-contain" />
+                  </span>
+                ) : <span className="text-slate-400 font-medium">{s.name}</span>}
               </a>
             ))}
           </div>

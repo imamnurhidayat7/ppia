@@ -18,7 +18,8 @@ committed.
 
 | Variable | Description |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string used by Prisma, e.g. `postgresql://user:password@localhost:5432/ppia?schema=public`. **Required.** |
+| `DATABASE_URL` | PostgreSQL connection used by the running Prisma client. It may be a pooled/PgBouncer URL in production. **Required.** |
+| `DIRECT_URL` | Direct PostgreSQL connection used by Prisma migration commands. It can equal `DATABASE_URL` locally; when `DATABASE_URL` uses a pooler, point this at the direct database port. **Required by the Prisma schema.** |
 
 ### Authentication
 

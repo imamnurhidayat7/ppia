@@ -28,6 +28,8 @@ cp api/.env.example api/.env
 Open `api/.env` and set, at minimum:
 
 - `DATABASE_URL` — your PostgreSQL connection string
+- `DIRECT_URL` — the direct PostgreSQL connection used by migrations (it may
+  equal `DATABASE_URL` for a local database)
 - `JWT_SECRET` — any long random string for local use
 
 Every variable is documented in [Configuration](configuration.md). Leaving the
@@ -49,12 +51,14 @@ local development.
 
 ```bash
 cd api
-npx prisma migrate dev
+npx prisma migrate deploy
+npm run db:generate
 cd ..
 ```
 
-This applies the migrations in `api/prisma/migrations` and generates the Prisma
-client. Use `npx prisma studio` to browse and edit data in a GUI.
+This replays the committed migrations in `api/prisma/migrations` and generates the
+Prisma client. Use `npm run db:migrate` only while authoring a new migration in a
+local development database. Use `npx prisma studio` to browse and edit data in a GUI.
 
 ## 5. Run the apps
 

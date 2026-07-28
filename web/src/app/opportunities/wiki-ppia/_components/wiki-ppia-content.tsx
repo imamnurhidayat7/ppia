@@ -29,7 +29,7 @@
  * trusts whatever an admin saves — worth sanitising at some point.
  */
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, createElement } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import { api } from "@/lib/api";
@@ -285,7 +285,7 @@ function SectionCard({
   copiedKey: string | null;
 }) {
   const color = section.color || ACCENT;
-  const Icon = iconFor(section.icon);
+  const icon = iconFor(section.icon);
 
   return (
     <motion.section
@@ -304,7 +304,7 @@ function SectionCard({
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           style={{ background: `${color}16`, boxShadow: `inset 0 0 0 1px ${color}2E` }}
         >
-          <Icon size={19} strokeWidth={2.1} style={{ color }} />
+          {createElement(icon, { size: 19, strokeWidth: 2.1, style: { color } })}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2.5">

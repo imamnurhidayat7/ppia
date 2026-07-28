@@ -19,8 +19,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CalendarPlus, Check, Download, ExternalLink, Rss } from 'lucide-react';
 import { toPlainText } from '@/lib/sanitize-html';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { API_ORIGIN as API_URL } from '@/lib/api-base';
 
 export interface CalendarEventInput {
   slug: string;

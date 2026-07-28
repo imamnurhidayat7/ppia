@@ -30,8 +30,8 @@ cp api/.env.example api/.env
 # 3. Configure the web app (defaults to the local API)
 #    web/.env.local already points at http://localhost:4000
 
-# 4. Create the database schema
-cd api && npx prisma migrate dev && cd ..
+# 4. Apply the committed database migrations
+cd api && npx prisma migrate deploy && npm run db:generate && cd ..
 
 # 5. Run both apps together (API on :4000, web on :3001)
 npm run dev
@@ -69,7 +69,7 @@ Run from the repository root:
 | --- | --- |
 | `npm run install:all` | Install root, API, and web dependencies |
 | `npm run dev` | Run API and web together in watch mode |
-| `npm run build` | Build the web app for production |
+| `npm run build` | Build the web app for production (CI also builds the API separately) |
 | `npm run start` | Start both apps in production mode |
 
 Inside `api/`:
@@ -79,7 +79,10 @@ Inside `api/`:
 | `npm run dev` | Start the API with hot reload (`tsx watch`) |
 | `npm run build` | Compile TypeScript to `dist/` |
 | `npm start` | Run the compiled API |
-| `npm run db:migrate` | Apply Prisma migrations (dev) |
+| `npm run typecheck` | Type-check API and test sources without emitting files |
+| `npm test` | Run API unit tests once |
+| `npx prisma migrate deploy` | Apply committed migrations without creating a shadow database |
+| `npm run db:migrate` | Create/develop migrations locally (`prisma migrate dev`) |
 | `npm run db:studio` | Open Prisma Studio |
 
 Inside `web/`:
@@ -88,7 +91,9 @@ Inside `web/`:
 | --- | --- |
 | `npm run dev` | Next.js dev server on port 3001 |
 | `npm run build` | Production build |
+| `npm run typecheck` | Type-check the Next.js app without emitting files |
 | `npm run lint` | Run ESLint |
+| `npm test` | Run web unit tests once |
 
 ## Documentation
 

@@ -23,7 +23,9 @@ The API is an Express service. Every route is mounted under `/api` (see
 
 ## Response shape
 
-List endpoints return the resource under a named key plus pagination:
+List endpoints return the resource under a named key plus pagination. Newer
+endpoints use `totalPages`; media and audit-log responses retain the legacy
+`pages` name for client compatibility.
 
 ```json
 {
@@ -32,7 +34,14 @@ List endpoints return the resource under a named key plus pagination:
 }
 ```
 
+Public comment lists default to 20 top-level threads and accept `page`/`limit`
+(`limit` is capped at 50). Media and audit lists cap `limit` at 100.
+
 Errors return `{ "error": "message" }` with an appropriate HTTP status.
+
+Anonymous successful GETs on the explicit public-content allowlist return
+`Cache-Control: public, max-age=60, stale-while-revalidate=300`. Authenticated,
+admin, and member-specific responses are never marked for shared caching.
 
 ---
 
@@ -46,9 +55,13 @@ Errors return `{ "error": "message" }` with an appropriate HTTP status.
 | POST | `/reset-password` | — | Reset a password using a token. |
 | POST | `/verify-email` | — | Verify an e-mail address using a token. |
 | POST | `/resend-verification` | — | Resend the verification e-mail. |
-| GET | `/me` | 🔑 | Current user from the token. |
+| GET | `/me` | 🔑 | Current user from the database. |
 | GET | `/profile` | 🔑 | Current user's full profile. |
 | PUT | `/profile` | 🔑 | Update own profile. |
+
+JWTs identify the user, but authorization data is refreshed from the database on
+every authenticated request. Role, division, deletion, and approval-status changes
+therefore take effect immediately rather than waiting for token expiry.
 
 ## Users — `/api/users`
 
@@ -91,12 +104,19 @@ Errors return `{ "error": "message" }` with an appropriate HTTP status.
 | GET | `/my` | 🔑 | The current member's registrations. |
 | DELETE | `/:registrationId` | 🔑 | Cancel own registration. |
 | GET | `/event/:eventId` | 🔒 | List attendees for an event. |
+| POST | `/event/:eventId/checkin-by-code` | 🔒 | Check in an attendee using their six-character code. |
 | PATCH | `/:registrationId/checkin` | 🔒 | Mark an attendee checked in. |
 | PATCH | `/:registrationId/status` | 🔒 | Update a registration's status. |
 
 ## Event documentation — `/api/event-documentation`
 
-Photos, videos, and links for past events. Read is public; writes are 🛡️.
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| GET | `/public/:slug` | — | Gallery items for a published event. |
+| GET | `/event/:eventId` | 🔑 | Event documentation for administration. |
+| POST | `/` | 🛡️ | Add a photo, video, or link. |
+| PUT | `/:id` | 🛡️ | Update a documentation item. |
+| DELETE | `/:id` | 🛡️ | Delete a documentation item. |
 
 ## Articles — `/api/articles`
 
@@ -127,8 +147,8 @@ Photos, videos, and links for past events. Read is public; writes are 🛡️.
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| GET | `/article/:articleId` | — | Visible comments on an article. |
-| GET | `/research/:researchId` | — | Visible comments on a research item. |
+| GET | `/article/:articleId` | — | Visible article threads (`page`, `limit`; defaults 20, max 50). |
+| GET | `/research/:researchId` | — | Visible research threads (`page`, `limit`; defaults 20, max 50). |
 | POST | `/public` | — | Post a public comment. |
 | POST | `/` | 🔑 | Post a comment as the signed-in user. |
 | GET | `/` | 🛡️ | List all comments (moderation). |
@@ -144,7 +164,7 @@ Read (`GET /`, `/:id`, `/slug/:slug`) is public; create/update/delete are 🛡�
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| GET | `/` | 🛡️ | List media (folder/search filters). |
+| GET | `/` | 🛡️ | Paginated media list (`folder`, `search`, `page`, `limit`; max 100). |
 | PATCH | `/:id` | 🛡️ | Update alt text / folder. |
 | DELETE | `/:id` | 🛡️ | Delete a file. |
 
@@ -177,18 +197,24 @@ writes are 🔒.
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| GET | `/` | — | Public settings (e.g. WhatsApp group link). |
+| GET | `/` | — | Public organisation, contact, branding, and operational flags. Never includes the WhatsApp invite. |
+| GET | `/member` | 🔑 | Member-only settings, currently the WhatsApp group invite. |
 | GET | `/all` | 🔒 | All settings. |
 | PUT | `/` | 🔒 | Update settings. |
+
+`maintenanceMode=true` returns the maintenance page with HTTP 503 for public web
+routes while leaving login/admin access available. `allowPublicRegistration=false`
+is enforced by both the registration page and `POST /api/auth/register`.
 
 ## Newsletter — `/api/newsletter`
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
 | POST | `/subscribe` | — | Subscribe an e-mail. |
-| POST | `/unsubscribe` | — | Unsubscribe an e-mail. |
+| POST | `/unsubscribe` | — | Unsubscribe an e-mail submitted by the visitor. |
+| GET | `/unsubscribe?email=…&token=…` | — | Signed one-click unsubscribe link used in delivered e-mails. |
 | GET | `/subscribers` | 🔒 | List subscribers. |
-| POST | `/send` | 🔒 | Send a newsletter to active subscribers. |
+| POST | `/send` | 🔒 | Deliver a per-recipient newsletter to active subscribers (maximum 500 per request). |
 
 ## Search — `/api/search`
 
@@ -231,8 +257,8 @@ writes are 🔒.
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| GET | `/` | 🔒 | List audit entries (entity/action filters). |
-| GET | `/entity/:entity/:entityId` | 🔒 | Audit trail for one entity. |
+| GET | `/` | 🔒 | List audit entries (`entity`, `action`, `page`, `limit`; max 100). |
+| GET | `/entity/:entity/:entityId` | 🔒 | Paginated audit trail for one entity (`page`, `limit`; max 100). |
 
 ## Bookmarks — `/api/bookmarks`
 
@@ -242,6 +268,18 @@ writes are 🔒.
 | GET | `/` | 🔑 | The current member's bookmarked articles. |
 | POST | `/:articleId` | 🔑 | Bookmark an article. |
 | DELETE | `/:articleId` | 🔑 | Remove a bookmark. |
+
+## Notifications — `/api/notifications`
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| GET | `/` | 🔑 | Current member's recent notifications and unread count. |
+| POST | `/read-all` | 🔑 | Mark all current member notifications as read. |
+| PATCH | `/:id/read` | 🔑 | Mark one owned notification as read. |
+| DELETE | `/:id` | 🔑 | Delete one owned notification. |
+
+Notifications are created internally by successful application actions; there is
+no public create endpoint.
 
 ## FAQs — `/api/faq`
 

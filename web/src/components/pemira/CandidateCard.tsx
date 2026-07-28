@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { API_ORIGIN } from '@/lib/api-base';
 
 interface Props {
   candidate: {
@@ -19,7 +20,7 @@ interface Props {
   selected?: boolean;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_BASE_URL = API_ORIGIN;
 
 function getFullUrl(url?: string | null) {
   if (!url) return undefined;

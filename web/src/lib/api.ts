@@ -14,7 +14,7 @@ import type {
   ApiError,
 } from './api-types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { API_ORIGIN as API_URL } from './api-base';
 
 class ApiClient {
   private client: AxiosInstance;

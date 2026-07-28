@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import api from '@/lib/api';
+import { API_ORIGIN } from '@/lib/api-base';
 import type { UserProfile } from '@/lib/api-types';
 import { useToast } from '@/components/Toast';
 import { Avatar, Badge, Button } from '@/components/ui';
@@ -271,7 +272,7 @@ export default function ProfilePage() {
     try {
       const res = await api.uploadImage(file);
       // The upload endpoint returns a relative path; store it as absolute.
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiBase = API_ORIGIN;
       const avatarUrl = res.url.startsWith('http') ? res.url : `${apiBase}${res.url}`;
       await api.updateProfile({ avatar: avatarUrl });
       setProfile({ ...profile, avatar: avatarUrl });

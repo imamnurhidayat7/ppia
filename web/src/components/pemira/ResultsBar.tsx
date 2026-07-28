@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Crown, Trophy } from 'lucide-react';
+import { API_ORIGIN } from '@/lib/api-base';
 
 interface Result {
   id: string;
@@ -13,7 +14,7 @@ interface Result {
   percentage: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_BASE_URL = API_ORIGIN;
 function getFullUrl(url?: string | null) {
   if (!url) return undefined;
   if (url.startsWith('http')) return url;

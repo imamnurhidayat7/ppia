@@ -8,12 +8,16 @@ import type { LandingSection, SectionBlock } from '@/lib/api-types';
  * Hook to fetch a landing page section by key from the CMS API.
  * Falls back gracefully if the API is unavailable.
  */
-export function useLandingSection(key: string) {
-  const [section, setSection] = useState<LandingSection | null>(null);
-  const [loading, setLoading] = useState(true);
+export function useLandingSection(key: string, initial?: LandingSection | null) {
+  const [section, setSection] = useState<LandingSection | null>(initial ?? null);
+  // When the server already resolved this section, skip the client round-trip.
+  const [loading, setLoading] = useState(initial == null);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Seeded from the server — nothing to fetch on the client.
+    if (initial != null) return;
+
     let mounted = true;
 
     async function fetchSection() {
@@ -36,6 +40,9 @@ export function useLandingSection(key: string) {
     return () => {
       mounted = false;
     };
+    // `initial` is only read to decide whether to fetch at all; it is a stable
+    // server-provided prop, so it does not belong in the re-fetch trigger list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   return { section, loading, error };

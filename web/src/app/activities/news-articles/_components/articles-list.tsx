@@ -4,6 +4,7 @@ import { toPlainText } from "@/lib/sanitize-html";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
 import { Calendar, User, ArrowRight, BookOpen, Newspaper } from "lucide-react";
 import api from "@/lib/api";
@@ -297,10 +298,12 @@ export default function NewsArticlesPage() {
                 >
                   <div className="h-40 flex items-center justify-center relative overflow-hidden">
                     {post.imageUrl ? (
-                      <img
-                        src={getImageUrl(post.imageUrl)}
+                      <Image
+                        src={getImageUrl(post.imageUrl) || post.imageUrl}
                         alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div

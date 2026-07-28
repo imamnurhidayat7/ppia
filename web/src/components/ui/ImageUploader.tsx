@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Upload, X, Loader2, Link } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 import { useToast } from '@/components/Toast';
+import { API_ORIGIN } from '@/lib/api-base';
 
 interface ImageUploaderProps {
   value?: string;
@@ -12,7 +13,7 @@ interface ImageUploaderProps {
   placeholder?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = API_ORIGIN;
 
 export function ImageUploader({
   value,

@@ -265,7 +265,7 @@ export default function DashboardArticleDetailPage() {
       await reloadComments(article.id);
       return true;
     },
-    [article?.id, reloadComments]
+    [article, reloadComments]
   );
 
   const fetchArticle = useCallback(async () => {

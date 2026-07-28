@@ -12,13 +12,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const { slug } = await params;
   const article = await fetchArticleBySlug(slug);
 
-  if (!article) {
-    return {
-      title: "Article not found",
-      description: "This article is no longer available on the PPIA Auckland website.",
-      robots: { index: false, follow: true },
-    };
-  }
+  if (!article) notFound();
 
   const canonical = `/activities/news-articles/${slug}`;
   const title = article.metaTitle?.trim() || article.title;

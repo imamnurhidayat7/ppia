@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import prisma from '../lib/prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this';
 
@@ -11,26 +12,59 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authenticate = (
+export const authenticate = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): void => {
-  try {
-    const authHeader = req.headers.authorization;
+): Promise<void> => {
+  const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'No token provided' });
+  if (!authHeader?.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'No token provided' });
+    return;
+  }
+
+  let userId: string;
+  try {
+    const decoded = jwt.verify(authHeader.slice(7), JWT_SECRET) as { userId?: string };
+    if (!decoded.userId) throw new Error('Missing user ID');
+    userId = decoded.userId;
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+    return;
+  }
+
+  try {
+    // Authorization data is deliberately refreshed on every request. JWTs live
+    // for seven days, but role, division and approval changes must take effect
+    // immediately rather than preserving stale privileges from the token.
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true, divisionId: true, membershipStatus: true }
+    });
+
+    if (!user) {
+      res.status(401).json({ error: 'User no longer exists' });
       return;
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string; divisionId?: string };
+    if (user.membershipStatus !== 'APPROVED') {
+      res.status(403).json({
+        error: 'Membership is not approved',
+        status: user.membershipStatus
+      });
+      return;
+    }
 
-    req.user = decoded;
+    req.user = {
+      userId: user.id,
+      role: user.role,
+      ...(user.divisionId ? { divisionId: user.divisionId } : {})
+    };
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    console.error('Authentication lookup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 

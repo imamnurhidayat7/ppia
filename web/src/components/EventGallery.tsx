@@ -235,20 +235,19 @@ export default function EventGallery({ slug, className = '' }: EventGalleryProps
           )}
 
           <figure
-            className="max-h-full max-w-4xl"
+            className="w-[min(90vw,64rem)]"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* Deliberately a plain <img>.
-                `next/image` needs either explicit dimensions or a sized box, and
-                a full-size viewer has neither: photos arrive in any aspect ratio
-                and the point is to show them whole at up to 80vh. Optimisation
-                also matters least here — the visitor asked for the full image. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={getImageUrl(activePhoto.url) || activePhoto.url}
-              alt={activePhoto.title || ''}
-              className="max-h-[80vh] w-auto rounded-xl object-contain"
-            />
+            <div className="relative h-[80vh] w-full">
+              <Image
+                src={getImageUrl(activePhoto.url) || activePhoto.url}
+                alt={activePhoto.title || ''}
+                fill
+                sizes="90vw"
+                quality={90}
+                className="object-contain"
+              />
+            </div>
             <figcaption className="mt-3 text-center text-sm text-white/70">
               {activePhoto.title && (
                 <span className="block font-semibold text-white">{activePhoto.title}</span>

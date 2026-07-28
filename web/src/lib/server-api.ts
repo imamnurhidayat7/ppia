@@ -13,8 +13,8 @@
  */
 
 import { toPlainText } from '@/lib/sanitize-html';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import type { LandingSection } from '@/lib/api-types';
+import { API_ORIGIN as API_BASE } from '@/lib/api-base';
 
 /** Public content changes rarely; five minutes keeps crawlers and readers current enough. */
 const PUBLIC_REVALIDATE = 300;
@@ -187,4 +187,35 @@ export function toMetaDescription(source: unknown, fallback: string): string {
   const clipped = text.slice(0, 160);
   const lastSpace = clipped.lastIndexOf(' ');
   return `${(lastSpace > 80 ? clipped.slice(0, lastSpace) : clipped).trimEnd()}…`;
+}
+
+// ── Home page list fetches ───────────────────────────────────────────────
+//
+// These power the public homepage sections. Rendering them on the server means
+// the HTML ships with the content already in it (better LCP and SEO) and the
+// response is HTTP-cached for PUBLIC_REVALIDATE seconds instead of triggering a
+// separate client request per section on every visit.
+
+/** Latest published events for the homepage carousel. */
+export async function fetchHomeEvents(limit = 8): Promise<PublicEvent[]> {
+  const data = await getJson<{ events?: PublicEvent[] }>(`/events?limit=${limit}`);
+  return data?.events ?? [];
+}
+
+/** Latest published articles for the homepage grid. */
+export async function fetchHomeArticles(limit = 3): Promise<PublicArticle[]> {
+  const data = await getJson<{ articles?: PublicArticle[] }>(`/articles?limit=${limit}`);
+  return data?.articles ?? [];
+}
+
+/**
+ * CMS-managed configuration for a landing section (heading, badge, "view all"
+ * label, etc.). Returns `null` when the section has not been customised, in
+ * which case the component falls back to its built-in defaults.
+ */
+export async function fetchLandingSection(key: string): Promise<LandingSection | null> {
+  const data = await getJson<{ success?: boolean; data?: LandingSection }>(
+    `/landing-sections/key/${encodeURIComponent(key)}`
+  );
+  return data?.data ?? null;
 }

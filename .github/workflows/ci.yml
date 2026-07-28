@@ -74,10 +74,9 @@ jobs:
       - name: Tests
         run: npm test
 
-      # `next build` is deliberately not run here.
-      #
-      # Several routes fetch from the API while rendering, so a build in CI would
-      # need a live API and database or would fail on network errors — turning an
-      # infrastructure gap into a red build on unrelated commits. Typecheck and
-      # lint catch the errors a build surfaces in this codebase; adding the build
-      # belongs together with a CI database and a stubbed API.
+      - name: Production build
+        run: npm run build
+        env:
+          # Public server fetches fail closed to empty content during build; a
+          # refused local port makes that deterministic without external I/O.
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:9

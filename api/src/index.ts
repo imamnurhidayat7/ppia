@@ -32,6 +32,7 @@ import faqRoutes from './routes/faqs'
 import bookmarkRoutes from './routes/bookmarks'
 import notificationRoutes from './routes/notifications'
 import { securityHeaders } from './middleware/security-headers'
+import { publicReadCache } from './middleware/public-cache'
 
 dotenv.config()
 
@@ -100,6 +101,8 @@ app.use(cors({
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+// Shared caching is restricted to an explicit allowlist of anonymous GETs.
+app.use(publicReadCache)
 
 /**
  * Serve uploaded files statically.

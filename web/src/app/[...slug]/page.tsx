@@ -24,12 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const page = await getPage(slug);
 
-  if (!page) {
-    return {
-      title: "Page Not Found",
-      description: "The page you're looking for doesn't exist.",
-    };
-  }
+  if (!page) notFound();
 
   return {
     title: page.metaTitle || page.title,

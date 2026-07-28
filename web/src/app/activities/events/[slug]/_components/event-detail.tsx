@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/api";
 import { sanitizeHtml } from "@/lib/sanitize-html";
@@ -10,6 +11,7 @@ import { useToast } from "@/components/Toast";
 import { Modal } from "@/components/ui";
 import type { PublicEvent } from "@/lib/server-api";
 import { ArrowLeft, Calendar, Clock, MapPin, Users } from "lucide-react";
+import { getImageUrl } from "@/lib/utils";
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -104,8 +106,15 @@ export default function EventDetail({ event }: { event: PublicEvent }) {
         {/* Hero Banner - Full Width */}
         <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden mb-8">
           {event.imageUrl && (
-            <div className="w-full">
-              <img src={event.imageUrl} alt={event.title} className="w-full h-auto max-h-[500px] object-contain bg-gray-100" />
+            <div className="relative h-[260px] w-full bg-gray-100 sm:h-[380px] lg:h-[500px]">
+              <Image
+                src={getImageUrl(event.imageUrl) || event.imageUrl}
+                alt={event.title}
+                fill
+                priority
+                sizes="(min-width: 1280px) 1216px, 100vw"
+                className="object-contain"
+              />
             </div>
           )}
           <div className="p-8 md:p-10">

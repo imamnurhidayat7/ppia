@@ -32,7 +32,8 @@ Point the web app at the deployed API by setting `NEXT_PUBLIC_API_URL` at build 
 Set these before starting the API (see [Configuration](configuration.md) for the full
 list):
 
-- `DATABASE_URL` — production PostgreSQL
+- `DATABASE_URL` — production PostgreSQL runtime URL (pooled is supported)
+- `DIRECT_URL` — direct PostgreSQL URL for Prisma migrations
 - `JWT_SECRET` — a fresh, long random string (different from dev/staging)
 - `API_URL`, `FRONTEND_URL` — the real public URLs
 - `CORS_ORIGINS` — any additional browser origins that call the API
@@ -64,8 +65,8 @@ uploads to object storage; otherwise files are lost on redeploy.
 ## Pre-launch checklist
 
 - [ ] `JWT_SECRET` is unique to production and kept secret
-- [ ] `DATABASE_URL` points at the production database and migrations are applied
-      (`prisma migrate deploy`)
+- [ ] `DATABASE_URL` points at the runtime database, `DIRECT_URL` points at its
+      direct connection, and migrations are applied (`prisma migrate deploy`)
 - [ ] `FRONTEND_URL` / `CORS_ORIGINS` list only the real origins
 - [ ] `TRUST_PROXY` matches the proxy topology; `RATE_LIMIT_DISABLED` is not set
 - [ ] Mail is configured (or intentionally left in log-only mode)
@@ -79,10 +80,10 @@ uploads to object storage; otherwise files are lost on redeploy.
 
 - **CI runs on every push and pull request** to `main`, `master`, and `develop` via
   [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). It checks both packages:
-  the API job runs `typecheck` and `test` (after generating the Prisma client); the web
-  job runs `typecheck`, `lint`, and `test`. `next build` is intentionally excluded
-  because several routes fetch from the API at render time and would need a live API and
-  database in CI. Run a production `npm run build` manually before deploying.
+  the API job runs Prisma generation, typecheck, tests, and its production build; the
+  web job runs typecheck, lint, tests, and `next build`. The web build uses an
+  intentionally unreachable local API URL, so server-rendered public fetches exercise
+  their documented empty-content fallback without external network or database access.
 - **No Dockerfiles** are included; the build steps above assume a Node runtime.
 - Scheduled-publish fields exist on content models, but confirm whether a scheduler is
   running in your environment before relying on timed publishing.

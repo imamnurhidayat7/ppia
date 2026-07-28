@@ -11,6 +11,7 @@ import { useLanguage } from "@/lib/language-context";
 import { useLandingColors } from "@/lib/hooks/use-landing-colors";
 import { useLandingSection } from "@/lib/hooks/use-landing-section";
 import { pickText } from "@/lib/utils";
+import type { LandingSection } from "@/lib/api-types";
 import SectionHeading from "./SectionHeading";
 
 interface ApiEvent {
@@ -19,8 +20,8 @@ interface ApiEvent {
   title: string;
   description?: string;
   startDate: string;
-  endDate?: string;
-  location?: string;
+  endDate?: string | null;
+  location?: string | null;
   imageUrl?: string;
   published?: boolean;
 }
@@ -58,15 +59,51 @@ function formatDate(iso: string): string {
   }
 }
 
-export default function EventsSection() {
+/** Map the raw API event list to the display shape used by the carousel. */
+function mapEvents(list: ApiEvent[]): DisplayEvent[] {
+  return list.map((e, i) => {
+    const palette = ACCENTS[i % ACCENTS.length];
+    return {
+      id: e.id,
+      slug: e.slug,
+      title: e.title,
+      date: formatDate(e.startDate),
+      location: e.location || "TBA",
+      imageUrl: getImageUrl(e.imageUrl),
+      accent: palette.accent,
+      bg: palette.bg,
+    };
+  });
+}
+
+interface EventsSectionProps {
+  /**
+   * Events resolved on the server. When provided, the section renders them
+   * immediately (no client fetch, no loading skeleton). When omitted, it falls
+   * back to fetching on the client so the component still works standalone.
+   */
+  initialEvents?: ApiEvent[];
+  /** Server-resolved CMS heading config for this section. */
+  initialSection?: LandingSection | null;
+}
+
+export default function EventsSection({ initialEvents, initialSection }: EventsSectionProps = {}) {
+  // Treat the server data as authoritative only when it is non-empty. An empty
+  // array almost always means the API was unreachable during server rendering
+  // (it degrades to `[]`), so in that case we still let the client re-fetch —
+  // otherwise a transient API outage at render time would leave the section
+  // permanently empty until the ISR cache expires.
+  const hasInitial = Array.isArray(initialEvents) && initialEvents.length > 0;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [events, setEvents] = useState<DisplayEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<DisplayEvent[]>(() =>
+    hasInitial ? mapEvents(initialEvents!) : []
+  );
+  const [loading, setLoading] = useState(!hasInitial);
   const { language } = useLanguage();
   const { colors } = useLandingColors();
-  const { section } = useLandingSection("events");
+  const { section } = useLandingSection("events", initialSection);
   const isId = language === "id";
 
   const header = useMemo(() => {
@@ -88,6 +125,9 @@ export default function EventsSection() {
   }, [section, language]);
 
   useEffect(() => {
+    // Server already provided the events — no client fetch needed.
+    if (hasInitial) return;
+
     const fetchEvents = async () => {
       try {
         const response = await api.getEvents({ limit: 8 });
@@ -97,20 +137,7 @@ export default function EventsSection() {
             : Array.isArray(response)
               ? response
               : [];
-        const mapped = list.map((e, i) => {
-          const palette = ACCENTS[i % ACCENTS.length];
-          return {
-            id: e.id,
-            slug: e.slug,
-            title: e.title,
-            date: formatDate(e.startDate),
-            location: e.location || "TBA",
-            imageUrl: getImageUrl(e.imageUrl),
-            accent: palette.accent,
-            bg: palette.bg,
-          };
-        });
-        setEvents(mapped);
+        setEvents(mapEvents(list));
       } catch (err) {
         console.error("Failed to fetch events:", err);
         setEvents([]);
@@ -119,7 +146,7 @@ export default function EventsSection() {
       }
     };
     fetchEvents();
-  }, []);
+  }, [hasInitial]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {

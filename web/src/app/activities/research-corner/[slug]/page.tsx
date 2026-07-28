@@ -12,13 +12,7 @@ export async function generateMetadata({ params }: ResearchPageProps): Promise<M
   const { slug } = await params;
   const research = await fetchResearchBySlug(slug);
 
-  if (!research) {
-    return {
-      title: "Research not found",
-      description: "This publication is no longer available in the PPIA Auckland Research Corner.",
-      robots: { index: false, follow: true },
-    };
-  }
+  if (!research) notFound();
 
   const canonical = `/activities/research-corner/${slug}`;
   const title = research.metaTitle?.trim() || research.title;

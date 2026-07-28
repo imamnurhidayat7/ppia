@@ -13,6 +13,20 @@ interface AuthRequest extends Request {
 
 /** Matches the character budget the comment forms enforce client-side. */
 const MAX_COMMENT_LENGTH = 2000;
+const DEFAULT_COMMENT_LIMIT = 20;
+const MAX_COMMENT_LIMIT = 50;
+const MAX_REPLIES_PER_THREAD = 100;
+
+const parsePagination = (pageValue: unknown, limitValue: unknown) => {
+  const parsedPage = Number.parseInt(String(pageValue ?? ''), 10);
+  const parsedLimit = Number.parseInt(String(limitValue ?? ''), 10);
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const requestedLimit = Number.isFinite(parsedLimit) && parsedLimit > 0
+    ? parsedLimit
+    : DEFAULT_COMMENT_LIMIT;
+  const limit = Math.min(requestedLimit, MAX_COMMENT_LIMIT);
+  return { page, limit, skip: (page - 1) * limit };
+};
 
 /**
  * Validate and normalise comment body text.
@@ -117,31 +131,32 @@ const notifyCommentParentAuthor = async (params: {
 export const getArticleComments = async (req: Request, res: Response): Promise<void> => {
   try {
     const { articleId } = req.params as { articleId: string };
+    const { page, limit, skip } = parsePagination(req.query.page, req.query.limit);
+    const where = { articleId, parentId: null, isHidden: false };
 
-    const comments = await prisma.comment.findMany({
-      where: {
-        articleId,
-        parentId: null, // Only top-level comments
-        isHidden: false
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        User: {
-          select: { id: true, name: true, avatar: true }
-        },
-        replies: {
-          where: { isHidden: false },
-          orderBy: { createdAt: 'asc' },
-          include: {
-            User: {
-              select: { id: true, name: true, avatar: true }
-            }
+    const [comments, total] = await Promise.all([
+      prisma.comment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          User: { select: { id: true, name: true, avatar: true } },
+          replies: {
+            where: { isHidden: false },
+            take: MAX_REPLIES_PER_THREAD,
+            orderBy: { createdAt: 'asc' },
+            include: { User: { select: { id: true, name: true, avatar: true } } }
           }
         }
-      }
-    });
+      }),
+      prisma.comment.count({ where })
+    ]);
 
-    res.json({ comments });
+    res.json({
+      comments,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+    });
   } catch (error) {
     console.error('Get article comments error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -152,31 +167,32 @@ export const getArticleComments = async (req: Request, res: Response): Promise<v
 export const getResearchComments = async (req: Request, res: Response): Promise<void> => {
   try {
     const { researchId } = req.params as { researchId: string };
+    const { page, limit, skip } = parsePagination(req.query.page, req.query.limit);
+    const where = { researchId, parentId: null, isHidden: false };
 
-    const comments = await prisma.comment.findMany({
-      where: {
-        researchId,
-        parentId: null,
-        isHidden: false
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        User: {
-          select: { id: true, name: true, avatar: true }
-        },
-        replies: {
-          where: { isHidden: false },
-          orderBy: { createdAt: 'asc' },
-          include: {
-            User: {
-              select: { id: true, name: true, avatar: true }
-            }
+    const [comments, total] = await Promise.all([
+      prisma.comment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          User: { select: { id: true, name: true, avatar: true } },
+          replies: {
+            where: { isHidden: false },
+            take: MAX_REPLIES_PER_THREAD,
+            orderBy: { createdAt: 'asc' },
+            include: { User: { select: { id: true, name: true, avatar: true } } }
           }
         }
-      }
-    });
+      }),
+      prisma.comment.count({ where })
+    ]);
 
-    res.json({ comments });
+    res.json({
+      comments,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+    });
   } catch (error) {
     console.error('Get research comments error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -356,10 +372,7 @@ export const getAllComments = async (req: AuthRequest, res: Response): Promise<v
     }
 
     const { page = '1', limit = '20', articleId, researchId, hidden } = req.query as Record<string, string | undefined>;
-
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const skip = (pageNum - 1) * limitNum;
+    const { page: pageNum, limit: limitNum, skip } = parsePagination(page, limit);
 
     const where: any = {};
 
