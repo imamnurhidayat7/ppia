@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import api from "@/lib/api";
+import { ResearchStatsSkeleton, ResearchPapersSkeleton } from "@/components/skeletons/public-skeletons";
 import { FileText, ExternalLink, BookOpen, Users, Lightbulb, Globe, FlaskConical, TrendingUp, Search, Eye, Download, ArrowRight } from "lucide-react";
 
 interface Research {
@@ -239,14 +240,7 @@ export default function ResearchCornerPage() {
         />
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="text-center animate-pulse">
-                  <div className="h-12 w-20 bg-white/10 rounded mx-auto mb-2" />
-                  <div className="h-4 w-24 bg-white/10 rounded mx-auto" />
-                </div>
-              ))}
-            </div>
+            <ResearchStatsSkeleton />
           ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
@@ -342,18 +336,7 @@ export default function ResearchCornerPage() {
 
           <div className="space-y-6">
             {loading ? (
-              [1, 2, 3].map((i) => (
-                <div key={i} className="rounded-3xl border-2 border-[#E2E8F0] p-8 animate-pulse">
-                  <div className="h-1.5 bg-gray-200 rounded mb-6" />
-                  <div className="flex gap-6">
-                    <div className="flex-1 space-y-4">
-                      <div className="h-4 w-24 bg-gray-200 rounded" />
-                      <div className="h-8 w-3/4 bg-gray-200 rounded" />
-                      <div className="h-20 w-full bg-gray-200 rounded" />
-                    </div>
-                  </div>
-                </div>
-              ))
+              <ResearchPapersSkeleton />
             ) : filteredPapers.length === 0 ? (
               <div className="text-center py-16">
                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />

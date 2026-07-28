@@ -10,6 +10,7 @@ import { SubscribeToCalendarLink } from "@/components/AddToCalendarButton";
 import { Calendar, MapPin, Clock } from "lucide-react";
 import api from "@/lib/api";
 import { API_ORIGIN as API_BASE_URL } from "@/lib/api-base";
+import { EventsListSkeleton } from "@/components/skeletons/public-skeletons";
 
 // Helper to get full image URL
 const getFullImageUrl = (url: string | undefined | null): string | undefined => {
@@ -173,20 +174,7 @@ export default function EventsPage() {
           description={headerData.description}
           breadcrumbs={headerData.breadcrumbs}
         />
-        <section className="py-20 bg-[#F8FAFC]">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-2xl p-6 animate-pulse">
-                  <div className="h-4 w-20 bg-gray-200 rounded mb-4" />
-                  <div className="h-6 w-3/4 bg-gray-200 rounded mb-2" />
-                  <div className="h-4 w-1/2 bg-gray-200 rounded mb-4" />
-                  <div className="h-20 bg-gray-200 rounded" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <EventsListSkeleton />
       </>
     );
   }
