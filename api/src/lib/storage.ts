@@ -56,3 +56,38 @@ export async function uploadPublicObject(
   if (error) throw new Error(`Storage upload failed: ${error.message}`);
   return sb.storage.from(PUBLIC_BUCKET).getPublicUrl(objectPath).data.publicUrl;
 }
+
+/**
+ * Upload a buffer to the private bucket and return its object key (NOT a URL).
+ * Private objects are not publicly readable; callers hand the key to
+ * `createPrivateSignedUrl` to produce a short-lived link when someone
+ * authorised needs to view the file.
+ */
+export async function uploadPrivateObject(
+  objectPath: string,
+  buffer: Buffer,
+  contentType: string
+): Promise<string> {
+  const sb = client();
+  const { error } = await sb.storage
+    .from(PRIVATE_BUCKET)
+    .upload(objectPath, buffer, { contentType, upsert: false });
+  if (error) throw new Error(`Storage upload failed: ${error.message}`);
+  return objectPath;
+}
+
+/**
+ * Create a short-lived signed URL for a private object. Returns null when
+ * storage is unconfigured or the key cannot be signed (e.g. already deleted).
+ */
+export async function createPrivateSignedUrl(
+  objectPath: string,
+  expiresInSeconds = 120
+): Promise<string | null> {
+  if (!isStorageConfigured()) return null;
+  const { data, error } = await client()
+    .storage.from(PRIVATE_BUCKET)
+    .createSignedUrl(objectPath, expiresInSeconds);
+  if (error) return null;
+  return data?.signedUrl ?? null;
+}

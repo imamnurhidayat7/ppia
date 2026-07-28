@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Degree, NotificationType, Prisma, Role } from '@prisma/client';
 import prisma from '../lib/prisma';
+import { createPrivateSignedUrl } from '../lib/storage';
 import { USER_DIRECTORY_SELECT, USER_SAFE_SELECT_WITH_DIVISION } from '../lib/user-select';
 import {
   sendEmail,
@@ -521,6 +522,62 @@ export const getMemberDirectory = async (req: AuthRequest, res: Response): Promi
     });
   } catch (error) {
     console.error('Get member directory error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Issue a short-lived signed URL for a member's proof-of-studentship document
+ * (loaCoe), which lives in a private Storage bucket. Super Admin only, since
+ * this is personal data. Generated on demand rather than stored, so links
+ * cannot be shared or leak from the page source.
+ */
+export const getMemberDocumentUrl = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+    const { id } = req.params as { id: string };
+
+    if (!userId) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    if (userRole !== 'SUPER_ADMIN') {
+      res.status(403).json({ error: 'Insufficient permissions' });
+      return;
+    }
+
+    const member = await prisma.user.findUnique({
+      where: { id },
+      select: { loaCoe: true },
+    });
+
+    if (!member) {
+      res.status(404).json({ error: 'Member not found' });
+      return;
+    }
+
+    if (!member.loaCoe) {
+      res.status(404).json({ error: 'No document uploaded for this member' });
+      return;
+    }
+
+    // Legacy or externally hosted absolute URLs are returned unchanged.
+    if (/^https?:\/\//i.test(member.loaCoe)) {
+      res.json({ url: member.loaCoe });
+      return;
+    }
+
+    const signedUrl = await createPrivateSignedUrl(member.loaCoe, 120);
+    if (!signedUrl) {
+      res.status(500).json({ error: 'Could not generate a link for this document' });
+      return;
+    }
+
+    res.json({ url: signedUrl });
+  } catch (error) {
+    console.error('Get member document URL error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -412,6 +412,12 @@ class ApiClient {
     return response.data;
   }
 
+  /** Short-lived signed URL for a member's private proof-of-studentship document. */
+  async getMemberDocumentUrl(id: string): Promise<{ url: string }> {
+    const response = await this.client.get(`/members/${id}/document-url`);
+    return response.data;
+  }
+
   async deleteMember(id: string) {
     const response = await this.client.delete(`/members/${id}`);
     return response.data;

@@ -1,40 +1,20 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { uploadPublicObject, isStorageConfigured } from '../lib/storage';
-
-const UPLOADS_DIR = path.join(__dirname, '../../uploads');
-
-// Ensure uploads directory exists
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+import {
+  uploadPublicObject,
+  uploadPrivateObject,
+  isStorageConfigured,
+} from '../lib/storage';
 
 /**
  * Upload validation.
  *
- * Two separate problems existed here:
- *
- * 1. The stored filename took its extension from `file.originalname`, which the
- *    client controls completely. A request declaring `Content-Type: image/png`
- *    while naming the file `payload.html` passed the MIME filter and was written
- *    as `<random>.html` into a directory served as static files — stored HTML,
- *    and therefore stored XSS, on the API's own origin.
- *
- * 2. `file.mimetype` is just the multipart part header. It is client-supplied
- *    and says nothing about the bytes that follow.
- *
- * The fix has three layers:
- *
- *   · The extension is *derived* from the allowlisted MIME type rather than read
- *     from the filename, so the client cannot influence it at all.
- *   · The declared MIME must be in the allowlist for the endpoint.
- *   · After the file is written, its leading bytes are checked against the
- *     signature for that type, and the file is deleted if they do not match.
- *
- * Magic-byte checking is what actually establishes the file type; the first two
- * layers just keep obvious junk from ever being written.
+ * `file.mimetype` is just the multipart part header — client-supplied and no
+ * proof of the actual bytes. So the declared MIME must be in an allowlist, the
+ * stored extension is derived from that allowlist (never from the client-named
+ * file), and the leading bytes are checked against the format signature before
+ * the file is accepted. Files are held in memory and streamed to Supabase
+ * Storage; nothing is written to the local disk.
  */
 interface FileType {
   /** The extension the file will be stored with. */
@@ -80,20 +60,6 @@ const DOCUMENT_TYPES: Record<string, FileType> = {
 /** Longest signature we inspect sits at offset 12, so 16 bytes is plenty. */
 const HEAD_BYTES = 16;
 
-function makeStorage(types: Record<string, FileType>) {
-  return multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-    filename: (_req, file, cb) => {
-      // `fileFilter` runs before this and rejects anything not in `types`, so
-      // the lookup is guaranteed to hit. The extension comes from our map — the
-      // original filename is never used to build the stored name.
-      const type = types[file.mimetype];
-      const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      cb(null, `${unique}${type.ext}`);
-    },
-  });
-}
-
 function makeFilter(types: Record<string, FileType>, message: string) {
   return (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     if (types[file.mimetype]) {
@@ -105,43 +71,27 @@ function makeFilter(types: Record<string, FileType>, message: string) {
 }
 
 /**
- * Confirm the written file really is what it claimed, and remove it if not.
- * Returns null when the file is acceptable, or an error message.
+ * Validate the in-memory upload against its declared type. Returns null when
+ * acceptable, or an error message. Also returns the resolved extension so the
+ * caller can build a safe object key.
  */
-function verifySignature(
+function verifyUpload(
   file: Express.Multer.File,
   types: Record<string, FileType>
-): string | null {
+): { error: string } | { ext: string } {
   const type = types[file.mimetype];
-  if (!type) return 'Unsupported file type';
-
-  let head: Buffer;
-  try {
-    const handle = fs.openSync(file.path, 'r');
-    try {
-      head = Buffer.alloc(HEAD_BYTES);
-      fs.readSync(handle, head, 0, HEAD_BYTES, 0);
-    } finally {
-      fs.closeSync(handle);
-    }
-  } catch {
-    return 'Could not read the uploaded file';
-  }
-
-  if (type.matches(head)) return null;
-  return 'File contents do not match its declared type';
+  if (!type) return { error: 'Unsupported file type' };
+  const head = file.buffer.subarray(0, HEAD_BYTES);
+  if (!type.matches(head)) return { error: 'File contents do not match its declared type' };
+  return { ext: type.ext };
 }
 
-function discard(filePath: string) {
-  try {
-    fs.unlinkSync(filePath);
-  } catch {
-    // Already gone, or not ours to remove — nothing useful to do here.
-  }
+function uniqueName(ext: string): string {
+  return `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
 }
 
-// Images are held in memory so the buffer can be signature-checked and streamed
-// straight to Supabase Storage — nothing touches the local disk.
+// Both endpoints hold the file in memory so the buffer can be signature-checked
+// and streamed straight to Supabase Storage.
 export const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: makeFilter(IMAGE_TYPES, 'Only image files (JPEG, PNG, GIF, WebP) are allowed'),
@@ -149,32 +99,12 @@ export const upload = multer({
 });
 
 export const uploadDocument = multer({
-  storage: makeStorage(DOCUMENT_TYPES),
+  storage: multer.memoryStorage(),
   fileFilter: makeFilter(DOCUMENT_TYPES, 'Only PDF files are allowed'),
   limits: { fileSize: 2 * 1024 * 1024, files: 1 },
 });
 
-function respond(req: Request, res: Response, types: Record<string, FileType>): void {
-  if (!req.file) {
-    res.status(400).json({ error: 'No file uploaded' });
-    return;
-  }
-
-  const problem = verifySignature(req.file, types);
-  if (problem) {
-    discard(req.file.path);
-    res.status(400).json({ error: problem });
-    return;
-  }
-
-  res.json({
-    url: `/uploads/${req.file.filename}`,
-    filename: req.file.filename,
-    mimetype: req.file.mimetype,
-    size: req.file.size,
-  });
-}
-
+/** Image upload → public bucket. Returns a public URL. */
 export const uploadFile = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
@@ -182,17 +112,9 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const type = IMAGE_TYPES[req.file.mimetype];
-    if (!type) {
-      res.status(400).json({ error: 'Unsupported file type' });
-      return;
-    }
-
-    // Same magic-byte check as before, now against the in-memory buffer: the
-    // declared MIME must actually match the leading bytes.
-    const head = req.file.buffer.subarray(0, HEAD_BYTES);
-    if (!type.matches(head)) {
-      res.status(400).json({ error: 'File contents do not match its declared type' });
+    const check = verifyUpload(req.file, IMAGE_TYPES);
+    if ('error' in check) {
+      res.status(400).json({ error: check.error });
       return;
     }
 
@@ -202,7 +124,7 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const objectName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${type.ext}`;
+    const objectName = uniqueName(check.ext);
     const publicUrl = await uploadPublicObject(objectName, req.file.buffer, req.file.mimetype);
 
     res.json({
@@ -217,13 +139,43 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-// Document upload handler (PDF for registration proof of studentship)
+/**
+ * Document upload (PDF proof of studentship) → PRIVATE bucket.
+ *
+ * These are personal documents, so they must not be publicly readable. The
+ * response returns the object KEY (not a URL); an authorised admin later
+ * exchanges it for a short-lived signed URL to view the file.
+ */
 export const uploadDocumentFile = async (req: Request, res: Response): Promise<void> => {
   try {
-    respond(req, res, DOCUMENT_TYPES);
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    const check = verifyUpload(req.file, DOCUMENT_TYPES);
+    if ('error' in check) {
+      res.status(400).json({ error: check.error });
+      return;
+    }
+
+    if (!isStorageConfigured()) {
+      console.error('Document upload rejected: Supabase Storage env vars are not set.');
+      res.status(500).json({ error: 'File storage is not configured on the server' });
+      return;
+    }
+
+    const objectKey = `loa-coe/${uniqueName(check.ext)}`;
+    const key = await uploadPrivateObject(objectKey, req.file.buffer, req.file.mimetype);
+
+    res.json({
+      url: key,
+      filename: objectKey,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
   } catch (error) {
     console.error('Document upload error:', error);
-    if (req.file) discard(req.file.path);
     res.status(500).json({ error: 'Failed to upload document' });
   }
 };

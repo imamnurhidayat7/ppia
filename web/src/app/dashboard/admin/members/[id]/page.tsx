@@ -47,6 +47,8 @@ interface UploadedFile {
   url?: string | null;
   isImage: boolean;
   emptyHint: string;
+  /** Stored in a private bucket; opened via an on-demand signed URL. */
+  isPrivate?: boolean;
 }
 
 const STATUS_LABEL: Record<MembershipStatus, string> = {
@@ -86,7 +88,65 @@ function MemberDetailSkeleton() {
 }
 
 /** Uploaded file preview: images render inline, everything else becomes a download link. */
-function FileCard({ file }: { file: UploadedFile }) {
+function FileCard({ file, memberId }: { file: UploadedFile; memberId?: string }) {
+  const [preparingDoc, setPreparingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
+
+  const openPrivateDocument = async () => {
+    if (!memberId) return;
+    setPreparingDoc(true);
+    setDocError(null);
+    try {
+      const { url } = await api.getMemberDocumentUrl(memberId);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      setDocError('Could not open the document. Please try again.');
+    } finally {
+      setPreparingDoc(false);
+    }
+  };
+
+  // Private documents (proof of studentship) live in a private bucket and are
+  // opened through a short-lived signed URL fetched on click, never embedded in
+  // the page source.
+  if (file.isPrivate) {
+    return (
+      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
+          <FileText className="h-4 w-4 text-slate-400" />
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{file.label}</span>
+        </div>
+        <div className="p-4">
+          {!file.url ? (
+            <p className="text-sm text-slate-400">{file.emptyHint}</p>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={openPrivateDocument}
+                disabled={preparingDoc}
+                className="flex w-full items-center gap-3 rounded-lg bg-slate-50 p-3 text-left transition-colors hover:bg-slate-100 disabled:opacity-60 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E8231A] text-white">
+                  <FileText className="h-5 w-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    {preparingDoc ? 'Preparing secure link…' : 'View PDF'}
+                  </span>
+                  <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                    {file.label}
+                  </span>
+                </span>
+              </button>
+              {docError && <p className="mt-2 text-xs text-[#E8231A]">{docError}</p>}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const fullUrl = file.url ? getImageUrl(file.url) : undefined;
   const showImage = Boolean(fullUrl && file.isImage && isImageUrl(fullUrl));
   const isPdf = Boolean(fullUrl && isPdfUrl(fullUrl));
@@ -253,6 +313,7 @@ export default function MemberDetailPage() {
         url: member.loaCoe,
         isImage: false,
         emptyHint: 'No proof of student status uploaded yet.',
+        isPrivate: true,
       },
     ];
   }, [member]);
@@ -499,7 +560,7 @@ export default function MemberDetailPage() {
           >
             <div className="space-y-4">
               {uploadedFiles.map((file) => (
-                <FileCard key={file.label} file={file} />
+                <FileCard key={file.label} file={file} memberId={member?.id} />
               ))}
             </div>
           </SectionCard>

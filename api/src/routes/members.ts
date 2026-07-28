@@ -7,7 +7,8 @@ import {
   getMembersStats,
   approveMember,
   rejectMember,
-  getMemberDirectory
+  getMemberDirectory,
+  getMemberDocumentUrl
 } from '../controllers/memberController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -24,6 +25,8 @@ router.get('/directory', authenticate, getMemberDirectory);
 // Protected routes
 router.get('/', authenticate, authorize('SUPER_ADMIN'), getAllMembers);
 router.get('/:id', authenticate, getMemberById);
+// Short-lived signed URL for the member's private proof-of-studentship document.
+router.get('/:id/document-url', authenticate, authorize('SUPER_ADMIN'), getMemberDocumentUrl);
 router.put('/:id', authenticate, authorize('SUPER_ADMIN'), updateMember);
 router.patch('/:id/approve', authenticate, authorize('SUPER_ADMIN'), approveMember);
 router.patch('/:id/reject', authenticate, authorize('SUPER_ADMIN'), rejectMember);
