@@ -11,7 +11,7 @@
  * the API so the person lands on a real page instead of a JSON response.
  */
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Loader2, MailX, XCircle } from 'lucide-react';
@@ -22,7 +22,29 @@ type State =
   | { status: 'done'; email: string }
   | { status: 'error'; message: string };
 
-export default function NewsletterUnsubscribePage() {
+/** Reusable spinner card, shown both while suspended and while the request runs. */
+function ProcessingCard() {
+  return (
+    <main className="flex min-h-[70vh] items-center justify-center bg-gradient-to-b from-gray-50 to-white px-6 py-16">
+      <div className="w-full max-w-md rounded-3xl border border-gray-100 bg-white p-8 text-center shadow-lg">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        </div>
+        <h1 className="font-display text-xl font-bold text-navy">Processing…</h1>
+        <p className="mt-2 text-sm text-gray-500">
+          One moment while we update your preferences.
+        </p>
+      </div>
+    </main>
+  );
+}
+
+/**
+ * `useSearchParams()` forces this subtree to render on the client. Next.js
+ * requires it to sit inside a Suspense boundary, otherwise the whole page fails
+ * to prerender at build time — so the default export below wraps this in one.
+ */
+function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
   const token = searchParams.get('token');
@@ -131,5 +153,13 @@ export default function NewsletterUnsubscribePage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function NewsletterUnsubscribePage() {
+  return (
+    <Suspense fallback={<ProcessingCard />}>
+      <UnsubscribeContent />
+    </Suspense>
   );
 }
