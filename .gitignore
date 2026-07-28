@@ -49,5 +49,12 @@ yarn-error.log*
 .DS_Store
 *.pem
 
+# ── AI tooling / skills (not application source) ─────────────
+# These are local agent/skill directories, not part of the app.
+.claude/
+_bmad/
+.superpowers/
+.github/prompts/
+
 # ── Local backup of the pre-merge git histories (safe to delete) ─
 .git-backup/

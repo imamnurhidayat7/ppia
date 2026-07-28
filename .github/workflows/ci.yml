@@ -1,0 +1,83 @@
+name: CI
+
+# Single workflow for the consolidated monorepo. `api/` and `web/` now live in
+# one repository, so CI runs from the repo root and checks both packages.
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API - typecheck and tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+        env:
+          # The unsubscribe-token module refuses to sign with an empty key.
+          # No database or network is touched by these unit tests.
+          JWT_SECRET: ci-placeholder-secret
+
+      - name: Build
+        run: npm run build
+
+  web:
+    name: Web - typecheck, lint and tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      # `next build` is deliberately not run here.
+      #
+      # Several routes fetch from the API while rendering, so a build in CI would
+      # need a live API and database or would fail on network errors — turning an
+      # infrastructure gap into a red build on unrelated commits. Typecheck and
+      # lint catch the errors a build surfaces in this codebase; adding the build
+      # belongs together with a CI database and a stubbed API.

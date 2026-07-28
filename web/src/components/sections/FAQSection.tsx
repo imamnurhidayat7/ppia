@@ -10,6 +10,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, HelpCircle } from 'lucide-react';
 import { useLandingSection, getBlocksByType } from '@/lib/hooks/use-landing-section';
@@ -164,9 +165,15 @@ export default function FAQSection() {
 
         <p className="text-center mt-8 text-sm text-slate-400">
           More questions?{' '}
-          <a href="/contact" className="font-semibold hover:underline" style={{ color: colors.textAccent }}>
+          {/* Link, not <a>: an internal navigation with a plain anchor forces a
+              full document reload and loses the client-side transition. */}
+          <Link
+            href="/contact"
+            className="font-semibold hover:underline"
+            style={{ color: colors.textAccent }}
+          >
             Get in touch
-          </a>
+          </Link>
         </p>
       </div>
     </section>

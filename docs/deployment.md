@@ -77,8 +77,12 @@ uploads to object storage; otherwise files are lost on redeploy.
 
 ## Notes and limitations
 
-- **No automated tests or CI** are configured in the repository today; verification is
-  manual (`npm run build`, `npm run lint`, and the API's `tsc` build).
+- **CI runs on every push and pull request** to `main`, `master`, and `develop` via
+  [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). It checks both packages:
+  the API job runs `typecheck` and `test` (after generating the Prisma client); the web
+  job runs `typecheck`, `lint`, and `test`. `next build` is intentionally excluded
+  because several routes fetch from the API at render time and would need a live API and
+  database in CI. Run a production `npm run build` manually before deploying.
 - **No Dockerfiles** are included; the build steps above assume a Node runtime.
 - Scheduled-publish fields exist on content models, but confirm whether a scheduler is
   running in your environment before relying on timed publishing.

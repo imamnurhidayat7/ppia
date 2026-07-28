@@ -91,7 +91,7 @@ export function RepeaterEditor({ block, onChange }: RepeaterEditorProps) {
 
   // Read items: prefer config.items (new), fall back to content JSON (legacy)
   const config = (block.config as Record<string, any> | null) ?? {};
-  let items: Record<string, any>[] = Array.isArray(config.items)
+  const items: Record<string, any>[] = Array.isArray(config.items)
     ? (config.items as Record<string, any>[])
     : parseLegacyItems(block.content);
 
