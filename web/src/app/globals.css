@@ -1,0 +1,758 @@
+@import "tailwindcss";
+
+/*
+ * Dark mode is driven by a `.dark` class on <html> instead of the OS media
+ * query, so the dashboard can offer an explicit Light / Dark / System toggle.
+ * ThemeProvider (lib/theme-context.tsx) resolves "system" to the OS preference
+ * and applies the class, so the default behaviour matches what it used to be.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* PPIA Legacy Colors */
+  --color-navy: #1A2B4A;
+  --color-navy-dark: #0D1B33;
+  --color-ppia-red: #E8231A;
+  --color-ppia-red-dark: #C41E16;
+  --color-ppia-red-muted: #FFF0EF;
+
+  /* PPIA Dashboard Design System Colors */
+  --color-primary-50: #EEF2FF;
+  --color-primary-100: #E0E7FF;
+  --color-primary-200: #C7D2FE;
+  --color-primary-300: #A5B4FC;
+  --color-primary-400: #818CF8;
+  --color-primary-500: #6366F1;
+  --color-primary-600: #4F46E5;
+  --color-primary-700: #4338CA;
+  --color-primary-800: #3730A3;
+  --color-primary-900: #312E81;
+  --color-primary-950: #1E1B4B;
+
+  /*
+   * Semantic Colors — full 50…950 ramps.
+   * `danger`, `success` and `warning` are not part of Tailwind's default
+   * palette, so only the shades declared here produce CSS. The dashboard used
+   * danger-200 / danger-900 / success-900 and friends, which silently rendered
+   * as no colour at all until the missing steps were filled in.
+   */
+  --color-success-50: #ECFDF5;
+  --color-success-100: #D1FAE5;
+  --color-success-200: #A7F3D0;
+  --color-success-300: #6EE7B7;
+  --color-success-400: #34D399;
+  --color-success-500: #10B981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+  --color-success-800: #065F46;
+  --color-success-900: #064E3B;
+  --color-success-950: #022C22;
+
+  --color-warning-50: #FFFBEB;
+  --color-warning-100: #FEF3C7;
+  --color-warning-200: #FDE68A;
+  --color-warning-300: #FCD34D;
+  --color-warning-400: #FBBF24;
+  --color-warning-500: #F59E0B;
+  --color-warning-600: #D97706;
+  --color-warning-700: #B45309;
+  --color-warning-800: #92400E;
+  --color-warning-900: #78350F;
+  --color-warning-950: #451A03;
+
+  --color-danger-50: #FFF1F2;
+  --color-danger-100: #FFE4E6;
+  --color-danger-200: #FECDD3;
+  --color-danger-300: #FDA4AF;
+  --color-danger-400: #FB7185;
+  --color-danger-500: #F43F5E;
+  --color-danger-600: #E11D48;
+  --color-danger-700: #BE123C;
+  --color-danger-800: #9F1239;
+  --color-danger-900: #881337;
+  --color-danger-950: #4C0519;
+
+  /* Neutral / Slate */
+  --color-slate-50: #F8FAFC;
+  --color-slate-100: #F1F5F9;
+  --color-slate-200: #E2E8F0;
+  --color-slate-300: #CBD5E1;
+  --color-slate-400: #94A3B8;
+  --color-slate-500: #64748B;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1E293B;
+  --color-slate-900: #0F172A;
+  --color-slate-950: #020617;
+
+  /*
+   * Fonts — these must point at the families next/font actually loads.
+   * next/font generates hashed family names exposed through --font-inter and
+   * --font-poppins, so the previous literal "Plus Jakarta Sans"/"Inter"/"Poppins"
+   * names never matched anything and body copy silently fell back to system-ui
+   * while headings using var(--font-poppins) inline did render Poppins. That
+   * mismatch is why type looked different from page to page.
+   */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-poppins), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.3);
+  --shadow-glow-lg: 0 0 40px rgba(79, 70, 229, 0.4);
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * Headings default to the display face so pages do not have to opt in with
+ * inline styles. Add `font-sans` on a heading to override.
+ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* PPIA Legacy Styles */
+.mesh-gradient {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(232, 35, 26, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(26, 43, 74, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 85%, rgba(120, 0, 160, 0.12) 0%, transparent 55%),
+    #0D1B33;
+}
+
+.glow-red {
+  box-shadow: 0 0 30px rgba(232, 35, 26, 0.45), 0 0 70px rgba(232, 35, 26, 0.12);
+}
+
+.glow-text {
+  text-shadow: 0 0 40px rgba(232, 35, 26, 0.55);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Skip to content link for accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #E8231A;
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #E8231A 0%, #FF6B6B 50%, #E8231A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+}
+
+/*
+ * Animated variant for the hero headline. The gradient is wider than the text
+ * and slides, which reads as a slow shimmer rather than a colour cycle.
+ */
+.gradient-text-animated {
+  background: linear-gradient(
+    100deg,
+    #E8231A 0%,
+    #FF8A5B 22%,
+    #FFD166 40%,
+    #FF6B6B 60%,
+    #E8231A 82%,
+    #FF8A5B 100%
+  );
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 7s ease-in-out infinite;
+}
+
+@keyframes gradient-pan {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-text-animated {
+    animation: none;
+  }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* React Day Picker Custom Styles */
+.rdp {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: #E8231A;
+  --rdp-background-color: #FFF0EF;
+  margin: 0;
+}
+
+.rdp-root {
+  color: #1A2B4A;
+}
+
+.rdp-months {
+  justify-content: center;
+}
+
+.rdp-month {
+  width: 100%;
+}
+
+.rdp-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 16px 0;
+}
+
+.rdp-caption_label {
+  font-weight: 600;
+  font-size: 16px;
+  color: #1A2B4A;
+}
+
+.rdp-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.rdp-nav_button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748B;
+  transition: all 0.2s;
+}
+
+.rdp-nav_button:hover {
+  background: #F1F5F9;
+  color: #1A2B4A;
+}
+
+.rdp-nav_button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.rdp-head_cell {
+  font-weight: 500;
+  font-size: 12px;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: 8px;
+}
+
+.rdp-row {
+  margin-top: 0;
+}
+
+.rdp-cell {
+  padding: 2px;
+}
+
+.rdp-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A2B4A;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rdp-day:hover:not(.rdp-day_selected):not(.rdp-day_disabled) {
+  background: #F1F5F9;
+}
+
+.rdp-day_today:not(.rdp-day_selected) {
+  background: #FEF3C7;
+  font-weight: 700;
+}
+
+.rdp-day_selected {
+  background: #E8231A !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+.rdp-day_selected:hover {
+  background: #C41E16 !important;
+}
+
+.rdp-day_outside {
+  color: #CBD5E1;
+  opacity: 0.5;
+}
+
+.rdp-day_disabled {
+  color: #CBD5E1;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.rdp-day_range_middle {
+  background: #FFF0EF !important;
+  color: #E8231A !important;
+  border-radius: 0 !important;
+}
+
+.rdp-day_range_start {
+  border-radius: 10px 0 0 10px !important;
+}
+
+.rdp-day_range_end {
+  border-radius: 0 10px 10px 0 !important;
+}
+
+/* Dashboard Design System */
+.card-hover {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #475569;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar-item:hover {
+  background-color: #EEF2FF;
+  color: #4338CA;
+}
+.sidebar-item.active {
+  background-color: #EEF2FF;
+  color: #4338CA;
+  border-left: 3px solid #4F46E5;
+  margin-left: -3px;
+}
+
+.stats-card {
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.stats-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.skeleton {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background-color: #E2E8F0;
+  border-radius: 4px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.badge-primary { background-color: #E0E7FF; color: #4338CA; }
+.badge-success { background-color: #ECFDF5; color: #047857; }
+.badge-warning { background-color: #FFFBEB; color: #D97706; }
+.badge-danger { background-color: #FFF1F2; color: #BE123C; }
+.badge-slate { background-color: #F1F5F9; color: #334155; }
+
+/*
+ * Form field base — declared inside `@layer components` on purpose.
+ *
+ * `@import "tailwindcss"` puts every utility in `@layer utilities`. A rule
+ * written outside any layer beats layered rules regardless of source order or
+ * specificity, so while `.input-base` sat unlayered it silently overrode every
+ * utility placed alongside it:
+ *
+ *   `input-base pl-9`      → padding-left ignored, so the icon inside the field
+ *                            overlapped its own placeholder text.
+ *   `input-base lg:w-48`   → width:100% won, so a filter <select> claimed the
+ *                            whole toolbar row and the search field next to it
+ *                            collapsed to zero width, leaving only its floating
+ *                            icon painted over the select.
+ *
+ * Inside `components`, utilities win again, which is what callers expect.
+ */
+@layer components {
+  .input-base {
+    width: 100%;
+    padding: 10px 12px;
+    background-color: white;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    color: #0F172A;
+    font-size: 14px;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Room for an icon sitting inside the field. */
+  .input-base.input-with-icon { padding-left: 36px; }
+
+  .input-base::placeholder { color: #94A3B8; }
+  .input-base:focus {
+    outline: none;
+    /* Brand red, matching every other focus and accent treatment. The previous
+       indigo was the only place it appeared and read as a second brand colour. */
+    border-color: #E8231A;
+    box-shadow: 0 0 0 3px rgba(232, 35, 26, 0.15);
+  }
+  .input-base:disabled { background-color: #F1F5F9; cursor: not-allowed; }
+  .input-error { border-color: #F43F5E; }
+  .input-error:focus { border-color: #F43F5E; box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2); }
+}
+
+.card {
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.card-interactive {
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.card-interactive:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.table-header {
+  background-color: #F8FAFC;
+  font-size: 12px;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.table-row { border-bottom: 1px solid #F1F5F9; transition: background-color 150ms; }
+.table-row:hover { background-color: rgba(248, 250, 252, 0.5); }
+.table-cell { padding: 12px 16px; font-size: 14px; color: #334155; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+}
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  z-index: 50;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E2E8F0;
+}
+
+.ppia-command-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20vh;
+}
+.ppia-command-dialog {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  border: 1px solid #E2E8F0;
+  width: 100%;
+  max-width: 36rem;
+  overflow: hidden;
+}
+
+.avatar-xs { width: 24px; height: 24px; font-size: 10px; }
+.avatar-sm { width: 32px; height: 32px; font-size: 12px; }
+.avatar-md { width: 40px; height: 40px; font-size: 14px; }
+.avatar-lg { width: 48px; height: 48px; font-size: 16px; }
+.avatar-xl { width: 64px; height: 64px; font-size: 18px; }
+.avatar-2xl { width: 80px; height: 80px; font-size: 20px; }
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes slide-in-right { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes check-bounce { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+.animate-fade-in { animation: fade-in 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-fade-in-up { animation: fade-in-up 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-scale-in { animation: scale-in 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-slide-in-right { animation: slide-in-right 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-check-bounce { animation: check-bounce 0.3s ease-out forwards; }
+.animate-marquee { animation: marquee 30s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+}
+
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+
+/* Dark Mode Support — driven by the `.dark` class set by ThemeProvider */
+.dark {
+  color-scheme: dark;
+}
+
+/* Form inputs — layered alongside `.input-base` so utilities still win. */
+@layer components {
+  .dark .input-base {
+    background-color: #1E293B;
+    border-color: #334155;
+    color: #F1F5F9;
+  }
+  .dark .input-base::placeholder { color: #64748B; }
+}
+.dark .input-base:disabled { background-color: #334155; }
+.dark .input-base:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Cards */
+.dark .card {
+  background-color: #1E293B;
+  border-color: #334155;
+}
+
+/* Stats cards */
+.dark .stats-card {
+  background-color: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Table cells */
+.dark .table-cell { color: #CBD5E1; }
+
+/* Sidebar items */
+.dark .sidebar-item { color: #94A3B8; }
+.dark .sidebar-item:hover {
+  background-color: rgba(99, 102, 241, 0.15);
+  color: #A5B4FC;
+}
+.dark .sidebar-item.active {
+  background-color: rgba(99, 102, 241, 0.2);
+  color: #C7D2FE;
+}
+
+/* Skeleton */
+.dark .skeleton { background-color: #334155; }
+
+/* Modal / command dialog surfaces */
+.dark .modal-content,
+.dark .ppia-command-dialog {
+  background-color: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4), 0 10px 10px rgba(0, 0, 0, 0.3);
+}
+.dark .toast {
+  background-color: #1E293B;
+  border-color: #334155;
+}
+
+/*
+ * Light Mode Overrides — the brand navy must survive on public pages that also
+ * carry a `dark:` background utility. Scoped to :not(.dark) so it keeps the
+ * exact behaviour of the old `@media (prefers-color-scheme: light)` rule.
+ */
+html:not(.dark) .bg-\[\#0D1B33\] {
+  background-color: #0D1B33 !important;
+}
+
+/* Dashboard shell helpers */
+.dashboard-nav-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.dashboard-nav-scroll::-webkit-scrollbar { width: 6px; }
+.dashboard-nav-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+/* Subtle dotted texture used behind dashboard hero panels */
+.dashboard-grid-texture {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.55) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.55) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Consistent scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #E8231A;
+  outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+  nav, footer, .no-print { display: none !important; }
+  body { background: white !important; color: black !important; font-size: 12pt; }
+  .mesh-gradient { background: white !important; }
+  section, .bg-\[\#0D1B33\], .bg-\[\#1A2B4A\] { background: white !important; }
+  .text-white, .text-\[\#94A3B8\], .text-\[\#64748B\] { color: black !important; }
+  .gradient-text { background: none !important; -webkit-text-fill-color: black !important; color: black !important; }
+  .page-break { page-break-after: always; }
+  .avoid-break { page-break-inside: avoid; }
+  a { text-decoration: underline; }
+  a[href]:after { content: " (" attr(href) ")"; font-size: 10pt; }
+  a[href^="/"]:after, a[href^="#"]:after { content: ""; }
+  img { max-width: 100% !important; page-break-inside: avoid; }
+  table { page-break-inside: avoid; }
+  .shadow-lg, .shadow-xl, .shadow-2xl { box-shadow: none !important; }
+  button, .btn { display: none !important; }
+  section { padding: 20pt 0 !important; }
+  .print-only { display: block !important; }
+}
+
+/* Wiki PPIA CMS content rendering */
+.wiki-content ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+.wiki-content ol { list-style: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
+.wiki-content li { margin: 0.25rem 0; }
+.wiki-content strong { color: #1A2B4A; font-weight: 600; }
+.wiki-content p { margin: 0.5rem 0; }
+.wiki-content a { color: #3B82F6; text-decoration: underline; }
+.wiki-content h4 { font-weight: 600; color: #1A2B4A; margin: 0.5rem 0; }

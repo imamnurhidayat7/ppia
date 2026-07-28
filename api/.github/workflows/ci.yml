@@ -1,0 +1,53 @@
+name: CI
+
+# Lives inside the api repository because `api/` and `web/` are separate git
+# repositories — a workflow in the parent directory would never be picked up,
+# since that directory is not tracked by either one.
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+# A new push to the same branch cancels the previous run; there is no value in
+# finishing a check for a commit that has already been replaced.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, tests and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The Prisma client is generated code the TypeScript build imports, so it
+      # must exist before the typecheck. No database is contacted by `generate`.
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      # Uses tsconfig.test.json, which is tsconfig.json plus the test files —
+      # the build config excludes them so they do not ship in dist.
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Unit tests over pure functions: no database, no network, no .env.
+      # JWT_SECRET is set only because the unsubscribe-token module refuses to
+      # sign with an empty key.
+      - name: Tests
+        run: npm test
+        env:
+          JWT_SECRET: ci-placeholder-secret
+
+      - name: Build
+        run: npm run build

@@ -1,0 +1,16 @@
+{
+  // Test files are excluded from the build so they do not end up in dist, but
+  // they still need typechecking — otherwise a test could reference a function
+  // that no longer exists and nothing would notice until it ran.
+  //
+  // `noEmit` because this config exists only to check types.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

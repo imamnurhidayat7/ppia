@@ -1,0 +1,24 @@
+{
+  "name": "ppia-auckland",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd api && npm run dev",
+    "dev:web": "cd web && npm run dev",
+    "install:all": "npm install && cd api && npm install && cd ../web && npm install",
+    "build": "cd web && npm run build",
+    "start": "concurrently \"npm run start:api\" \"npm run start:web\"",
+    "start:api": "cd api && npm start",
+    "start:web": "cd web && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@auth/core": "^0.34.3",
+    "@tanstack/react-query": "^5.101.2",
+    "framer-motion": "^12.42.2",
+    "sonner": "^2.0.7"
+  }
+}

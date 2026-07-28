@@ -1,0 +1,663 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Article {
+  id                   String    @id @default(cuid())
+  title                String
+  slug                 String    @unique
+  excerpt              String?
+  content              Json
+  imageUrl             String?
+  divisionId           String?
+  published            Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  authorId             String
+  category             String    @default("News")
+  likes                Int       @default(0)
+  scheduledPublishAt   DateTime?
+  scheduledUnpublishAt DateTime?
+  views                Int       @default(0)
+  // New professional fields
+  isFeatured           Boolean   @default(false)
+  featuredOrder        Int?
+  readingTime          Int       @default(0)
+  metaTitle            String?
+  metaDescription      String?
+  metaKeywords         String?
+  User                 User      @relation(fields: [authorId], references: [id])
+  Division             Division? @relation(fields: [divisionId], references: [id])
+  Comment              Comment[]
+  Bookmark             Bookmark[]
+  tags                 Tag[]     @relation("ArticleTags")
+}
+
+/// A member saving an article to read again later.
+///
+/// Modelled as its own table rather than an array on either side so the save
+/// time is recorded and the reading list can be ordered by when it was saved.
+/// The unique pair is what makes saving idempotent: a second save is a conflict
+/// the API turns into a no-op rather than a duplicate row.
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([userId, createdAt])
+}
+
+/// An in-app notification addressed to one member.
+///
+/// Persisted rather than derived so that "read" survives a page reload and the
+/// history remains after the event that caused it has passed. `readAt` doubles
+/// as the flag and the timestamp — a nullable date carries strictly more
+/// information than a boolean and cannot disagree with itself.
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String?
+  /// In-app destination, e.g. /dashboard/articles/some-slug. Relative by
+  /// convention so a notification stays valid across environments.
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  User      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+}
+
+model Candidate {
+  id              String          @id @default(cuid())
+  electionId      String
+  userId          String
+  vision          String          @db.Text
+  mission         String          @db.Text
+  experience      String?         @db.Text
+  program         String?         @db.Text
+  slogan          String?
+  posterUrl       String?
+  status          CandidateStatus @default(PENDING)
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectionReason String?         @db.Text
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  election        Election        @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id])
+  votes           Vote[]
+
+  @@unique([electionId, userId])
+  @@index([status])
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  content    String
+  articleId  String?
+  researchId String?
+  userId     String?
+  userName   String
+  userEmail  String
+  parentId   String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  isHidden   Boolean   @default(false)
+  Article    Article?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  Research   Research? @relation(fields: [researchId], references: [id], onDelete: Cascade)
+  User       User?     @relation(fields: [userId], references: [id])
+  Comment    Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
+  replies    Comment[] @relation("CommentToComment")
+}
+
+model Division {
+  id                                String     @id @default(cuid())
+  name                              String
+  slug                              String     @unique
+  description                       String?
+  color                             String?
+  order                             Int        @default(0)
+  isActive                          Boolean    @default(true)
+  createdAt                         DateTime   @default(now())
+  updatedAt                         DateTime   @updatedAt
+  coordinatorId                     String?    @unique
+  Article                           Article[]
+  User_Division_coordinatorIdToUser User?      @relation("Division_coordinatorIdToUser", fields: [coordinatorId], references: [id])
+  Event                             Event[]
+  Research                          Research[]
+  members                           User[]     @relation("User_divisionIdToDivision")
+}
+
+model Election {
+  id                String         @id @default(cuid())
+  title             String
+  description       String?        @db.Text
+  registrationStart DateTime
+  registrationEnd   DateTime
+  campaignStart     DateTime
+  campaignEnd       DateTime
+  votingStart       DateTime
+  votingEnd         DateTime
+  status            ElectionStatus @default(UPCOMING)
+  createdBy         String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  candidates        Candidate[]
+  votes             Vote[]
+  creator           User           @relation("ElectionCreator", fields: [createdBy], references: [id])
+
+  @@index([status])
+  @@index([votingStart])
+}
+
+model Event {
+  id                   String               @id @default(cuid())
+  title                String
+  slug                 String               @unique
+  description          String
+  content              Json?
+  imageUrl             String?
+  startDate            DateTime
+  endDate              DateTime?
+  location             String?
+  divisionId           String?
+  published            Boolean              @default(false)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  authorId             String
+  capacity             Int?
+  isFree               Boolean              @default(true)
+  registrationDeadline DateTime?
+  scheduledPublishAt   DateTime?
+  scheduledUnpublishAt DateTime?
+  User                 User                 @relation(fields: [authorId], references: [id])
+  Division             Division?            @relation(fields: [divisionId], references: [id])
+  EventDocumentation   EventDocumentation[]
+  EventRegistration    EventRegistration[]
+}
+
+model EventDocumentation {
+  id          String            @id @default(cuid())
+  eventId     String
+  type        DocumentationType
+  url         String
+  title       String?
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  Event       Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model EventRegistration {
+  id           String             @id @default(cuid())
+  eventId      String
+  userId       String
+  status       RegistrationStatus @default(REGISTERED)
+  registeredAt DateTime           @default(now())
+  checkedInAt  DateTime?
+  Event        Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  User         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  mimetype  String
+  size      Int
+  createdAt DateTime @default(now())
+  altText   String?
+  folder    String?
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  isActive       Boolean   @default(true)
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+}
+
+model Page {
+  id              String      @id @default(cuid())
+  title           String
+  slug            String      @unique
+  content         Json        // Legacy raw content (kept for backward compat)
+  excerpt         String?     // Short description for SEO & previews
+  metaTitle       String?     // SEO meta title
+  metaDescription String?     // SEO meta description
+  featuredImage   String?     // Hero/banner image URL
+  pageType        String      @default("standard") // standard | landing | custom (legacy)
+  template        String      @default("default") // default | landing | cabinet | timeline | event_list | division_grid
+  published       Boolean     @default(false)
+  authorId        String
+  User            User        @relation(fields: [authorId], references: [id])
+  blocks          PageBlock[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([published])
+  @@index([pageType])
+  @@index([template])
+}
+
+model PageBlock {
+  id          String   @id @default(cuid())
+  pageId      String
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type        BlockType
+  title       String?
+  titleId     String?  // Indonesian
+  subtitle    String?
+  subtitleId  String?  // Indonesian
+  content     String?
+  contentId   String?  // Indonesian HTML content
+  linkUrl     String?
+  linkText    String?
+  linkTextId  String?
+  imageUrl    String?
+  iconName    String?  // Lucide icon name
+  color       String?  // Hex color
+  order       Int      @default(0)
+  config      Json?    // Additional block-specific configuration
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([pageId, order])
+}
+
+// Landing Page CMS Models
+model LandingSection {
+  id          String         @id @default(cuid())
+  key         String         @unique  // "hero", "about", "video", "events", "articles", "membership"
+  title       String?
+  titleId     String?        // Indonesian title
+  subtitle    String?
+  subtitleId  String?        // Indonesian subtitle
+  description String?
+  descriptionId String?      // Indonesian description
+  enabled     Boolean        @default(true)
+  order       Int            @default(0)
+  config      Json?          // Section-specific configuration
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  blocks      SectionBlock[]
+
+  @@index([key])
+  @@index([order])
+}
+
+model SectionBlock {
+  id          String         @id @default(cuid())
+  sectionId   String
+  section     LandingSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  type        BlockType
+  title       String?
+  titleId     String?        // Indonesian
+  subtitle    String?
+  subtitleId  String?        // Indonesian
+  content     String?
+  contentId   String?        // Indonesian HTML content
+  linkUrl     String?
+  linkText    String?
+  linkTextId  String?
+  imageUrl    String?
+  iconName    String?        // Lucide icon name
+  color       String?        // Hex color
+  order       Int            @default(0)
+  config      Json?          // Additional block-specific configuration
+  enabled     Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([sectionId, order])
+}
+
+enum BlockType {
+  TEXT
+  IMAGE
+  VIDEO
+  CTA_BUTTON
+  STATISTIC
+  FEATURE
+  ARTICLE_CARD
+  EVENT_CARD
+  MEMBER_CARD
+  SOCIAL_LINK
+  NEWSLETTER_FORM
+  HERO
+  GALLERY
+  DIVIDER
+  SPACER
+  CODE
+  QUOTE
+  HEADING
+  COLUMNS
+  TIMELINE
+  TEAM
+  TABLE
+  CONTACT
+  COUNTDOWN
+  SPONSOR
+  FAQ
+  MAP
+}
+
+// Menu Configuration
+model MenuItem {
+  id          String       @id @default(cuid())
+  key         String       @unique  // "header_main", "header_right", "footer_about", "footer_activities", "footer_quicklinks"
+  items       Json         // Array of menu items with hierarchy
+  enabled     Boolean      @default(true)
+  updatedAt   DateTime     @updatedAt
+
+  @@index([key])
+}
+
+// Header/Footer Configuration
+model SiteConfig {
+  id          String       @id @default(cuid())
+  key         String       @unique  // "header", "footer", "social"
+  config      Json         // Configuration data
+  updatedAt   DateTime     @updatedAt
+
+  @@index([key])
+}
+
+model Research {
+  id                 String             @id @default(cuid())
+  title              String
+  titleIndonesian    String?
+  slug               String             @unique
+  abstract           String
+  abstractIndonesian String?
+  researchType       ResearchType       @default(RESEARCH_PROJECT)
+  researchStatus     ResearchStatus     @default(DRAFT)
+  authors            String
+  mainAuthorId       String?
+  publicationDate    DateTime?
+  venue              String?
+  venueDate          String?
+  volume             String?
+  issue              String?
+  pages              String?
+  doi                String?
+  issn               String?
+  isbn               String?
+  url                String?
+  keywords           String?
+  citationFormat     String?
+  citationText       String?
+  generatedCitation  String?
+  pdfUrl             String?
+  pdfSize            Int?
+  imageUrl           String?
+  supplementalFiles  Json?
+  divisionId         String?
+  downloadCount      Int                @default(0)
+  viewCount          Int                @default(0)
+  citationsCount     Int                @default(0)
+  published          Boolean            @default(false)
+  featuredOrder      Int?
+  metaTitle          String?
+  metaDescription    String?
+  metaKeywords       String?
+  scheduledPublishAt DateTime?
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  reviewComments     String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  Division           Division?          @relation(fields: [divisionId], references: [id])
+  mainAuthor         User?              @relation(fields: [mainAuthorId], references: [id])
+  Comment            Comment[]
+  downloads          ResearchDownload[]
+  tags               Tag[]              @relation("ResearchTags")
+}
+
+model ResearchDownload {
+  id           String   @id @default(cuid())
+  researchId   String
+  userId       String?
+  ipAddress    String?
+  userAgent    String?
+  downloadedAt DateTime @default(now())
+  Research     Research @relation(fields: [researchId], references: [id], onDelete: Cascade)
+  User         User?    @relation(fields: [userId], references: [id])
+
+  @@index([researchId])
+  @@index([userId])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  color       String?
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  articles    Article[]  @relation("ArticleTags")
+  researches  Research[] @relation("ResearchTags")
+}
+
+model User {
+  id                                    String              @id @default(cuid())
+  email                                 String              @unique
+  password                              String
+  username                              String              @unique
+  name                                  String
+  role                                  Role                @default(MEMBER)
+  position                              Position?
+  divisionId                            String?
+  avatar                                String?
+  personalEmail                         String?             @unique
+  firstName                             String?
+  lastName                              String?
+  phone                                 String?
+  studentId                             String?
+  university                            String?
+  universityEmail                       String?             @unique
+  upi                                   String?
+  degree                                Degree?
+  major                                 String?
+  graduationDate                        DateTime?
+  funding                               Funding?
+  loaCoe                                String?
+  consent                               Boolean             @default(false)
+  confirmation                          Boolean             @default(false)
+  createdAt                             DateTime            @default(now())
+  updatedAt                             DateTime            @updatedAt
+  bio                                   String?
+  instagram                             String?
+  isVerified                            Boolean             @default(false)
+  linkedIn                              String?
+  memberCardUrl                         String?
+  resetToken                            String?
+  resetTokenExpiry                      DateTime?
+  twitter                               String?
+  verificationExpiry                    DateTime?
+  verificationToken                     String?
+  membershipStatus                      MembershipStatus    @default(APPROVED)
+  approvedAt                            DateTime?
+  approvedBy                            String?
+  rejectionReason                       String?
+  Article                               Article[]
+  AuditLog                              AuditLog[]
+  Bookmark                              Bookmark[]
+  Notification                          Notification[]
+  Comment                               Comment[]
+  Division_Division_coordinatorIdToUser Division?           @relation("Division_coordinatorIdToUser")
+  Event                                 Event[]
+  EventRegistration                     EventRegistration[]
+  Page                                  Page[]
+  division                              Division?           @relation("User_divisionIdToDivision", fields: [divisionId], references: [id])
+  Research                              Research[]
+  ResearchDownload                      ResearchDownload[]
+  candidates                            Candidate[]
+  votes                                 Vote[]
+  electionsCreated                      Election[]          @relation("ElectionCreator")
+}
+
+model Vote {
+  id          String    @id @default(cuid())
+  electionId  String
+  candidateId String
+  voterId     String
+  votedAt     DateTime  @default(now())
+  election    Election  @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  voter       User      @relation(fields: [voterId], references: [id])
+
+  @@unique([electionId, voterId])
+  @@index([electionId])
+  @@index([candidateId])
+}
+
+enum Degree {
+  BACHELOR
+  MASTER
+  DOCTORATE
+  NON_DEGREE
+}
+
+enum DocumentationType {
+  PHOTO
+  VIDEO
+  LINK
+}
+
+enum Funding {
+  LPDP
+  SELF_FUNDED
+  SCHOLARSHIP
+  OTHER
+}
+
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Position {
+  PRESIDENT
+  VICE_PRESIDENT
+  SECRETARY
+  TREASURER
+  COORDINATOR
+  MEMBER
+}
+
+/// Why a notification exists. Kept coarse on purpose: the type drives the icon
+/// and grouping, while the specifics live in `title` and `body`.
+enum NotificationType {
+  COMMENT_REPLY
+  ARTICLE_PUBLISHED
+  EVENT_REMINDER
+  EVENT_REGISTRATION
+  MEMBERSHIP_APPROVED
+  MEMBERSHIP_REJECTED
+  SYSTEM
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  CANCELLED
+  WAITLISTED
+  ATTENDED
+  NO_SHOW
+}
+
+enum ElectionStatus {
+  UPCOMING
+  REGISTRATION
+  CAMPAIGN
+  VOTING
+  CLOSED
+  PUBLISHED
+}
+
+enum CandidateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum ResearchStatus {
+  DRAFT
+  PENDING_REVIEW
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+enum ResearchType {
+  ACADEMIC_PAPER
+  THESIS
+  DISSERTATION
+  RESEARCH_PROJECT
+  PUBLICATION
+  CONFERENCE_PAPER
+  JOURNAL_ARTICLE
+}
+
+enum Role {
+  SUPER_ADMIN
+  BOARD
+  MEMBER
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  VERIFIED
+  PENDING
+}
+
+model Faq {
+  id        Int      @id @default(autoincrement())
+  question  String
+  answer    String
+  category  String?
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,47 @@
+name: CI
+
+# Lives inside the web repository because `api/` and `web/` are separate git
+# repositories — a workflow in the parent directory would never be picked up,
+# since that directory is not tracked by either one.
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, lint and tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      # `next build` is deliberately not run here.
+      #
+      # Several routes fetch from the API while rendering, so a build in CI would
+      # need a live API and database or would fail on network errors — turning an
+      # infrastructure gap into a red build on unrelated commits. Typecheck and
+      # lint catch the errors a build surfaces in this codebase; adding the build
+      # belongs together with a CI database and a stubbed API.
