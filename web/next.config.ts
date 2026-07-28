@@ -63,6 +63,8 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       ...apiImagePatterns(),
+      // Supabase Storage public objects (any project ref under supabase.co).
+      { protocol: "https", hostname: "**.supabase.co", pathname: "/storage/v1/object/public/**" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
       { protocol: "https", hostname: "picsum.photos" },

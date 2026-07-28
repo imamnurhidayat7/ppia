@@ -73,13 +73,19 @@ app.use(securityHeaders)
  * a custom domain). Hard-coding only localhost meant a deployed frontend would
  * be refused by the browser.
  */
+// Browsers send the Origin header without a trailing slash or path
+// (e.g. `https://app.example.com`), but an operator setting FRONTEND_URL /
+// CORS_ORIGINS may include one (`https://app.example.com/`). Normalise both
+// sides so a stray slash does not silently block every browser request.
+const normaliseOrigin = (value: string) => value.trim().replace(/\/+$/, '')
+
 const allowedOrigins = Array.from(
   new Set(
     [
       'http://localhost:3000',
       'http://localhost:3001',
-      (process.env.FRONTEND_URL || '').split('#')[0].trim(),
-      ...(process.env.CORS_ORIGINS || '').split('#')[0].split(',').map((value) => value.trim()),
+      normaliseOrigin((process.env.FRONTEND_URL || '').split('#')[0]),
+      ...(process.env.CORS_ORIGINS || '').split('#')[0].split(',').map(normaliseOrigin),
     ].filter(Boolean)
   )
 )
@@ -88,7 +94,7 @@ app.use(cors({
   origin: (origin, callback) => {
     // Requests without an Origin header are not browser cross-origin requests
     // (curl, server-to-server, same-origin navigation) and are left alone.
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(normaliseOrigin(origin))) {
       callback(null, true)
       return
     }

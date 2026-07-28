@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { uploadPublicObject, isStorageConfigured } from '../lib/storage';
 
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
 
@@ -139,8 +140,10 @@ function discard(filePath: string) {
   }
 }
 
+// Images are held in memory so the buffer can be signature-checked and streamed
+// straight to Supabase Storage — nothing touches the local disk.
 export const upload = multer({
-  storage: makeStorage(IMAGE_TYPES),
+  storage: multer.memoryStorage(),
   fileFilter: makeFilter(IMAGE_TYPES, 'Only image files (JPEG, PNG, GIF, WebP) are allowed'),
   limits: { fileSize: 10 * 1024 * 1024, files: 1 },
 });
@@ -174,10 +177,42 @@ function respond(req: Request, res: Response, types: Record<string, FileType>): 
 
 export const uploadFile = async (req: Request, res: Response): Promise<void> => {
   try {
-    respond(req, res, IMAGE_TYPES);
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    const type = IMAGE_TYPES[req.file.mimetype];
+    if (!type) {
+      res.status(400).json({ error: 'Unsupported file type' });
+      return;
+    }
+
+    // Same magic-byte check as before, now against the in-memory buffer: the
+    // declared MIME must actually match the leading bytes.
+    const head = req.file.buffer.subarray(0, HEAD_BYTES);
+    if (!type.matches(head)) {
+      res.status(400).json({ error: 'File contents do not match its declared type' });
+      return;
+    }
+
+    if (!isStorageConfigured()) {
+      console.error('Upload rejected: Supabase Storage env vars are not set.');
+      res.status(500).json({ error: 'File storage is not configured on the server' });
+      return;
+    }
+
+    const objectName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${type.ext}`;
+    const publicUrl = await uploadPublicObject(objectName, req.file.buffer, req.file.mimetype);
+
+    res.json({
+      url: publicUrl,
+      filename: objectName,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
   } catch (error) {
     console.error('Upload error:', error);
-    if (req.file) discard(req.file.path);
     res.status(500).json({ error: 'Failed to upload file' });
   }
 };
