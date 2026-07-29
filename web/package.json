@@ -40,9 +40,11 @@
     "react-dom": "19.2.4",
     "sharp": "^0.35.3"
   },
+  "//overrides.jsdom": "Pinned below isomorphic-dompurify's declared ^27 on purpose. jsdom 27 pulls html-encoding-sniffer@6, which reaches @exodus/bytes — an ESM-only package — through a CommonJS require(). Next externalises jsdom from the server bundle, so that require() runs at request time and throws ERR_REQUIRE_ESM on any Node older than 22.12, taking down every server-rendered route while prerendered pages kept working. jsdom 26 uses html-encoding-sniffer@4, whose only dependency (whatwg-encoding) is CommonJS, so the failure cannot happen regardless of the host's Node version. jsdom is only here to give DOMPurify a DOM to parse into; the API used (new JSDOM('').window) is unchanged between 26 and 27.",
   "overrides": {
     "postcss": "^8.5.24",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "jsdom": "^26.1.0"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.2.10",
