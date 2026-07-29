@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
+import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import { Users, Megaphone, Globe, ChevronRight, CheckCircle, Mail, ArrowRight, Sparkles, GraduationCap, Heart } from "lucide-react";
 import api from "@/lib/api";
 
@@ -106,7 +107,7 @@ export default function PartnershipPage() {
     }).catch(() => undefined);
   }, []);
 
-  if (!content) return null;
+  if (!content) return <PublicPageSkeleton />;
   const activeBenefits = content.benefits;
   const activeTiers = content.tiers;
   const activePartners = content.currentPartners;

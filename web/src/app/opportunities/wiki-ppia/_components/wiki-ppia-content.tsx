@@ -32,6 +32,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback, createElement } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
+import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import { api } from "@/lib/api";
 import {
   ArrowRight,
@@ -494,7 +495,7 @@ export default function WikiPPIAPage() {
 
   const collapseAll = useCallback(() => setOpenItems({}), []);
 
-  if (!content) return null;
+  if (!content) return <PublicPageSkeleton />;
 
   const meta = content.meta ?? {};
   const contactEmail = meta.contactEmail || "ppiauckland@gmail.com";

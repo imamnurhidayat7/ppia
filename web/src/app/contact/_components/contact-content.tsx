@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
+import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import api from "@/lib/api";
 import RichText from "@/components/RichText";
 import {
@@ -202,7 +203,7 @@ export default function ContactPage() {
       .catch(() => undefined);
   }, []);
 
-  if (!content) return null;
+  if (!content) return <PublicPageSkeleton />;
 
   const activeChannels = cmsChannels ?? [];
   const activeFaqs = cmsFaqs ?? [];

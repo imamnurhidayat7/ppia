@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
+import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import { ExternalLink, ChevronRight, Star, CheckCircle, Globe, BookOpen, DollarSign } from "lucide-react";
 import api from "@/lib/api";
 import { toScholarshipContent, type ScholarshipContent } from "@/lib/scholarship-content";
@@ -142,7 +143,7 @@ export default function ScholarshipPage() {
       });
   }, []);
 
-  if (!content) return null;
+  if (!content) return <PublicPageSkeleton />;
 
   const activeScholarships = cmsScholarships ?? [];
   const activeTips = cmsTips ?? applicationTips;

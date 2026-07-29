@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
+import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import { Download, BookOpen, Calendar, Archive, FileText, Filter, ArrowRight } from "lucide-react";
 import api from "@/lib/api";
 
@@ -53,7 +54,7 @@ export default function HistoricalArchivePage() {
     return [ALL_YEARS, ...uniqueYears];
   }, [content]);
 
-  if (!content) return null;
+  if (!content) return <PublicPageSkeleton />;
   const { header, timelineSection, cta, documents, milestones } = content;
   const filteredMilestones = selectedYear === ALL_YEARS
     ? milestones

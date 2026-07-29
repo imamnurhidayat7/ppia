@@ -28,6 +28,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
+import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import { Mail, Users } from "lucide-react";
 import api from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
@@ -534,7 +535,7 @@ export default function CabinetPage() {
     return buckets.filter((bucket) => bucket.items.length > 0);
   }, [content, divisions]);
 
-  if (!content) return null;
+  if (!content) return <PublicPageSkeleton />;
 
   const allLeaders = (content.leaders ?? []).filter(hasPerson) as Leader[];
   const chairs = allLeaders.filter((l) => l.tier === 'chair');

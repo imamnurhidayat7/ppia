@@ -192,6 +192,33 @@ export function EventDetailSkeleton() {
   );
 }
 
+/**
+ * Generic content page: header, a summary/stat row and a grid of cards. Used by
+ * the CMS-driven pages (cabinet, contact, about, opportunities) while their
+ * client content loads, so the viewport shows a considered layout rather than a
+ * bare Navbar + Footer.
+ */
+export function PublicPageSkeleton() {
+  return (
+    <>
+      <PublicHeaderSkeleton />
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mb-14 grid grid-cols-2 gap-8 md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="text-center">
+                <Shimmer className="mx-auto mb-2 h-9 w-20 rounded-lg" />
+                <Shimmer className="mx-auto h-3 w-24 rounded-md" />
+              </div>
+            ))}
+          </div>
+          <CardGridSkeleton count={6} />
+        </div>
+      </section>
+    </>
+  );
+}
+
 /** Generic CMS page: header plus a block of text lines. */
 export function GenericPageSkeleton() {
   return (

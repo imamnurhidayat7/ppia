@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
+import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import { Briefcase, ExternalLink, Clock, ChevronRight, BookOpen, Users, Star } from "lucide-react";
 import api from "@/lib/api";
 
@@ -13,7 +14,7 @@ export default function CareerInfoPage() {
   const [activeTab, setActiveTab] = useState<ResourceTab>("Jobs");
   const [content, setContent] = useState<CareerContent | null>(null);
   useEffect(() => { api.getPageBySlug("opportunities/career-info").then((res) => { const value = res?.page?.content as CareerContent | undefined; if (value?.header) setContent(value); }).catch(() => undefined); }, []);
-  if (!content) return null;
+  if (!content) return <PublicPageSkeleton />;
   // Every list is CMS-managed and may be empty on a freshly created page, so
   // default to [] instead of letting `.map` throw on undefined.
   const activePlatforms = content.platforms ?? [];

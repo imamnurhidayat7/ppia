@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
+import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import { Target, Heart, Lightbulb, Users } from "lucide-react";
 import api from "@/lib/api";
 
@@ -30,7 +31,7 @@ export default function AmbitionActionPage() {
       if (value?.header && Array.isArray(value.pillars)) setData(value);
     }).catch(() => undefined);
   }, []);
-  if (!data) return null;
+  if (!data) return <PublicPageSkeleton />;
 
   const pillars = data.pillars.map((p) => ({ ...p, icon: ICON_MAP[p.icon] ?? Lightbulb }));
 

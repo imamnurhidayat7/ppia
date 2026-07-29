@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
+import { GenericPageSkeleton } from "@/components/skeletons/public-skeletons";
 import api from "@/lib/api";
 import RichText from "@/components/RichText";
 
@@ -22,7 +23,7 @@ export default function TermsOfServicePage() {
       .catch(() => undefined);
   }, []);
 
-  if (!content) return null;
+  if (!content) return <GenericPageSkeleton />;
 
   return (
     <>
