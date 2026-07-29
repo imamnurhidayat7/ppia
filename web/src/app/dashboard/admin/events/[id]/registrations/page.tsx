@@ -7,10 +7,12 @@ import { useAuth } from '@/lib/auth-context';
 import api from '@/lib/api';
 import { useToast } from '@/components/Toast';
 import { useConfirm, ConfirmHost } from '@/hooks/useConfirm';
-import { Avatar, Badge, Button, Pagination } from '@/components/ui';
+import { Avatar, Badge, Button, Modal, Pagination } from '@/components/ui';
+import { resolveEventFields, type RegField, type RegResponses } from '@/lib/event-registration';
 import {
   AccessDenied,
   EmptyBlock,
+  IconAction,
   ListPageSkeleton,
   PageHeading,
   PageStack,
@@ -31,6 +33,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Download,
+  Eye,
   GraduationCap,
   Mail,
   MapPin,
@@ -40,6 +43,15 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
+
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
 
 type RegistrationStatus = 'REGISTERED' | 'CANCELLED' | 'WAITLISTED' | 'ATTENDED' | 'NO_SHOW';
 
@@ -60,6 +72,10 @@ interface RegistrationRow {
   status: RegistrationStatus;
   registeredAt: string;
   checkedInAt?: string;
+  responses?: RegResponses;
+  /** Set instead of a linked account when someone registered as a guest. */
+  guestName?: string;
+  guestEmail?: string;
   user?: Attendee;
   /** Prisma relation name used by the API response. */
   User?: Attendee;
@@ -73,6 +89,13 @@ interface EventSummary {
   slug?: string;
   startDate: string;
   location?: string;
+  registrationFields?: RegField[] | null;
+}
+
+/** Render an answer for display / CSV. Multiple choice joins with "; ". */
+function answerText(value: unknown): string {
+  if (Array.isArray(value)) return value.join('; ');
+  return value == null ? '' : String(value);
 }
 
 const STATUS_OPTIONS: RegistrationStatus[] = [
@@ -99,16 +122,44 @@ const STATUS_VARIANT: Record<RegistrationStatus, 'primary' | 'success' | 'danger
   NO_SHOW: 'default',
 };
 
+/**
+ * Registration is open to guests, so a row may have no linked account. Fall back
+ * to the name and e-mail the guest supplied, otherwise they appear as "No name"
+ * with no way to contact them.
+ */
 function attendeeOf(row: RegistrationRow): Attendee | undefined {
-  return row.user || row.User || row.attendee;
+  const account = row.user || row.User || row.attendee;
+  if (account) return account;
+  if (row.guestName || row.guestEmail) {
+    return {
+      id: row.id,
+      name: row.guestName || 'Guest',
+      email: row.guestEmail || '',
+    };
+  }
+  return undefined;
+}
+
+/** True when the row was created without signing in. */
+function isGuest(row: RegistrationRow): boolean {
+  return !(row.user || row.User || row.attendee);
 }
 
 function csvValue(value: unknown): string {
   return `"${String(value ?? '').replace(/"/g, '""')}"`;
 }
 
-function exportCsv(rows: RegistrationRow[], eventTitle: string) {
-  const headers = ['Name', 'Email', 'University', 'Status', 'Registered at', 'Check-in time'];
+function exportCsv(rows: RegistrationRow[], eventTitle: string, fields: RegField[]) {
+  const headers = [
+    'Name',
+    'Email',
+    'University',
+    'Status',
+    'Registered at',
+    'Check-in time',
+    'Account',
+    ...fields.map((f) => f.label),
+  ];
   const lines = rows.map((row) => {
     const attendee = attendeeOf(row);
     return [
@@ -118,6 +169,8 @@ function exportCsv(rows: RegistrationRow[], eventTitle: string) {
       STATUS_LABEL[row.status],
       row.registeredAt,
       row.checkedInAt || '',
+      isGuest(row) ? 'Guest' : 'Member',
+      ...fields.map((f) => answerText(row.responses?.[f.id])),
     ]
       .map(csvValue)
       .join(',');
@@ -146,6 +199,8 @@ export default function EventRegistrationsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [busyRow, setBusyRow] = useState<string | null>(null);
+  const [eventFields, setEventFields] = useState<RegField[]>([]);
+  const [viewRow, setViewRow] = useState<RegistrationRow | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<RegistrationStatus | ''>('');
@@ -169,7 +224,7 @@ export default function EventRegistrationsPage() {
     if (!eventId) return;
     try {
       const [eventRes, regsRes] = await Promise.all([
-        api.getEvent(eventId),
+        api.getEventAdmin(eventId),
         api.getEventRegistrations(eventId),
       ]);
       const detail = (eventRes.event || eventRes) as EventSummary;
@@ -180,6 +235,7 @@ export default function EventRegistrationsPage() {
         startDate: detail.startDate,
         location: detail.location,
       });
+      setEventFields(resolveEventFields(detail.registrationFields));
       const payload = regsRes as { registrations?: RegistrationRow[] } | RegistrationRow[];
       const list = Array.isArray(payload) ? payload : payload?.registrations ?? [];
       setRegistrations(Array.isArray(list) ? list : []);
@@ -382,7 +438,7 @@ export default function EventRegistrationsPage() {
               size="sm"
               leftIcon={<Download className="h-4 w-4" />}
               disabled={filtered.length === 0}
-              onClick={() => exportCsv(filtered, event?.title || 'event')}
+              onClick={() => exportCsv(filtered, event?.title || 'event', eventFields)}
             >
               Export CSV
             </Button>
@@ -391,14 +447,14 @@ export default function EventRegistrationsPage() {
       />
 
       {event && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm ink-muted">
           <span className="inline-flex items-center gap-1.5">
             <CalendarClock className="h-4 w-4 text-[#E8231A]" />
-            {formatDate(event.startDate)}
+            {formatDate(event.startDate, DATE_OPTS)}
           </span>
           {event.location && (
             <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-slate-400" />
+              <MapPin className="h-4 w-4 ink-muted" />
               {event.location}
             </span>
           )}
@@ -436,9 +492,14 @@ export default function EventRegistrationsPage() {
             setSearchQuery(value);
             setCurrentPage(1);
           }}
-          placeholder="Search by name, email, university, or status…"
+          placeholder="Search attendees by name, email, or university…"
           ariaLabel="Search attendees"
         />
+        {hasFilters && (
+          <span className="data-type shrink-0 text-[12px] uppercase ink-muted">
+            {filtered.length} of {counts.all}
+          </span>
+        )}
         {hasFilters && <ResetFiltersButton onClick={resetFilters} />}
       </Toolbar>
 
@@ -459,12 +520,12 @@ export default function EventRegistrationsPage() {
               maxLength={12}
               autoComplete="off"
               spellCheck={false}
-              className="input-base font-mono uppercase tracking-widest"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 font-mono uppercase tracking-widest"
             />
             {codeMessage && (
               <p
                 className={cn(
-                  'mt-1.5 text-xs',
+                  'mt-1.5 text-[12px]',
                   codeMessage.ok
                     ? 'text-success-600 dark:text-success-400'
                     : 'text-danger-600 dark:text-danger-400'
@@ -503,12 +564,12 @@ export default function EventRegistrationsPage() {
         <TableShell
           head={
             <>
-              <Th>Attendee</Th>
-              <Th>Contact</Th>
-              <Th>Status</Th>
-              <Th>Registered at</Th>
-              <Th>Check-in</Th>
-              <Th align="right">Actions</Th>
+              <Th className="w-[22%]">Attendee</Th>
+              <Th className="w-[20%]">Contact</Th>
+              <Th className="w-[10%]">Status</Th>
+              <Th className="w-[13%]">Registered at</Th>
+              <Th className="w-[13%]">Check-in</Th>
+              <Th align="right" className="w-[22%]">Actions</Th>
             </>
           }
           footer={
@@ -535,11 +596,19 @@ export default function EventRegistrationsPage() {
                   <div className="flex items-center gap-3">
                     <Avatar src={attendee?.avatar} name={attendee?.name || '?'} size="md" />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {/* The "Guest" badge used to share a line with the name and
+                          truncate it first ("Gues…"); it now sits on its own row
+                          so the name always has the full width. */}
+                      <p className="truncate text-sm font-semibold ink-strong">
                         {attendee?.name || 'No name'}
                       </p>
+                      {isGuest(row) && (
+                        <Badge variant="outline" size="sm" className="data-type mt-0.5 uppercase">
+                          Guest
+                        </Badge>
+                      )}
                       {attendee?.university && (
-                        <p className="flex items-center gap-1 truncate text-xs text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 flex items-center gap-1 truncate text-[12px] ink-muted">
                           <GraduationCap className="h-3 w-3 shrink-0" />
                           {attendee.university}
                         </p>
@@ -549,47 +618,44 @@ export default function EventRegistrationsPage() {
                 </Td>
                 <Td>
                   <span className="flex items-center gap-1.5 truncate">
-                    <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <Mail className="h-3.5 w-3.5 shrink-0 ink-muted" />
                     {attendee?.email || '—'}
                   </span>
                   {attendee?.phone && (
-                    <span className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="mt-0.5 flex items-center gap-1.5 text-[12px] ink-muted">
                       <Phone className="h-3 w-3 shrink-0" />
                       {attendee.phone}
                     </span>
                   )}
                 </Td>
                 <Td>
-                  <Badge variant={STATUS_VARIANT[row.status]}>{STATUS_LABEL[row.status]}</Badge>
+                  <Badge variant={STATUS_VARIANT[row.status]} className="data-type uppercase">{STATUS_LABEL[row.status]}</Badge>
                 </Td>
                 <Td>
-                  <span className="whitespace-nowrap text-slate-600 dark:text-slate-300">
-                    {formatDate(row.registeredAt)}
+                  <span className="data-type whitespace-nowrap text-[12px] ink-body">
+                    {formatDate(row.registeredAt, DATE_OPTS)}
                   </span>
                 </Td>
                 <Td>
                   {row.checkedInAt ? (
-                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-emerald-700 dark:text-emerald-300">
+                    <span className="data-type inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] text-emerald-700 dark:text-emerald-300">
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      {formatDate(row.checkedInAt)}
+                      {formatDate(row.checkedInAt, DATE_OPTS)}
                     </span>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="ink-muted">—</span>
                   )}
                 </Td>
                 <Td align="right">
-                  <RowActions>
-                    {row.status !== 'ATTENDED' && (
-                      <Button
-                        size="xs"
-                        variant="success"
-                        leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                        disabled={busy}
-                        onClick={() => handleCheckIn(row)}
-                      >
-                        Check-in
-                      </Button>
-                    )}
+                  {/*
+                    Four full-width controls used to sit in one row (two text
+                    buttons, a wide <select>, and a third text button), which
+                    wrapped unpredictably at ordinary table widths. The status
+                    picker now gets its own row so it always has room, and the
+                    other actions collapse to icon buttons — the same pattern
+                    the events list already uses.
+                  */}
+                  <div className="flex flex-col items-end gap-2">
                     <select
                       value={row.status}
                       onChange={(changeEvent) =>
@@ -597,7 +663,7 @@ export default function EventRegistrationsPage() {
                       }
                       disabled={busy}
                       aria-label={`Change status for ${attendee?.name || 'attendee'}`}
-                      className="input-base w-40"
+                      className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 w-full max-w-[10rem]"
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <option key={status} value={status}>
@@ -605,24 +671,62 @@ export default function EventRegistrationsPage() {
                         </option>
                       ))}
                     </select>
-                    {row.status !== 'CANCELLED' && row.status !== 'ATTENDED' && (
-                      <Button
-                        size="xs"
-                        variant="secondary"
-                        leftIcon={<XCircle className="h-3.5 w-3.5" />}
-                        disabled={busy}
-                        onClick={() => handleCancel(row)}
-                      >
-                        Cancel registration
-                      </Button>
-                    )}
-                  </RowActions>
+                    <RowActions>
+                      <IconAction
+                        icon={Eye}
+                        label="View responses"
+                        onClick={() => setViewRow(row)}
+                      />
+                      {row.status !== 'ATTENDED' && (
+                        <IconAction
+                          icon={CheckCircle2}
+                          label="Check in"
+                          disabled={busy}
+                          onClick={() => handleCheckIn(row)}
+                        />
+                      )}
+                      {row.status !== 'CANCELLED' && row.status !== 'ATTENDED' && (
+                        <IconAction
+                          icon={XCircle}
+                          label="Cancel registration"
+                          tone="danger"
+                          disabled={busy}
+                          onClick={() => handleCancel(row)}
+                        />
+                      )}
+                    </RowActions>
+                  </div>
                 </Td>
               </Tr>
             );
           })}
         </TableShell>
       )}
+
+      <Modal
+        isOpen={!!viewRow}
+        onClose={() => setViewRow(null)}
+        title="Registration responses"
+        description={viewRow ? attendeeOf(viewRow)?.name || undefined : undefined}
+        size="md"
+      >
+        {viewRow && (
+          <div className="space-y-4">
+            {eventFields.length === 0 ? (
+              <p className="text-sm ink-muted">No form fields were collected for this event.</p>
+            ) : (
+              eventFields.map((f) => (
+                <div key={f.id}>
+                  <p className="data-type text-[12px] font-semibold uppercase ink-muted">{f.label}</p>
+                  <p className="mt-0.5 whitespace-pre-wrap text-sm ink-strong">
+                    {answerText(viewRow.responses?.[f.id]) || '—'}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </Modal>
 
       <ConfirmHost ctx={confirmCtx} />
     </PageStack>

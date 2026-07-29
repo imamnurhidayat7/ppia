@@ -84,12 +84,12 @@ export default function CandidateRegistrationForm({ onSubmit, onClose }: Props) 
                       ? 'bg-emerald-500 text-white'
                       : step === s.id
                         ? 'bg-[#E8231A] text-white shadow-md shadow-[#E8231A]/30'
-                        : 'bg-slate-100 text-slate-400'
+                        : 'bg-slate-100 text-slate-600'
                   }`}>
                     {step > s.id ? <CheckCircle2 className="w-4 h-4" /> : s.id}
                   </div>
-                  <p className={`text-[10px] font-bold mt-1 whitespace-nowrap ${
-                    step === s.id ? 'text-[#E8231A]' : step > s.id ? 'text-emerald-600' : 'text-slate-400'
+                  <p className={`text-[12px] font-bold mt-1 whitespace-nowrap ${
+                    step === s.id ? 'text-[#C41E16]' : step > s.id ? 'text-emerald-700' : 'text-slate-600'
                   }`}>
                     {s.title}
                   </p>

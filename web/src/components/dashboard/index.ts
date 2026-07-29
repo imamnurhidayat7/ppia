@@ -13,7 +13,6 @@ export type { DashboardCounts, DashboardNotification } from './dashboard-data-co
 export {
   ADMIN_NAV,
   MEMBER_NAV,
-  ADMIN_QUICK_CREATE,
   SEGMENT_LABELS,
   canAccess,
   filterSections,

@@ -76,28 +76,28 @@ export function PageHeading({
         </Link>
       )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
+        <div className="flex min-w-0 items-start gap-3.5">
+          {/* Porthole marker, the same shape the public pages use for a heading
+              icon, so a dashboard screen reads as part of the same site. */}
           {Icon && (
-            <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0D1B33] text-white">
+            <span
+              className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0B1C2E] text-white"
+              style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 4px rgba(11,28,46,0.10)' }}
+            >
               <Icon className="h-5 w-5" />
             </span>
           )}
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#E8231A]">
-                {eyebrow}
-              </p>
+              <p className="data-type accent-label text-[12px] font-bold uppercase">{eyebrow}</p>
             )}
-            <h1 className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-              {title}
-            </h1>
-            {description && (
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
-            )}
+            <h1 className="font-display text-2xl font-black tracking-tight ink-strong">{title}</h1>
+            {description && <p className="mt-1 text-sm ink-body">{description}</p>}
           </div>
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2 sm:shrink-0">{actions}</div>}
       </div>
+      <span aria-hidden="true" className="rope-rule mt-1 block opacity-60" />
     </div>
   );
 }
@@ -113,26 +113,27 @@ export function PageHero({
   className,
 }: PageHeadingProps & { children?: React.ReactNode }) {
   return (
-    <section
-      className={cn(
-        'relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0D1B33] via-[#1A2B4A] to-[#24406f] p-6 sm:p-8',
-        className
-      )}
-    >
-      <div className="dashboard-grid-texture pointer-events-none absolute inset-0 opacity-[0.06]" />
+    <section className={cn('sea-deep relative overflow-hidden rounded-[6px] p-6 sm:p-8', className)}>
+      {/* Same depth treatment as the public deep-sea sections. */}
+      <div
+        aria-hidden="true"
+        className="sea-chart-light pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          maskImage: 'radial-gradient(ellipse 80% 75% at 35% 45%, transparent 15%, black 85%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 80% 75% at 35% 45%, transparent 15%, black 85%)',
+        }}
+      />
       <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#E8231A]/25 blur-3xl" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           {Icon && (
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-sm">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-sm">
               <Icon className="h-6 w-6" />
             </span>
           )}
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-[11px] font-bold uppercase tracking-wider text-white/60">
-                {eyebrow}
-              </p>
+              <p className="data-type text-[12px] font-bold uppercase text-white/70">{eyebrow}</p>
             )}
             <h1 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
               {title}
@@ -178,27 +179,24 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900',
+        'chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] dark:border-slate-800',
         className
       )}
     >
       {(title || action) && (
-        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-          <div className="flex min-w-0 items-start gap-2.5">
+        <header className="flex items-start justify-between gap-4 border-b border-[#DCE7F1] px-5 py-4 dark:border-slate-800">
+          <div className="flex min-w-0 items-start gap-3">
             {Icon && (
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+              <span
+                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ink-muted"
+                style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 3px rgba(11,28,46,0.05)' }}
+              >
                 <Icon className="h-4 w-4" />
               </span>
             )}
             <div className="min-w-0">
-              {title && (
-                <h2 className="font-display text-base font-bold text-slate-900 dark:text-slate-50">
-                  {title}
-                </h2>
-              )}
-              {description && (
-                <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{description}</p>
-              )}
+              {title && <h2 className="font-display text-base font-bold ink-strong">{title}</h2>}
+              {description && <p className="mt-0.5 text-sm ink-body">{description}</p>}
             </div>
           </div>
           {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
@@ -206,9 +204,7 @@ export function SectionCard({
       )}
       <div className={cn(flush ? '' : 'p-5', bodyClassName)}>{children}</div>
       {footer && (
-        <footer className="border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-          {footer}
-        </footer>
+        <footer className="border-t border-[#DCE7F1] px-5 py-3 dark:border-slate-800">{footer}</footer>
       )}
     </section>
   );
@@ -272,7 +268,7 @@ export function SearchField({
 }) {
   return (
     <div className={cn('relative min-w-0 flex-1', className)}>
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
       <input
         type="search"
         value={value}
@@ -342,16 +338,16 @@ export function TableShell({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900',
+        'chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] dark:border-slate-800',
         className
       )}
     >
       <div className="overflow-x-auto">
         <table className="w-full table-fixed">
-          <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
+          <thead className="border-b border-[#DCE7F1] bg-[#F5FAFD] dark:border-slate-800 dark:bg-slate-800/50">
             <tr>{head}</tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">{children}</tbody>
+          <tbody className="divide-y divide-[#E7EFF7] dark:divide-slate-800">{children}</tbody>
         </table>
       </div>
       {footer}
@@ -371,7 +367,8 @@ export function Th({
   return (
     <th
       className={cn(
-        'px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400',
+        // Column labels are data, set in the mono face like the public tables.
+        'data-type px-4 py-3 text-[12px] font-bold uppercase ink-muted',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         align === 'left' && 'text-left',
@@ -395,7 +392,7 @@ export function Td({
   return (
     <td
       className={cn(
-        'px-4 py-3 text-sm text-slate-700 dark:text-slate-300',
+        'px-4 py-3 text-sm ink-body',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         className
@@ -420,8 +417,8 @@ export function Tr({
       className={cn(
         'transition-colors',
         selected
-          ? 'bg-[#FFF0EF] dark:bg-[#E8231A]/10'
-          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50',
+          ? 'bg-[#FEF2F1] dark:bg-[#E8231A]/10'
+          : 'hover:bg-[#F5FAFD] dark:hover:bg-slate-800/50',
         className
       )}
     >
@@ -516,23 +513,22 @@ export function StatTile({
         ) : (
           <span className={cn('h-2 w-2 rounded-full', palette.dot)} />
         )}
-        <span className="truncate text-xs font-semibold text-slate-600 dark:text-slate-300">
-          {label}
-        </span>
+        {/* Readings are labelled in the data face and set as figures below. */}
+        <span className="data-type truncate text-[12px] font-bold uppercase ink-muted">{label}</span>
       </span>
-      <span className="mt-1 block font-display text-2xl font-black text-slate-900 dark:text-slate-50">
+      <span className="data-type mt-1.5 block font-display text-2xl font-black ink-strong">
         {typeof value === 'number' ? value.toLocaleString('en-NZ') : value}
       </span>
-      {hint && <span className="mt-0.5 block truncate text-xs text-slate-400">{hint}</span>}
+      {hint && <span className="mt-0.5 block truncate text-[12px] ink-muted">{hint}</span>}
     </>
   );
 
   const shell = cn(
-    'rounded-2xl border p-4 text-left transition-all',
+    'rounded-[5px] border p-4 text-left transition-all',
     active
-      ? cn('border-transparent ring-2 ring-slate-300 dark:ring-slate-600', palette.active)
-      : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900',
-    onClick && 'hover:border-slate-300 dark:hover:border-slate-700',
+      ? cn('border-transparent ring-2 ring-[#C3D2E0] dark:ring-slate-600', palette.active)
+      : 'chart-paper border-[#DCE7F1] dark:border-slate-800',
+    onClick && 'hover:border-[#C3D2E0] dark:hover:border-slate-700',
     className
   );
 
@@ -579,13 +575,14 @@ export function EmptyBlock({
 }) {
   return (
     <div className={cn('flex flex-col items-center justify-center px-6 py-14 text-center', className)}>
-      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
-        <Icon className="h-5 w-5 text-slate-400" />
+      <span
+        className="mb-4 flex h-12 w-12 items-center justify-center rounded-full ink-muted"
+        style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)' }}
+      >
+        <Icon className="h-5 w-5" />
       </span>
-      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</p>
-      {description && (
-        <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">{description}</p>
-      )}
+      <p className="text-base font-semibold ink-strong">{title}</p>
+      {description && <p className="mt-1.5 max-w-sm text-sm ink-body">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
@@ -666,11 +663,14 @@ export function AccessDenied({
 }) {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 text-center">
-      <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-danger-50 dark:bg-danger-900/30">
-        <ShieldAlert className="h-8 w-8 text-danger-600 dark:text-danger-300" />
+      <span
+        className="mb-5 flex h-16 w-16 items-center justify-center rounded-full"
+        style={{ boxShadow: 'inset 0 0 0 1px #F3C9C6, 0 0 0 5px rgba(176,24,18,0.10)' }}
+      >
+        <ShieldAlert className="h-7 w-7" style={{ color: '#B01812' }} />
       </span>
-      <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-50">{title}</h2>
-      <p className="mt-1.5 max-w-md text-sm text-slate-500 dark:text-slate-400">{message}</p>
+      <h2 className="font-display text-xl font-bold ink-strong">{title}</h2>
+      <p className="mt-2 max-w-md text-sm ink-body">{message}</p>
       <Link href={backHref} className="mt-5">
         <Button variant="primary">{backLabel}</Button>
       </Link>
@@ -753,18 +753,15 @@ export function Field({
 }) {
   return (
     <div className={cn('w-full', className)}>
-      <label
-        htmlFor={htmlFor}
-        className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
-      >
+      <label htmlFor={htmlFor} className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted">
         {label}
-        {required && <span className="ml-0.5 text-[#E8231A]">*</span>}
+        {required && <span className="accent-label ml-0.5">*</span>}
       </label>
       {children}
       {error ? (
-        <p className="mt-1.5 text-xs text-danger-600 dark:text-danger-400">{error}</p>
+        <p className="mt-1.5 text-[13px] font-medium text-danger-600 dark:text-danger-400">{error}</p>
       ) : (
-        hint && <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{hint}</p>
+        hint && <p className="mt-1.5 text-[13px] ink-muted">{hint}</p>
       )}
     </div>
   );

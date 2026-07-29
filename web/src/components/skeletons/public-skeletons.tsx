@@ -27,7 +27,7 @@ export function Shimmer({
 /** Matches the dark navy <PageHeader/> band (label, title, description). */
 export function PublicHeaderSkeleton() {
   return (
-    <div className="bg-[#0D1B33] pt-32 pb-16">
+    <div className="sea-deep pt-32 pb-16">
       <div className="mx-auto max-w-7xl px-6">
         <Shimmer dark className="mb-5 h-3 w-28 rounded-full" />
         <Shimmer dark className="mb-4 h-10 w-72 max-w-full rounded-xl" />
@@ -41,13 +41,13 @@ export function PublicHeaderSkeleton() {
 
 function ImageCardSkeleton() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white">
+    <div className="chart-paper flex flex-col overflow-hidden rounded-[5px] border border-[#DCE7F1]">
       <Shimmer className="h-40 w-full !rounded-none" />
       <div className="space-y-3 p-5">
         <Shimmer className="h-5 w-3/4" />
         <Shimmer className="h-4 w-full" />
         <Shimmer className="h-4 w-5/6" />
-        <div className="flex items-center justify-between border-t border-[#F1F5F9] pt-4">
+        <div className="flex items-center justify-between pt-4">
           <Shimmer className="h-3 w-28" />
           <Shimmer className="h-3 w-12" />
         </div>
@@ -72,14 +72,14 @@ export function CardGridSkeleton({ count = 6 }: { count?: number }) {
 /** News & Articles: filter tabs, a featured banner and the post grid. */
 export function ArticlesListSkeleton() {
   return (
-    <section className="bg-white py-16">
+    <section className="sea-shore py-16">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-10 flex w-fit gap-2 rounded-xl bg-[#F1F5F9] p-1">
+        <div className="chart-paper mb-10 flex w-fit gap-2 rounded-[5px] border border-[#DCE7F1] p-1">
           {[0, 1, 2].map((i) => (
             <Shimmer key={i} className="h-9 w-24 rounded-lg" />
           ))}
         </div>
-        <Shimmer className="mb-10 h-56 w-full rounded-3xl" />
+        <Shimmer className="mb-10 h-56 w-full rounded-[5px]" />
         <CardGridSkeleton count={6} />
       </div>
     </section>
@@ -89,7 +89,7 @@ export function ArticlesListSkeleton() {
 /** Events listing: the upcoming grid. */
 export function EventsListSkeleton() {
   return (
-    <section className="bg-[#F8FAFC] py-16">
+    <section className="sea-shore py-16">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-8 flex flex-wrap gap-3">
           {[0, 1, 2, 3].map((i) => (
@@ -121,7 +121,7 @@ export function ResearchPapersSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-6">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="overflow-hidden rounded-3xl border-2 border-[#E2E8F0]">
+        <div key={i} className="chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1]">
           <Shimmer className="h-1.5 w-full !rounded-none" />
           <div className="space-y-4 p-8 md:p-10">
             <Shimmer className="h-4 w-32 rounded-full" />
@@ -152,9 +152,9 @@ export function ArticleDetailSkeleton() {
   return (
     <>
       <PublicHeaderSkeleton />
-      <section className="bg-white py-16">
+      <section className="sea-shore py-16">
         <div className="mx-auto max-w-3xl px-6">
-          <Shimmer className="mb-8 h-72 w-full rounded-3xl" />
+          <Shimmer className="mb-8 h-72 w-full rounded-[5px]" />
           <div className="space-y-4">
             <Shimmer className="h-5 w-2/3" />
             {Array.from({ length: 8 }).map((_, i) => (
@@ -172,15 +172,15 @@ export function EventDetailSkeleton() {
   return (
     <>
       <PublicHeaderSkeleton />
-      <section className="bg-white py-16">
+      <section className="sea-shore py-16">
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
-            <Shimmer className="mb-4 h-72 w-full rounded-3xl" />
+            <Shimmer className="mb-4 h-72 w-full rounded-[5px]" />
             {Array.from({ length: 6 }).map((_, i) => (
               <Shimmer key={i} className={`h-4 ${i % 3 === 2 ? "w-2/3" : "w-full"}`} />
             ))}
           </div>
-          <div className="space-y-4 rounded-3xl border border-[#E2E8F0] p-6">
+          <div className="chart-paper space-y-4 rounded-[5px] border border-[#DCE7F1] p-6">
             <Shimmer className="h-6 w-32" />
             <Shimmer className="h-4 w-full" />
             <Shimmer className="h-4 w-3/4" />
@@ -202,7 +202,7 @@ export function PublicPageSkeleton() {
   return (
     <>
       <PublicHeaderSkeleton />
-      <section className="bg-white py-16">
+      <section className="sea-shore py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-14 grid grid-cols-2 gap-8 md:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -224,7 +224,7 @@ export function GenericPageSkeleton() {
   return (
     <>
       <PublicHeaderSkeleton />
-      <section className="bg-white py-16">
+      <section className="sea-shore py-16">
         <div className="mx-auto max-w-4xl space-y-4 px-6">
           {Array.from({ length: 10 }).map((_, i) => (
             <Shimmer key={i} className={`h-4 ${i % 5 === 4 ? "w-1/2" : "w-full"}`} />

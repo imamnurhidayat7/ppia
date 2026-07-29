@@ -14,6 +14,7 @@
 
 import { toPlainText } from '@/lib/sanitize-html';
 import type { LandingSection } from '@/lib/api-types';
+import type { RegField } from '@/lib/event-registration';
 import { API_ORIGIN as API_BASE } from '@/lib/api-base';
 
 /** Public content changes rarely; five minutes keeps crawlers and readers current enough. */
@@ -41,9 +42,11 @@ export interface PublicEvent {
   startDate: string;
   endDate?: string | null;
   location?: string | null;
+  locationMapUrl?: string | null;
   capacity?: number | null;
   isFree?: boolean;
   registrationDeadline?: string | null;
+  registrationFields?: RegField[] | null;
   published?: boolean;
   createdAt?: string;
   updatedAt?: string;

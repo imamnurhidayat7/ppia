@@ -2,7 +2,28 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Users, Globe, Star, BookOpen } from "lucide-react";
+import {
+  ArrowRight,
+  Award,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Coffee,
+  FileText,
+  Globe,
+  GraduationCap,
+  Heart,
+  Image as ImageIcon,
+  Lightbulb,
+  Mail,
+  MapPin,
+  Phone,
+  Rocket,
+  Star,
+  TrendingUp,
+  Users,
+  Video,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
 import { useLandingSection, getBlocksByType } from "@/lib/hooks/use-landing-section";
@@ -42,7 +63,33 @@ const DEFAULT_FEATURES = [
   },
 ];
 
-const iconMap: Record<string, LucideIcon> = { Users, Globe, Star, BookOpen };
+/**
+ * Every icon the editor offers (ICON_OPTIONS in lib/section-schemas.ts) must be
+ * resolvable here. This map used to hold four entries, so choosing any of the
+ * other sixteen silently rendered the Users icon instead.
+ */
+const iconMap: Record<string, LucideIcon> = {
+  Users,
+  Calendar,
+  FileText,
+  MapPin,
+  Heart,
+  Star,
+  Award,
+  BookOpen,
+  GraduationCap,
+  Globe,
+  Mail,
+  Phone,
+  Video,
+  Image: ImageIcon,
+  Coffee,
+  Lightbulb,
+  Rocket,
+  TrendingUp,
+  CheckCircle,
+  ArrowRight,
+};
 
 export default function AboutSection() {
   const { language } = useLanguage();
@@ -95,63 +142,123 @@ export default function AboutSection() {
   }, [section, language]);
 
   return (
-    <section id="about" className="relative overflow-hidden bg-white py-28">
-      {/* A single soft wash keeps the section from reading as a plain white box
-          without competing with the cards. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-24 left-1/2 h-[420px] w-[820px] -translate-x-1/2 opacity-[0.05]"
-        style={{ background: 'radial-gradient(ellipse at center, #E8231A 0%, transparent 70%)' }}
-      />
-
-      <div className="relative mx-auto max-w-7xl px-6">
-        <SectionHeading
-          eyebrow={header.badge}
-          title={header.title}
-          highlight={header.titleHighlight}
-          intro={header.description}
-          className="mb-16"
+    <section id="about" className="sea-shore relative overflow-hidden py-28 lg:py-32">
+      {/* Shore-side depth: the navigation-chart grid carried down from the hero,
+          fading out behind the cards, plus one warm wash so the surface is not
+          a flat panel. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div
+          className="sea-chart absolute inset-0 opacity-[0.05]"
+          style={{
+            maskImage: 'radial-gradient(ellipse 75% 65% at 50% 45%, transparent 20%, black 85%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 75% 65% at 50% 45%, transparent 20%, black 85%)',
+          }}
         />
+        <div
+          className="absolute -top-24 left-1/2 h-[420px] w-[820px] -translate-x-1/2 opacity-[0.05]"
+          style={{ background: 'radial-gradient(ellipse at center, #E8231A 0%, transparent 70%)' }}
+        />
+      </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {features.map((f, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="group relative overflow-hidden rounded-2xl border border-[#EDF1F7] bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-[0_24px_60px_-24px_rgba(15,27,51,0.28)]"
-            >
-              {/* Accent rule that draws itself across the top on hover */}
-              <span
-                aria-hidden="true"
-                className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
-                style={{ background: f.color }}
-              />
-              {/* Faint colour wash so the whole card responds, not just the icon */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-20"
-                style={{ background: f.color }}
-              />
+      {/*
+        Structure: a plotted route, not a card grid.
 
-              <div
-                className="relative mb-6 flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110"
-                style={{ background: `${f.color}14`, boxShadow: `inset 0 0 0 1px ${f.color}26` }}
-              >
-                <f.icon size={21} strokeWidth={2.1} style={{ color: f.color }} />
-              </div>
-              <h3
-                className="relative mb-2.5 text-[17px] font-bold leading-snug text-[#0F1B33]"
-                style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
-              >
-                {f.title}
-              </h3>
-              <p className="relative text-sm leading-relaxed text-[#64748B]">{f.desc}</p>
-            </motion.div>
-          ))}
+        The heading holds the left rail and the features become numbered
+        waypoints threaded onto a single rope running down the page, each one
+        offset from the last. A four-across grid of tinted icon circles is the
+        default shape every landing page reaches for; a route is something this
+        organisation can actually own, and it also survives long CMS copy
+        better — a waypoint can grow downwards, where a grid row cannot.
+      */}
+      <div className="relative mx-auto grid max-w-7xl gap-14 px-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-20">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <SectionHeading
+            eyebrow={header.badge}
+            title={header.title}
+            highlight={header.titleHighlight}
+            intro={header.description}
+            align="left"
+          />
+
+          {/* Compass rose: the section's own mark, drawn rather than imported. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 120 120"
+            className="mt-12 hidden h-28 w-28 lg:block"
+          >
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#0D2740" strokeOpacity="0.12" />
+            <circle cx="60" cy="60" r="38" fill="none" stroke="#0D2740" strokeOpacity="0.08" strokeDasharray="3 6" />
+            <path d="M60 8 L69 55 L60 112 L51 55 Z" fill="#E8231A" fillOpacity="0.85" />
+            <path d="M8 60 L55 51 L112 60 L55 69 Z" fill="#0D2740" fillOpacity="0.28" />
+            <circle cx="60" cy="60" r="4.5" fill="#0D2740" />
+            <text x="60" y="6" textAnchor="middle" className="data-type" fontSize="9" fill="#0D2740" fillOpacity="0.5">N</text>
+          </svg>
         </div>
+
+        <ol className="relative">
+          {/* The rope every waypoint hangs from. */}
+          <span
+            aria-hidden="true"
+            className="rope-line-v absolute left-[19px] top-3 bottom-6 w-[3px] rounded-full sm:left-[23px]"
+          />
+
+          {features.map((f, i) => (
+            <motion.li
+              key={i}
+              initial={{ opacity: 0, x: -18 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.35 }}
+              transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="relative flex gap-5 pb-10 last:pb-0 sm:gap-7"
+            >
+              {/* Waypoint marker: a numbered buoy on the rope. */}
+              <span
+                aria-hidden="true"
+                className="relative z-10 mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white sm:h-12 sm:w-12"
+                style={{ boxShadow: `0 0 0 2px ${f.color}, 0 0 0 7px ${f.color}14` }}
+              >
+                <span className="data-type text-[12px] font-bold sm:text-xs" style={{ color: f.color }}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </span>
+
+              {/* Alternating indent so the column reads as a course being
+                  steered rather than a straight list. */}
+              <div className={`group min-w-0 flex-1 ${i % 2 === 1 ? "lg:translate-x-8" : ""}`}>
+                <div className="chart-paper relative overflow-hidden rounded-[4px] border border-[#DCE7F1] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_50px_-26px_rgba(7,19,33,0.4)] sm:p-7">
+                  {/* Corner fold, so the card is a sheet of chart paper. */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute right-0 top-0 h-8 w-8"
+                    style={{
+                      background: `linear-gradient(225deg, #EDF5FB 0 50%, ${f.color}22 50%)`,
+                      clipPath: "polygon(100% 0, 0 0, 100% 100%)",
+                    }}
+                  />
+
+                  <div className="flex items-center gap-2.5">
+                    <f.icon size={15} strokeWidth={2.3} style={{ color: f.color }} aria-hidden="true" />
+                    <h3
+                      className="text-[17px] font-bold leading-snug text-[#0F1B33]"
+                      style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
+                    >
+                      {f.title}
+                    </h3>
+                  </div>
+
+                  <p className="mt-3 max-w-xl text-sm leading-relaxed ink-body">{f.desc}</p>
+
+                  {/* Underline that runs out as the eye leaves the card. */}
+                  <span
+                    aria-hidden="true"
+                    className="mt-5 block h-px w-full origin-left scale-x-[0.18] transition-transform duration-500 group-hover:scale-x-100"
+                    style={{ background: `linear-gradient(90deg, ${f.color}, transparent)` }}
+                  />
+                </div>
+              </div>
+            </motion.li>
+          ))}
+        </ol>
       </div>
     </section>
   );

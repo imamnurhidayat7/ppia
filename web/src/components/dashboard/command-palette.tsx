@@ -204,7 +204,7 @@ export function CommandPalette({ onClose, role }: CommandPaletteProps) {
       />
       <div className="animate-scale-in relative w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
         <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-          <Search className="h-4 w-4 shrink-0 text-slate-400" />
+          <Search className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
           <input
             ref={inputRef}
             value={query}
@@ -215,13 +215,13 @@ export function CommandPalette({ onClose, role }: CommandPaletteProps) {
             }}
             onKeyDown={onKeyDown}
             placeholder="Search pages, events, articles, members…"
-            className="flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100"
+            className="flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400"
             aria-label="Keyword"
           />
           {searching && searchable && (
-            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+            <Loader2 className="h-4 w-4 animate-spin text-slate-500 dark:text-slate-400" />
           )}
-          <kbd className="hidden rounded border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:block dark:border-slate-700">
+          <kbd className="hidden rounded border border-slate-200 px-1.5 py-0.5 text-[12px] font-semibold text-slate-500 sm:block dark:border-slate-700 dark:text-slate-400">
             ESC
           </kbd>
         </div>
@@ -242,7 +242,7 @@ export function CommandPalette({ onClose, role }: CommandPaletteProps) {
               return (
                 <div key={result.id}>
                   {showHeader && (
-                    <p className="px-3 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <p className="px-3 pb-1 pt-3 text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       {meta.label}
                     </p>
                   )}
@@ -274,7 +274,9 @@ export function CommandPalette({ onClose, role }: CommandPaletteProps) {
                         </span>
                       )}
                     </span>
-                    {active && <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-slate-400" />}
+                    {active && (
+                      <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                    )}
                   </button>
                 </div>
               );
@@ -282,7 +284,7 @@ export function CommandPalette({ onClose, role }: CommandPaletteProps) {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-[11px] text-slate-400 dark:border-slate-800">
+        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-[12px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <span className="flex items-center gap-3">
             <span>↑ ↓ select</span>
             <span>↵ open</span>

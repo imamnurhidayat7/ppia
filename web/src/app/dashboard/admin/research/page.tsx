@@ -41,6 +41,15 @@ import {
   unwrapList,
 } from './_components/shared';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 /** '' = all. The tile row doubles as the review stage filter. */
 type StatusTab = '' | 'DRAFT' | 'PENDING_REVIEW' | 'UNDER_REVIEW' | 'PUBLISHED';
 
@@ -321,7 +330,7 @@ export default function AdminResearchPage() {
           }
           footer={
             <>
-              <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <div className="data-type border-t border-[#E7EFF7] px-5 py-3 text-[12px] ink-muted dark:border-slate-800">
                 Showing {paginatedItems.length} of {filteredItems.length} research items
               </div>
               <Pagination
@@ -347,49 +356,51 @@ export default function AdminResearchPage() {
                 <Td>
                   <Link
                     href={`/dashboard/admin/research/${item.id}`}
-                    className="line-clamp-2 max-w-md text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                    className="line-clamp-2 max-w-md text-sm font-semibold ink-strong hover:underline"
                   >
                     {item.title}
                   </Link>
-                  <p className="truncate text-xs text-slate-400">/{item.slug}</p>
+                  <p className="data-type truncate text-[12px] ink-muted">/{item.slug}</p>
                   {item.mainAuthor?.name && (
-                    <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                    <p className="mt-0.5 truncate text-[12px] ink-muted">
                       {item.mainAuthor.name}
                     </p>
                   )}
                 </Td>
                 <Td>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 dark:bg-violet-900/25 dark:text-violet-300">
-                    {TypeIcon && <TypeIcon className="h-3.5 w-3.5" />}
+                  <span className="data-type inline-flex items-center gap-1.5 rounded-[3px] bg-violet-50 px-2.5 py-1 text-[12px] font-bold uppercase text-violet-700 dark:bg-violet-900/25 dark:text-violet-300">
+                    {TypeIcon && <TypeIcon aria-hidden="true" className="h-3.5 w-3.5" />}
                     {typeLabel(item.researchType)}
                   </span>
                 </Td>
                 <Td>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant={status?.badge || 'default'}>
+                    <Badge variant={status?.badge || 'default'} className="data-type uppercase">
                       {status?.label || statusLabel(item.researchStatus)}
                     </Badge>
                     {item.published ? (
-                      <Badge variant="outline">Public</Badge>
+                      <Badge variant="outline" className="data-type uppercase">Public</Badge>
                     ) : (
-                      <Badge variant="warning">Unpublished</Badge>
+                      <Badge variant="warning" className="data-type uppercase">Unpublished</Badge>
                     )}
                   </div>
                 </Td>
                 <Td align="center">
-                  <span className="inline-flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="data-type inline-flex items-center gap-3 text-[12px] ink-muted">
                     <span className="inline-flex items-center gap-1">
-                      <Eye className="h-3.5 w-3.5" />
+                      <Eye aria-hidden="true" className="h-3.5 w-3.5" />
                       {(item.viewCount || 0).toLocaleString('en-NZ')}
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      <Download className="h-3.5 w-3.5" />
+                      <Download aria-hidden="true" className="h-3.5 w-3.5" />
                       {(item.downloadCount || 0).toLocaleString('en-NZ')}
                     </span>
                   </span>
                 </Td>
                 <Td>
-                  <span className="whitespace-nowrap">{formatDate(item.createdAt)}</span>
+                  <span className="data-type whitespace-nowrap text-[12px]">
+                    {formatDate(item.createdAt, DATE_OPTS)}
+                  </span>
                 </Td>
                 <Td align="right">
                   <RowActions>

@@ -19,6 +19,8 @@ node_modules/
 # ── Build output ─────────────────────────────────────────────
 # Next.js (web)
 .next/
+# Alternate build dirs from NEXT_DIST_DIR (verification builds beside `next dev`)
+.next-*/
 out/
 /build
 next-env.d.ts
@@ -33,6 +35,10 @@ api/generated/prisma
 # personal information (member registration documents).
 api/uploads/*
 !api/uploads/.gitkeep
+
+# Private documents written by the local storage driver. Never committed:
+# these are members' personal files.
+api/storage/
 
 # ── Testing / coverage ───────────────────────────────────────
 /coverage

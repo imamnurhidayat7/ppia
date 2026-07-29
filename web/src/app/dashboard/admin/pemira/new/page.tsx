@@ -116,7 +116,7 @@ export default function NewElectionPage() {
                 required
                 value={formData.title}
                 onChange={(changeEvent) => setValue('title', changeEvent.target.value)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="PEMIRA PPIA Auckland 2026"
               />
             </Field>
@@ -130,7 +130,7 @@ export default function NewElectionPage() {
                 rows={3}
                 value={formData.description}
                 onChange={(changeEvent) => setValue('description', changeEvent.target.value)}
-                className="input-base resize-none"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
                 placeholder="Election for the PPIA Auckland President, 2026–2027 term…"
               />
             </Field>
@@ -150,7 +150,7 @@ export default function NewElectionPage() {
                 required
                 value={formData.registrationStart}
                 onChange={(changeEvent) => setValue('registrationStart', changeEvent.target.value)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="Registration ends" htmlFor="election-registration-end" required>
@@ -160,7 +160,7 @@ export default function NewElectionPage() {
                 required
                 value={formData.registrationEnd}
                 onChange={(changeEvent) => setValue('registrationEnd', changeEvent.target.value)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
           </FormGrid>
@@ -182,7 +182,7 @@ export default function NewElectionPage() {
                 type="datetime-local"
                 value={formData.campaignStart}
                 onChange={(changeEvent) => setValue('campaignStart', changeEvent.target.value)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field
@@ -195,7 +195,7 @@ export default function NewElectionPage() {
                 type="datetime-local"
                 value={formData.campaignEnd}
                 onChange={(changeEvent) => setValue('campaignEnd', changeEvent.target.value)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
           </FormGrid>
@@ -214,7 +214,7 @@ export default function NewElectionPage() {
                 required
                 value={formData.votingStart}
                 onChange={(changeEvent) => setValue('votingStart', changeEvent.target.value)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="Voting ends" htmlFor="election-voting-end" required>
@@ -224,7 +224,7 @@ export default function NewElectionPage() {
                 required
                 value={formData.votingEnd}
                 onChange={(changeEvent) => setValue('votingEnd', changeEvent.target.value)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
           </FormGrid>

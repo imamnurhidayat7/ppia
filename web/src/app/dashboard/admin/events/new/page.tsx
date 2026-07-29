@@ -19,7 +19,9 @@ import {
   PageStack,
   SectionCard,
 } from '@/components/dashboard';
-import { CalendarClock, CalendarPlus, FileText, Save, Send, Users } from 'lucide-react';
+import { CalendarClock, CalendarPlus, ClipboardList, FileText, Save, Send, Users } from 'lucide-react';
+import { RegistrationFormBuilder } from '../_components/registration-form-builder';
+import { DEFAULT_REGISTRATION_FIELDS, type RegField } from '@/lib/event-registration';
 
 interface DivisionRef {
   id: string;
@@ -65,11 +67,15 @@ export default function NewEventPage() {
     endDate: undefined as Date | undefined,
     endTime: '17:00',
     location: '',
+    locationMapUrl: '',
     divisionId: '',
     published: false,
     capacity: undefined as number | undefined,
     registrationDeadline: undefined as Date | undefined,
     isFree: true,
+    // New events start with the profile-backed defaults; the admin can edit,
+    // reorder, delete, or add more before saving.
+    registrationFields: DEFAULT_REGISTRATION_FIELDS as RegField[],
   });
 
   const canManage = user?.role === 'SUPER_ADMIN' || user?.role === 'BOARD';
@@ -124,11 +130,13 @@ export default function NewEventPage() {
         startDate: combineDateTime(formData.startDate, formData.startTime),
         endDate: formData.endDate ? combineDateTime(formData.endDate, formData.endTime) : '',
         location: formData.location,
+        locationMapUrl: formData.locationMapUrl || undefined,
         divisionId: formData.divisionId || undefined,
         published: formData.published,
         capacity: formData.capacity,
         isFree: formData.isFree,
         registrationDeadline: formData.registrationDeadline?.toISOString() || undefined,
+        registrationFields: formData.registrationFields,
       };
 
       await api.createEvent(data);
@@ -191,7 +199,7 @@ export default function NewEventPage() {
                         .replace(/[^a-z0-9-]/g, ''),
                     })
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                   placeholder="For example: Welcoming Party 2025"
                 />
               </Field>
@@ -209,7 +217,7 @@ export default function NewEventPage() {
                   onChange={(changeEvent) =>
                     setFormData({ ...formData, slug: changeEvent.target.value })
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                   placeholder="welcoming-party-2025"
                 />
               </Field>
@@ -249,7 +257,7 @@ export default function NewEventPage() {
                     startDate: fromDateInputValue(changeEvent.target.value),
                   })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="Start time" htmlFor="event-start-time" required>
@@ -261,7 +269,7 @@ export default function NewEventPage() {
                 onChange={(changeEvent) =>
                   setFormData({ ...formData, startTime: changeEvent.target.value })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="End date" htmlFor="event-end-date" hint="Optional.">
@@ -275,7 +283,7 @@ export default function NewEventPage() {
                     endDate: fromDateInputValue(changeEvent.target.value),
                   })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="End time" htmlFor="event-end-time">
@@ -286,7 +294,7 @@ export default function NewEventPage() {
                 onChange={(changeEvent) =>
                   setFormData({ ...formData, endTime: changeEvent.target.value })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field
@@ -302,8 +310,25 @@ export default function NewEventPage() {
                 onChange={(changeEvent) =>
                   setFormData({ ...formData, location: changeEvent.target.value })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="Melbourne Town Hall"
+              />
+            </Field>
+            <Field
+              label="Map embed URL"
+              htmlFor="event-map-url"
+              hint='Optional. In Google Maps: search the venue → Share → Embed a map → Copy HTML, then paste just the link inside src="..." here.'
+              className="sm:col-span-2"
+            >
+              <input
+                id="event-map-url"
+                type="url"
+                value={formData.locationMapUrl}
+                onChange={(changeEvent) =>
+                  setFormData({ ...formData, locationMapUrl: changeEvent.target.value })
+                }
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
+                placeholder="https://www.google.com/maps/embed?pb=..."
               />
             </Field>
           </FormGrid>
@@ -333,7 +358,7 @@ export default function NewEventPage() {
                       : undefined,
                   })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="Example: 120"
               />
             </Field>
@@ -350,10 +375,21 @@ export default function NewEventPage() {
                       : undefined,
                   })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
           </FormGrid>
+        </SectionCard>
+
+        <SectionCard
+          title="Registration form"
+          description="Fields attendees fill in when they register. Defaults are pre-filled from the member's profile; delete or add fields as needed."
+          icon={ClipboardList}
+        >
+          <RegistrationFormBuilder
+            fields={formData.registrationFields}
+            onChange={(registrationFields) => setFormData({ ...formData, registrationFields })}
+          />
         </SectionCard>
 
         <SectionCard
@@ -369,7 +405,7 @@ export default function NewEventPage() {
                 onChange={(changeEvent) =>
                   setFormData({ ...formData, divisionId: changeEvent.target.value })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               >
                 <option value="">No division</option>
                 {divisions.map((division) => (
@@ -380,7 +416,7 @@ export default function NewEventPage() {
               </select>
             </Field>
 
-            <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+            <div className="rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
               <Toggle
                 id="event-published"
                 label="Publish event"

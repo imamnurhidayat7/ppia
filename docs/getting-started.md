@@ -9,6 +9,93 @@ This guide gets the platform running on your machine.
 - Optionally a **Mailtrap** account if you want to exercise real e-mail delivery
   (the API runs fine without it and logs e-mails instead)
 
+## Choosing where data lives: local or Supabase
+
+One variable selects the database **and** the file storage together, so the two
+cannot end up pointing at different environments by accident:
+
+```
+# api/.env
+DATA_SOURCE=local       # local Postgres + uploads on disk
+DATA_SOURCE=supabase    # Supabase Postgres + Supabase Storage
+```
+
+| | `DATA_SOURCE=local` | `DATA_SOURCE=supabase` |
+| --- | --- | --- |
+| Database | `LOCAL_DATABASE_URL` | `SUPABASE_DATABASE_URL` (+ `SUPABASE_DIRECT_URL` for migrations) |
+| Uploads | `api/uploads` and `api/storage/private` | Supabase Storage buckets |
+
+Both the API and the Prisma CLI honour the switch — the `db:*` scripts route
+through it, so `npm run db:deploy` always targets the database you selected. The
+API prints the resolved target at boot:
+
+```
+Data source: local — database localhost:5432/ppia
+Storage: local disk — public …/api/uploads, private …/api/storage/private
+```
+
+`STORAGE_DRIVER` only needs setting to break the pairing deliberately (for
+example a local database with the real buckets). An explicit `DATABASE_URL`
+always wins, so a host that injects one — Render, Fly, Heroku — keeps working
+without `DATA_SOURCE` at all.
+
+### Local Postgres, no Docker
+
+```bash
+brew install postgresql@16
+brew services start postgresql@16
+createdb ppia
+```
+
+A Homebrew install creates a role named after your macOS user with no password,
+so in `api/.env`:
+
+```
+DATA_SOURCE=local
+LOCAL_DATABASE_URL=postgresql://YOUR_USERNAME@localhost:5432/ppia?schema=public
+```
+
+Then create the schema:
+
+```bash
+cd api && npm run db:deploy && npm run db:generate && cd ..
+npm run dev
+```
+
+### Local Postgres via Docker (optional)
+
+If you would rather not install Postgres on the host, the repository ships a
+container. It publishes port **5433** so it cannot clash with an existing
+Postgres on 5432:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+# in api/.env:
+# LOCAL_DATABASE_URL=postgresql://ppia:ppia_local_dev@localhost:5433/ppia?schema=public
+```
+
+Stop it with `docker compose -f docker-compose.dev.yml down` (add `-v` to delete
+the data as well).
+
+### Where local uploads go
+
+- Public images → `api/uploads/`, served at `http://localhost:4000/uploads/<file>`.
+- Registration documents → `api/storage/private/`, deliberately **outside** the
+  statically served directory. They are readable only through a short-lived
+  signed link that the admin-gated `GET /api/members/:id/document` endpoint
+  mints, which the API serves from `GET /api/private-files/...`.
+- Both directories are gitignored. The private one holds members' personal
+  documents, so it must never be committed.
+
+The API prints which driver is active and where files land on boot:
+
+```
+Storage: local disk — public …/api/uploads, private …/api/storage/private
+```
+
+Leaving `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` empty is enough to select
+the local driver; `STORAGE_DRIVER` only needs setting to override that guess.
+
 ## 1. Install dependencies
 
 From the repository root:
@@ -27,9 +114,10 @@ cp api/.env.example api/.env
 
 Open `api/.env` and set, at minimum:
 
-- `DATABASE_URL` — your PostgreSQL connection string
-- `DIRECT_URL` — the direct PostgreSQL connection used by migrations (it may
-  equal `DATABASE_URL` for a local database)
+- `DATA_SOURCE` — `local` or `supabase`; selects the database and storage
+  together (see [Choosing where data lives](#choosing-where-data-lives-local-or-supabase))
+- `LOCAL_DATABASE_URL` — your local PostgreSQL connection string, when
+  `DATA_SOURCE=local`
 - `JWT_SECRET` — any long random string for local use
 
 Every variable is documented in [Configuration](configuration.md). Leaving the
@@ -51,14 +139,15 @@ local development.
 
 ```bash
 cd api
-npx prisma migrate deploy
+npm run db:deploy
 npm run db:generate
 cd ..
 ```
 
-This replays the committed migrations in `api/prisma/migrations` and generates the
-Prisma client. Use `npm run db:migrate` only while authoring a new migration in a
-local development database. Use `npx prisma studio` to browse and edit data in a GUI.
+This replays the committed migrations in `api/prisma/migrations` against the
+database `DATA_SOURCE` selects, and generates the Prisma client. Use
+`npm run db:migrate` only while authoring a new migration locally, and
+`npm run db:studio` to browse and edit data in a GUI.
 
 ## 5. Run the apps
 

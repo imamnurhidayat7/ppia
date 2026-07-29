@@ -108,7 +108,7 @@ export function BarChart({
           const ratio = item.value / max;
           return (
             <div key={item.label} className="group flex min-w-0 flex-1 flex-col items-center gap-2">
-              <span className="text-[11px] font-semibold text-slate-400 opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="text-[12px] font-semibold text-slate-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-300">
                 {formatValue(item.value)}
               </span>
               <div className="flex w-full flex-1 items-end">
@@ -122,7 +122,7 @@ export function BarChart({
                   title={`${item.label}: ${formatValue(item.value)}`}
                 />
               </div>
-              <span className="w-full truncate text-center text-[10px] text-slate-400">
+              <span className="w-full truncate text-center text-[12px] text-slate-600 dark:text-slate-300">
                 {item.label}
               </span>
             </div>
@@ -203,7 +203,7 @@ export function DonutChart({
             {centerValue ?? total}
           </span>
           {centerLabel && (
-            <span className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400">
               {centerLabel}
             </span>
           )}

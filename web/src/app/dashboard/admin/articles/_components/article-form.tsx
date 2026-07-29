@@ -77,7 +77,7 @@ export function ArticleForm({
                     slug: slugFromTitle(event.target.value),
                   })
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="Write a clear, specific title"
               />
             </Field>
@@ -93,7 +93,7 @@ export function ArticleForm({
                 required
                 value={values.slug}
                 onChange={(event) => onChange({ slug: event.target.value })}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="example-post-title"
               />
             </Field>
@@ -105,7 +105,7 @@ export function ArticleForm({
               rows={3}
               value={values.excerpt}
               onChange={(event) => onChange({ excerpt: event.target.value })}
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
               placeholder="Sum up the piece in one or two sentences."
             />
           </Field>
@@ -143,7 +143,7 @@ export function ArticleForm({
               id={`${idPrefix}-division`}
               value={values.divisionId}
               onChange={(event) => onChange({ divisionId: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               <option value="">No division</option>
               {divisions.map((division) => (
@@ -163,7 +163,7 @@ export function ArticleForm({
             }
           >
             {tags.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm ink-muted">
                 Create a tag in the Tags menu first to use it here.
               </p>
             ) : (
@@ -177,10 +177,10 @@ export function ArticleForm({
                       onClick={() => toggleTag(tag.id)}
                       aria-pressed={selected}
                       className={cn(
-                        'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                        'rounded-[4px] px-3 py-1.5 text-sm font-medium transition-colors',
                         selected
                           ? 'bg-[#E8231A] text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                          : 'bg-[#EDF5FB] ink-body hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
                       )}
                       style={selected && tag.color ? { backgroundColor: tag.color } : undefined}
                     >
@@ -211,7 +211,7 @@ export function ArticleForm({
                 type="text"
                 value={values.metaTitle}
                 onChange={(event) => onChange({ metaTitle: event.target.value })}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="Title for search results"
               />
             </Field>
@@ -226,7 +226,7 @@ export function ArticleForm({
               rows={2}
               value={values.metaDescription}
               onChange={(event) => onChange({ metaDescription: event.target.value })}
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
               placeholder="Short summary for search engines"
             />
           </Field>
@@ -240,7 +240,7 @@ export function ArticleForm({
               type="text"
               value={values.metaKeywords}
               onChange={(event) => onChange({ metaKeywords: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="ppia, scholarship, melbourne"
             />
           </Field>
@@ -253,7 +253,7 @@ export function ArticleForm({
         icon={Send}
       >
         <div className="space-y-4">
-          <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div className="rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
             <Toggle
               id={`${idPrefix}-published`}
               label="Publish now"
@@ -262,7 +262,7 @@ export function ArticleForm({
               onChange={(event) => onChange({ published: event.target.checked })}
             />
           </div>
-          <div className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div className="space-y-4 rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
             <Toggle
               id={`${idPrefix}-featured`}
               label="Mark as featured"
@@ -284,7 +284,7 @@ export function ArticleForm({
                   onChange={(event) =>
                     onChange({ featuredOrder: Number(event.target.value) || 0 })
                   }
-                  className="input-base sm:w-40"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 sm:w-40"
                 />
               </Field>
             )}

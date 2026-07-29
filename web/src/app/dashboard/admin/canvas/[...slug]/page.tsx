@@ -48,25 +48,25 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
     <div className="space-y-3 p-4">
       {/* Title */}
       <div>
-        <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Title</label>
+        <label className="data-type text-[12px] font-bold uppercase ink-muted">Title</label>
         <EditableField
           as="div"
           label="title"
           value={block.title || ''}
           onChange={(v) => onChange(block.id, 'title', v)}
-          className="text-slate-800 dark:text-slate-100 font-semibold text-lg mt-1"
+          className="ink-strong font-semibold text-lg mt-1"
           placeholder="Click to add a title..."
         />
       </div>
       {/* Subtitle */}
       <div>
-        <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Subtitle</label>
+        <label className="data-type text-[12px] font-bold uppercase ink-muted">Subtitle</label>
         <EditableField
           as="p"
           label="subtitle"
           value={block.subtitle || ''}
           onChange={(v) => onChange(block.id, 'subtitle', v)}
-          className="text-slate-600 dark:text-slate-300 mt-1"
+          className="ink-body mt-1"
           placeholder="Click to add a description..."
           multiline
         />
@@ -95,13 +95,13 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
   // Shared field snippets for common block fields
   const contentField = (label = 'Body') => (
     <div className="px-4 pb-4">
-      <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">{label}</label>
+      <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">{label}</label>
       <EditableField
         as="div"
         label={label.toLowerCase()}
         value={block.content || ''}
         onChange={(v) => onChange(block.id, 'content', v)}
-        className="text-sm text-slate-600 dark:text-slate-300 mt-1 min-h-[80px]"
+        className="text-sm ink-body mt-1 min-h-[80px]"
         placeholder="Write the text shown here..."
         multiline
       />
@@ -110,12 +110,12 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
 
   const codeField = (
     <div className="px-4 pb-4">
-      <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Code</label>
+      <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Code</label>
       <EditableField
         as="div"
         value={block.content || ''}
         onChange={(v) => onChange(block.id, 'content', v)}
-        className="text-xs font-mono text-slate-100 mt-1 min-h-20 bg-slate-900 rounded-lg p-3"
+        className="data-type text-[12px] text-slate-100 mt-1 min-h-20 bg-[#071321] rounded-[4px] p-3"
         placeholder="console.log('hello');"
         multiline
       />
@@ -124,11 +124,11 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
 
   const imageField = (label = 'Image') => (
     <div className="px-4 pb-4">
-      <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">{label}</label>
+      <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">{label}</label>
       <EditableImage
         value={block.imageUrl || ''}
         onChange={(v) => onChange(block.id, 'imageUrl', v)}
-        className="w-full rounded-lg object-cover h-40"
+        className="w-full rounded-[4px] object-cover h-40"
         placeholder="Click to add an image"
       />
     </div>
@@ -137,24 +137,24 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
   const ctaField = (
     <>
       <div className="px-4 pb-4">
-        <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Button label</label>
+        <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Button label</label>
         <EditableField
           as="p"
           label="button label"
           value={block.linkText || ''}
           onChange={(v) => onChange(block.id, 'linkText', v)}
-          className="text-slate-600 text-sm mt-1"
+          className="ink-body text-sm mt-1"
           placeholder="Learn more"
         />
       </div>
       <div className="px-4 pb-4">
-        <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Button link</label>
+        <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Button link</label>
         <EditableField
           as="p"
           label="button link"
           value={block.linkUrl || ''}
           onChange={(v) => onChange(block.id, 'linkUrl', v)}
-          className="text-slate-600 text-sm mt-1"
+          className="ink-body text-sm mt-1"
           placeholder="/about or https://..."
         />
       </div>
@@ -163,7 +163,7 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
 
   const colorField = (
     <div className="px-4 pb-4">
-      <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Accent colour</label>
+      <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Accent colour</label>
       <div className="flex items-center gap-2 mt-1">
         <input
           type="color"
@@ -172,7 +172,7 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
             const currentConfig = (block.config as any) ?? {};
             onChange(block.id, 'config', { ...currentConfig, color: e.target.value });
           }}
-          className="w-10 h-8 rounded cursor-pointer border border-slate-200 dark:border-slate-600"
+          className="w-10 h-8 rounded cursor-pointer border border-[#DCE7F1] dark:border-slate-600"
         />
         <EditableField
           as="p"
@@ -181,7 +181,7 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
             const currentConfig = (block.config as any) ?? {};
             onChange(block.id, 'config', { ...currentConfig, color: v });
           }}
-          className="text-slate-600 text-sm flex-1"
+          className="ink-body text-sm flex-1"
           placeholder="#E8231A"
         />
       </div>
@@ -189,9 +189,9 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
   );
 
   const dataSourceFields = (
-    <div className="border-t border-slate-200 dark:border-slate-700 pt-3 mt-3">
+    <div className="border-t border-[#DCE7F1] dark:border-slate-700 pt-3 mt-3">
       <div className="flex items-center justify-between mb-2">
-        <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Pull from database</label>
+        <label className="data-type text-[12px] font-bold uppercase ink-muted">Pull from database</label>
         <button
           type="button"
           onClick={() => toggleDataSource(!dataSource)}
@@ -203,11 +203,11 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
       {dataSource && (
         <div className="space-y-3">
           <div>
-            <label className="text-[11px] text-slate-400 block mb-1">Source</label>
+            <label className="data-type text-[12px] ink-muted block mb-1">Source</label>
             <select
               value={dataSource.type || 'events'}
               onChange={(e) => onDataSourceChange('type', e.target.value)}
-              className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm px-2 py-1.5 text-slate-700 dark:text-slate-200"
+              className="w-full rounded-[4px] border border-[#C3D2E0] dark:border-slate-600 bg-white dark:bg-slate-800 text-sm px-2 py-1.5 ink-body"
             >
               <option value="events">Events</option>
               <option value="articles">Articles</option>
@@ -219,11 +219,11 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
           </div>
           {(dataSource.type === 'events') && (
             <div>
-              <label className="text-[11px] text-slate-400 block mb-1">Filter</label>
+              <label className="data-type text-[12px] ink-muted block mb-1">Filter</label>
               <select
                 value={dataSource.filter || 'all'}
                 onChange={(e) => onDataSourceChange('filter', e.target.value)}
-                className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm px-2 py-1.5 text-slate-700 dark:text-slate-200"
+                className="w-full rounded-[4px] border border-[#C3D2E0] dark:border-slate-600 bg-white dark:bg-slate-800 text-sm px-2 py-1.5 ink-body"
               >
                 <option value="all">All</option>
                 <option value="upcoming">Upcoming</option>
@@ -233,25 +233,25 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
           )}
           {(dataSource.type === 'faq' || dataSource.type === 'media') && (
             <div>
-              <label className="text-[11px] text-slate-400 block mb-1">Category</label>
+              <label className="data-type text-[12px] ink-muted block mb-1">Category</label>
               <input
                 type="text"
                 value={dataSource.category || ''}
                 onChange={(e) => onDataSourceChange('category', e.target.value)}
                 placeholder="optional"
-                className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm px-2 py-1.5 text-slate-700 dark:text-slate-200"
+                className="w-full rounded-[4px] border border-[#C3D2E0] dark:border-slate-600 bg-white dark:bg-slate-800 text-sm px-2 py-1.5 ink-body"
               />
             </div>
           )}
           <div>
-            <label className="text-[11px] text-slate-400 block mb-1">How many items</label>
+            <label className="data-type text-[12px] ink-muted block mb-1">How many items</label>
             <input
               type="number"
               min="1"
               max="50"
               value={dataSource.limit || 5}
               onChange={(e) => onDataSourceChange('limit', parseInt(e.target.value, 10) || 5)}
-              className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm px-2 py-1.5 text-slate-700 dark:text-slate-200"
+              className="w-full rounded-[4px] border border-[#C3D2E0] dark:border-slate-600 bg-white dark:bg-slate-800 text-sm px-2 py-1.5 ink-body"
             />
           </div>
         </div>
@@ -266,11 +266,11 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
           <div className="px-4 pb-4 space-y-3">
             {commonFields}
             <div className="px-4 pb-4">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Image</label>
+              <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Image</label>
               <EditableImage
                 value={block.imageUrl || ''}
                 onChange={(v) => onChange(block.id, 'imageUrl', v)}
-                className="w-full rounded-lg object-cover h-48"
+                className="w-full rounded-[4px] object-cover h-48"
                 placeholder="Click to add an image"
               />
             </div>
@@ -281,7 +281,7 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
           <div className="px-4 pb-4 space-y-3">
             {commonFields}
             <div className="px-4 pb-4">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Video</label>
+              <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Video</label>
               <EditableVideo
                 value={block.linkUrl || ''}
                 onChange={(v) => onChange(block.id, 'linkUrl', v)}
@@ -295,7 +295,7 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
           <div className="px-4 pb-4 space-y-3">
             {commonFields}
             <div className="px-4 pb-2">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-1">Link URL</label>
+              <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-1">Link URL</label>
               <EditableField
                 as="span"
                 value={block.linkUrl || ''}
@@ -305,12 +305,12 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
               />
             </div>
             <div className="px-4 pb-2">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-1">Button label</label>
+              <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-1">Button label</label>
               <EditableField
                 as="span"
                 value={block.linkText || ''}
                 onChange={(v) => onChange(block.id, 'linkText', v)}
-                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-[4px] text-sm font-medium"
                 placeholder="Button label..."
               />
             </div>
@@ -338,23 +338,23 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
             {commonFields}
             <div className="px-4 pb-4 space-y-3">
               <div>
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Quote</label>
+                <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Quote</label>
                 <EditableField
                   as="blockquote"
                   value={block.content || ''}
                   onChange={(v) => onChange(block.id, 'content', v)}
-                  className="text-slate-700 dark:text-slate-200 italic mt-1"
+                  className="ink-body italic mt-1"
                   placeholder="Quote..."
                   multiline
                 />
               </div>
               <div>
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Author</label>
+                <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Author</label>
                 <EditableField
                   as="p"
                   value={block.subtitle || ''}
                   onChange={(v) => onChange(block.id, 'subtitle', v)}
-                  className="text-slate-500 text-sm mt-1"
+                  className="ink-muted text-sm mt-1"
                   placeholder="Author name..."
                 />
               </div>
@@ -366,12 +366,12 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
           <div className="px-4 pb-4 space-y-3">
             {commonFields}
             <div className="px-4 pb-4">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Label (optional)</label>
+              <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Label (optional)</label>
               <EditableField
                 as="p"
                 value={block.subtitle || ''}
                 onChange={(v) => onChange(block.id, 'subtitle', v)}
-                className="text-slate-500 text-sm text-center mt-1"
+                className="ink-muted text-sm text-center mt-1"
                 placeholder="Divider label..."
               />
             </div>
@@ -382,12 +382,12 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
           <div className="px-4 pb-4 space-y-3">
             {commonFields}
             <div className="px-4 pb-4">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Table data (JSON)</label>
+              <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Table data (JSON)</label>
               <EditableField
                 as="div"
                 value={block.content || ''}
                 onChange={(v) => onChange(block.id, 'content', v)}
-                className="text-xs font-mono text-slate-600 dark:text-slate-300 mt-1"
+                className="data-type text-[12px] ink-body mt-1"
                 placeholder='{"headers":["A","B"],"rows":[["1","2"]]}'
                 multiline
               />
@@ -400,22 +400,22 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
             {commonFields}
             <div className="px-4 pb-4 space-y-3">
               <div>
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Email</label>
+                <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Email</label>
                 <EditableField
                   as="p"
                   value={block.linkUrl || ''}
                   onChange={(v) => onChange(block.id, 'linkUrl', v)}
-                  className="text-slate-600 text-sm mt-1"
+                  className="ink-body text-sm mt-1"
                   placeholder="email@ppia.org"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Additional info (JSON)</label>
+                <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Additional info (JSON)</label>
                 <EditableField
                   as="div"
                   value={block.content || ''}
                   onChange={(v) => onChange(block.id, 'content', v)}
-                  className="text-xs font-mono text-slate-600 dark:text-slate-300 mt-1"
+                  className="data-type text-[12px] ink-body mt-1"
                   placeholder='{"phone":"","address":"","instagram":""}'
                   multiline
                 />
@@ -429,22 +429,22 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
             {commonFields}
             <div className="px-4 pb-4 space-y-3">
               <div>
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Event name</label>
+                <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Event name</label>
                 <EditableField
                   as="p"
                   value={block.subtitle || ''}
                   onChange={(v) => onChange(block.id, 'subtitle', v)}
-                  className="text-slate-600 text-sm mt-1"
+                  className="ink-body text-sm mt-1"
                   placeholder="Event name..."
                 />
               </div>
               <div>
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Target date (ISO)</label>
+                <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Target date (ISO)</label>
                 <EditableField
                   as="p"
                   value={block.linkUrl || ''}
                   onChange={(v) => onChange(block.id, 'linkUrl', v)}
-                  className="text-slate-600 text-sm font-mono mt-1"
+                  className="data-type ink-body text-sm mt-1"
                   placeholder="2026-08-17T00:00:00Z"
                 />
               </div>
@@ -483,22 +483,22 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
             {commonFields}
             <div className="px-4 pb-4 space-y-3">
               <div>
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Embed URL</label>
+                <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Embed URL</label>
                 <EditableField
                   as="p"
                   value={block.linkUrl || ''}
                   onChange={(v) => onChange(block.id, 'linkUrl', v)}
-                  className="text-slate-600 text-xs font-mono mt-1"
+                  className="data-type ink-body text-[12px] mt-1"
                   placeholder="https://maps.google.com/..."
                 />
               </div>
               <div>
-                <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Address</label>
+                <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Address</label>
                 <EditableField
                   as="p"
                   value={block.subtitle || ''}
                   onChange={(v) => onChange(block.id, 'subtitle', v)}
-                  className="text-slate-500 text-sm mt-1"
+                  className="ink-muted text-sm mt-1"
                   placeholder="Location address..."
                 />
               </div>
@@ -510,12 +510,12 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
           <div className="px-4 pb-4 space-y-3">
             {commonFields}
             <div className="px-4 pb-4">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Button label</label>
+              <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Button label</label>
               <EditableField
                 as="p"
                 value={block.linkText || ''}
                 onChange={(v) => onChange(block.id, 'linkText', v)}
-                className="text-slate-600 text-sm mt-1"
+                className="ink-body text-sm mt-1"
                 placeholder="Subscribe"
               />
             </div>
@@ -558,7 +558,7 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
         return (
           <div className="space-y-0">
             {commonFields}
-            <div className="px-4 pb-4 text-xs text-slate-400">
+            <div className="px-4 pb-4 text-[12px] ink-muted">
               <p>💡 <strong>Title</strong> = the statistic number (e.g. &quot;500+&quot;), <strong>Subtitle</strong> = the caption label.</p>
             </div>
             {colorField}
@@ -575,7 +575,7 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
         return (
           <div className="space-y-0">
             {commonFields}
-            <div className="px-4 pb-4 text-xs text-slate-400 italic">
+            <div className="px-4 pb-4 text-[12px] ink-muted italic">
               This block only adds empty vertical spacing on the public page.
             </div>
           </div>
@@ -586,12 +586,12 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
             {commonFields}
             {imageField('Social media icon')}
             <div className="px-4 pb-4">
-              <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide block mb-2">Link URL</label>
+              <label className="data-type text-[12px] font-bold uppercase ink-muted block mb-2">Link URL</label>
               <EditableField
                 as="p"
                 value={block.linkUrl || ''}
                 onChange={(v) => onChange(block.id, 'linkUrl', v)}
-                className="text-slate-600 text-sm mt-1"
+                className="ink-body text-sm mt-1"
                 placeholder="https://instagram.com/ppia"
               />
             </div>
@@ -617,7 +617,7 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
         return (
           <div className="space-y-0">
             {commonFields}
-            <div className="px-4 pb-4 text-xs text-slate-400 italic">
+            <div className="px-4 pb-4 text-[12px] ink-muted italic">
               No dedicated editor for the &quot;{block.type}&quot; block type yet. The title and subtitle above still apply.
             </div>
           </div>
@@ -627,15 +627,15 @@ function BlockEditor({ block, onChange, onDelete }: BlockEditorProps) {
 
   return (
     <SortableItem id={block.id}>
-      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden mb-2 shadow-sm">
+      <div className="chart-paper rounded-[4px] border border-[#DCE7F1] dark:border-slate-700 overflow-hidden mb-2 shadow-sm">
         {/* Block header */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-700/60 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#F5FAFD] dark:bg-slate-700/60 border-b border-[#DCE7F1] dark:border-slate-700">
           <button onClick={() => setExpanded((v) => !v)} className="flex-1 flex items-center gap-2 text-left">
-            {expanded ? <ChevronUp size={13} className="text-slate-400 shrink-0" /> : <ChevronDown size={13} className="text-slate-400 shrink-0" />}
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wide">{block.type}</span>
-            <span className="text-xs text-slate-400 truncate">{block.title || block.subtitle || ''}</span>
+            {expanded ? <ChevronUp size={13} className="ink-muted shrink-0" /> : <ChevronDown size={13} className="ink-muted shrink-0" />}
+            <span className="data-type text-[12px] font-bold uppercase ink-muted">{block.type}</span>
+            <span className="text-[12px] ink-muted truncate">{block.title || block.subtitle || ''}</span>
           </button>
-          <button onClick={() => onDelete(block.id)} className="p-1 text-slate-300 hover:text-red-500 transition-colors" title="Delete block" aria-label="Delete block">
+          <button onClick={() => onDelete(block.id)} className="p-1 ink-muted hover:text-red-500 transition-colors" title="Delete block" aria-label="Delete block">
             <Trash2 size={13} />
           </button>
         </div>
@@ -904,7 +904,7 @@ export default function PageCanvasEditor() {
 
   if (pageLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center gap-3 bg-slate-100 dark:bg-slate-950 text-slate-500 dark:text-slate-400">
+      <div className="fixed inset-0 flex items-center justify-center gap-3 bg-[#EDF5FB] dark:bg-slate-950 ink-muted">
         <Loader2 size={18} className="animate-spin" />
         <span className="text-sm">Loading page...</span>
       </div>
@@ -913,18 +913,18 @@ export default function PageCanvasEditor() {
 
   if (!page) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-slate-100 dark:bg-slate-950 p-6">
-        <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 p-6 text-center">
+      <div className="fixed inset-0 flex items-center justify-center bg-[#EDF5FB] dark:bg-slate-950 p-6">
+        <div className="chart-paper w-full max-w-sm rounded-[5px] p-6 text-center ring-1 ring-[#DCE7F1] dark:ring-slate-800">
           <AlertCircle size={24} className="mx-auto text-amber-500 mb-3" />
-          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <p className="text-sm font-semibold ink-strong">
             Page not found
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono break-all">
+          <p className="data-type text-[12px] ink-muted mt-1 break-all">
             /{slug}
           </p>
           <Link
             href="/dashboard/admin/pages"
-            className="inline-flex items-center justify-center h-9 px-4 mt-4 rounded-lg bg-[#E8231A] hover:bg-[#C41E16] text-white text-xs font-semibold transition-colors"
+            className="inline-flex items-center justify-center h-9 px-4 mt-4 rounded-[4px] bg-[#E8231A] hover:bg-[#C41E16] text-white text-[12px] font-semibold transition-colors"
           >
             Back to pages
           </Link>
@@ -953,14 +953,14 @@ export default function PageCanvasEditor() {
        */
       canvasMode={hasSchema ? 'preview' : 'document'}
       toolbarExtra={
-        <div className="hidden sm:flex items-center gap-0.5 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
+        <div className="hidden sm:flex items-center gap-0.5 p-0.5 rounded-[3px] bg-[#EDF5FB] dark:bg-slate-800">
           <button
             type="button"
             onClick={undo}
             disabled={!canUndo}
             title="Undo (Ctrl+Z)"
             aria-label="Undo last change"
-            className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-900 hover:bg-white dark:hover:bg-slate-700 dark:hover:text-slate-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-[3px] ink-muted hover:text-slate-900 hover:bg-white dark:hover:bg-slate-700 dark:hover:text-slate-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
           >
             <Undo2 size={14} />
           </button>
@@ -970,7 +970,7 @@ export default function PageCanvasEditor() {
             disabled={!canRedo}
             title="Redo (Ctrl+Y)"
             aria-label="Redo change"
-            className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-900 hover:bg-white dark:hover:bg-slate-700 dark:hover:text-slate-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-[3px] ink-muted hover:text-slate-900 hover:bg-white dark:hover:bg-slate-700 dark:hover:text-slate-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
           >
             <Redo2 size={14} />
           </button>
@@ -983,8 +983,8 @@ export default function PageCanvasEditor() {
               though the page had plenty of editable content. */}
           {hasSchema && (
             <>
-              <div className="shrink-0 flex items-center h-11 px-3 border-b border-slate-200 dark:border-slate-800">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="shrink-0 flex items-center h-11 px-3 border-b border-[#DCE7F1] dark:border-slate-800">
+                <p className="data-type text-[12px] font-bold uppercase ink-muted">
                   Page content
                 </p>
               </div>
@@ -994,25 +994,25 @@ export default function PageCanvasEditor() {
                     key={field.key}
                     type="button"
                     onClick={() => focusContentField(field.key)}
-                    className="w-full flex items-center gap-2 min-h-9 px-2.5 py-1.5 rounded-lg text-xs text-left text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8231A] transition-colors"
+                    className="w-full flex items-center gap-2 min-h-9 px-2.5 py-1.5 rounded-[4px] text-[12px] text-left ink-body hover:bg-[#EDF5FB] dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8231A] transition-colors"
                   >
-                    <FileText size={13} className="shrink-0 text-slate-400" />
+                    <FileText size={13} className="shrink-0 ink-muted" />
                     <span className="flex-1 leading-snug">{field.label}</span>
-                    <ChevronRight size={12} className="shrink-0 text-slate-300" />
+                    <ChevronRight size={12} className="shrink-0 ink-muted" />
                   </button>
                 ))}
               </nav>
             </>
           )}
 
-          <div className="shrink-0 flex items-center justify-between h-11 px-3 border-y border-slate-200 dark:border-slate-800">
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="shrink-0 flex items-center justify-between h-11 px-3 border-y border-[#DCE7F1] dark:border-slate-800">
+            <p className="data-type text-[12px] font-bold uppercase ink-muted">
               Extra blocks ({blocks.length})
             </p>
             <button
               type="button"
               onClick={() => setShowBlockLibrary(true)}
-              className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[11px] font-semibold text-[#E8231A] hover:bg-[#E8231A]/10 transition-colors"
+              className="inline-flex items-center gap-1 h-7 px-2 rounded-[3px] text-[12px] font-semibold text-[#E8231A] hover:bg-[#E8231A]/10 transition-colors"
             >
               <Plus size={12} />
               Add
@@ -1020,7 +1020,7 @@ export default function PageCanvasEditor() {
           </div>
           <nav className="flex-1 min-h-0 overflow-y-auto p-2 space-y-0.5" aria-label="Blocks">
             {blocks.length === 0 ? (
-              <p className="px-2 py-6 text-xs text-slate-400 text-center leading-relaxed">
+              <p className="px-2 py-6 text-[12px] ink-muted text-center leading-relaxed">
                 {hasSchema
                   ? 'No extra blocks. This page does not need them.'
                   : 'No blocks yet. Click Add to start.'}
@@ -1035,23 +1035,23 @@ export default function PageCanvasEditor() {
                       .getElementById(`block-${block.id}`)
                       ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
                   }
-                  className="w-full flex items-center gap-2 h-9 px-2.5 rounded-lg text-xs text-left text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8231A] transition-colors"
+                  className="w-full flex items-center gap-2 h-9 px-2.5 rounded-[4px] text-[12px] text-left ink-body hover:bg-[#EDF5FB] dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8231A] transition-colors"
                 >
-                  <span className="w-4 shrink-0 text-slate-400 font-mono text-[10px] tabular-nums">
+                  <span className="data-type w-4 shrink-0 ink-muted text-[12px]">
                     {idx + 1}
                   </span>
-                  <span className="shrink-0 text-[10px] font-semibold text-slate-400 uppercase">
+                  <span className="shrink-0 text-[12px] font-semibold ink-muted uppercase">
                     {block.type}
                   </span>
-                  <span className="truncate flex-1 text-slate-500 dark:text-slate-400">
+                  <span className="truncate flex-1 ink-muted">
                     {block.title || block.subtitle || '—'}
                   </span>
                 </button>
               ))
             )}
           </nav>
-          <div className="shrink-0 px-3 py-2.5 border-t border-slate-200 dark:border-slate-800">
-            <p className="text-[11px] leading-relaxed text-slate-400">
+          <div className="shrink-0 px-3 py-2.5 border-t border-[#DCE7F1] dark:border-slate-800">
+            <p className="text-[12px] leading-relaxed ink-muted">
               {hasSchema
                 ? 'Edit this page in the Content tab on the right. The canvas shows the live page.'
                 : 'Click any text on the canvas to edit it. Drag blocks to reorder.'}
@@ -1103,7 +1103,7 @@ export default function PageCanvasEditor() {
         <button
           type="button"
           onClick={() => setShowBlockLibrary(true)}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-[#E8231A] hover:text-[#E8231A] hover:bg-[#E8231A]/[0.03] transition-colors text-sm font-medium mt-2"
+          className="w-full flex items-center justify-center gap-2 py-4 rounded-[4px] border-2 border-dashed border-[#C3D2E0] dark:border-slate-600 ink-muted hover:border-[#E8231A] hover:text-[#E8231A] hover:bg-[#E8231A]/[0.03] transition-colors text-sm font-medium mt-2"
         >
           <Plus size={16} />
           Add block
@@ -1120,7 +1120,7 @@ export default function PageCanvasEditor() {
           aria-label="Choose a block type"
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl ring-1 ring-slate-900/10 w-full max-w-lg h-[560px] flex flex-col overflow-hidden"
+            className="chart-paper rounded-[5px] shadow-2xl ring-1 ring-[#DCE7F1] dark:ring-slate-800 w-full max-w-lg h-[560px] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <BlockLibrary
@@ -1136,7 +1136,7 @@ export default function PageCanvasEditor() {
         <div
           role="status"
           aria-live="polite"
-          className={`fixed bottom-5 right-5 z-[110] flex items-center gap-3 pl-4 pr-3 py-3 rounded-xl shadow-lg text-sm font-medium ring-1 ${
+          className={`fixed bottom-5 right-5 z-[110] flex items-center gap-3 pl-4 pr-3 py-3 rounded-[4px] shadow-lg text-sm font-medium ring-1 ${
             toast.type === 'success'
               ? 'bg-white text-emerald-800 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-800'
               : 'bg-white text-red-800 ring-red-200 dark:bg-red-950 dark:text-red-200 dark:ring-red-800'
@@ -1152,7 +1152,7 @@ export default function PageCanvasEditor() {
             type="button"
             onClick={() => setToast(null)}
             aria-label="Dismiss notification"
-            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            className="p-1 rounded-[3px] ink-muted hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
           >
             <X size={14} />
           </button>

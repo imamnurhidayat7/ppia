@@ -149,6 +149,219 @@ h1, h2, h3, h4, h5, h6 {
     #0D1B33;
 }
 
+/*
+ * Maritime landing theme.
+ *
+ * The hero establishes a deep-sea palette, so the sections below it alternate
+ * between two surfaces from the same family instead of plain white/navy blocks:
+ *
+ *   .sea-deep  — below the waterline, matching the hero gradient exactly.
+ *   .sea-shore — above it: a pale mist/shore wash rather than flat white.
+ *
+ * `.sea-chart` is the faint navigation-chart grid, and `.rope-rule` is the
+ * dashed rope hairline used where a section needs a horizontal edge.
+ */
+.sea-deep {
+  background: linear-gradient(115deg, #071321 0%, #0D2740 48%, #0B1C2E 100%);
+}
+
+.sea-shore {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5FAFD 52%, #EDF5FB 100%);
+}
+
+.sea-chart {
+  background-image:
+    linear-gradient(rgba(13, 39, 64, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 39, 64, 0.5) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.sea-chart-light {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.rope-rule {
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.45) 0 9px,
+    transparent 9px 18px
+  );
+}
+
+/*
+ * Signature materials for the landing page.
+ *
+ * The sections used to share one skeleton (centred eyebrow, heading, uniform
+ * card grid), which reads as a template no matter how the colours are tuned.
+ * These give each section its own physical object to be made of: chart paper,
+ * a rope route, a stamped postcard, a perforated boarding pass.
+ */
+
+/*
+ * Chart paper: the card material.
+ *
+ * The surface is white, not the warm cream it started as. Cream measured
+ * #FCFBF7, which pushed the muted label colour to 2.78:1 — below the 3:1 floor
+ * for any text at all — and held body copy at 5.27:1. The maritime feel now
+ * comes from the fibre grain and the structure around the card (rope, stamp,
+ * corner fold) rather than from tinting the paper, so contrast is not spent on
+ * decoration.
+ */
+.chart-paper {
+  background-color: #FFFFFF;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(13, 39, 64, 0.03) 0 1px, transparent 1px),
+    radial-gradient(circle at 72% 64%, rgba(13, 39, 64, 0.028) 0 1px, transparent 1px);
+  background-size: 13px 13px, 19px 19px;
+}
+
+/* The rope a route or a list is threaded onto. */
+.rope-line-v {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(217, 182, 139, 0.85) 0 7px,
+    rgba(217, 182, 139, 0.15) 7px 14px
+  );
+}
+
+/*
+ * Perforated tear edge for the boarding pass. A row of background-coloured
+ * dots punched along the seam, so the two halves read as one torn ticket
+ * rather than two stacked boxes.
+ */
+.perforation-v {
+  background-image: radial-gradient(circle, #071321 0 3px, transparent 3px);
+  background-size: 8px 14px;
+  background-repeat: repeat-y;
+  background-position: center;
+}
+
+/*
+ * Surface-aware ink scale.
+ *
+ * Every public page mixes light (`.sea-shore`, `.chart-paper`) and dark
+ * (`.sea-deep`) surfaces, and the same muted grey was previously hard-coded on
+ * both — which is why small labels failed on paper while looking fine on navy.
+ * These three classes resolve to a value measured against whichever surface
+ * they land on, so a component can be moved between surfaces without becoming
+ * unreadable:
+ *
+ *   on white          on #0B1C2E
+ *   ink-strong 17.1:1  13.4:1
+ *   ink-body   10.4:1  11.6:1
+ *   ink-muted   7.6:1   9.5:1
+ *
+ * All three clear WCAG AA (4.5:1) and AAA (7:1) for body text. Declared in
+ * `@layer components` so an explicit utility such as `text-white` still wins.
+ */
+@layer components {
+  .ink-strong { color: #0F1B33; }
+  .ink-body { color: #334155; }
+  .ink-muted { color: #475569; }
+
+  /*
+   * Brand red as *text*.
+   *
+   * The brand red itself is #E8231A, which measures 4.48:1 on white and 3.84:1
+   * on the deep-sea surface — under AA for the small uppercase labels it was
+   * being used for. Fills, rules and icons keep the true brand red; text
+   * switches to a shade that carries the same hue at a legible contrast:
+   * 5.9:1 on light, 7.5:1 on dark.
+   */
+  .accent-label { color: #C41E16; }
+  .sea-deep .accent-label { color: #FF8A80; }
+  .sea-deep .chart-paper .accent-label { color: #C41E16; }
+
+  /* Below the waterline the same roles need light values. */
+  .sea-deep .ink-strong { color: #F1F5F9; }
+  .sea-deep .ink-body { color: #CBD5E1; }
+  .sea-deep .ink-muted { color: #B6C2D1; }
+
+  /* …unless they sit on a card, which is light again. */
+  .sea-deep .chart-paper .ink-strong { color: #0F1B33; }
+  .sea-deep .chart-paper .ink-body { color: #334155; }
+  .sea-deep .chart-paper .ink-muted { color: #475569; }
+
+  /*
+   * Dark theme. The dashboard has a theme toggle, so every token needs a night
+   * value or a card turns into a white slab under a dark shell. Measured
+   * against the dark card surface (#0F1B2B): 14.6 / 10.2 / 7.4:1.
+   */
+  .dark .ink-strong { color: #F1F5F9; }
+  .dark .ink-body { color: #CBD5E1; }
+  .dark .ink-muted { color: #A8B6C6; }
+  .dark .accent-label { color: #FF8A80; }
+
+  /*
+   * Dashboard surfaces.
+   *
+   * `.dash-shore` is the page background and `.chart-paper` the card, both
+   * theme-aware, so a dashboard page inherits the maritime look without every
+   * screen hard-coding `bg-slate-50` / `bg-white` again.
+   */
+  .dash-shore {
+    background:
+      linear-gradient(180deg, #F7FBFD 0%, #EFF6FB 100%);
+  }
+  .dark .dash-shore {
+    background: linear-gradient(180deg, #071321 0%, #0A1928 100%);
+  }
+}
+
+/* The card material follows the theme too. */
+.dark .chart-paper {
+  background-color: #0F1B2B;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px),
+    radial-gradient(circle at 72% 64%, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px);
+}
+
+.dark .rope-rule {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.4) 0 9px,
+    transparent 9px 18px
+  );
+}
+
+.dark .sea-chart {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+}
+
+/* Coordinates, gate numbers, log entries — anything that should read as data. */
+.data-type {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+/* Postcard stamp: a perforated square frame. */
+.stamp-edge {
+  background-image: radial-gradient(circle, transparent 0 2.2px, currentColor 2.2px);
+  background-size: 7px 7px;
+  background-position: center;
+}
+
+/* Horizontal drift for the layered wave transitions between sections. */
+@keyframes wave-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-2.5%, 0, 0); }
+}
+
+.wave-drift-slow { animation: wave-drift 16s ease-in-out infinite; }
+.wave-drift-fast { animation: wave-drift 11s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-drift-slow,
+  .wave-drift-fast { animation: none; }
+}
+
 .glow-red {
   box-shadow: 0 0 30px rgba(232, 35, 26, 0.45), 0 0 70px rgba(232, 35, 26, 0.12);
 }

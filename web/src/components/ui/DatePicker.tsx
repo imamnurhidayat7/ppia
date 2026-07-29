@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { format, addMonths, subMonths, getYear, getMonth, eachMonthOfInterval, startOfYear, endOfYear, isSameDay, isToday, isBefore, isAfter } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
@@ -21,6 +22,11 @@ export function DatePicker({
   const [viewDate, setViewDate] = React.useState(new Date());
   const [selectMode, setSelectMode] = React.useState<'month' | 'year'>('month');
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const popoverRef = React.useRef<HTMLDivElement>(null);
+  // The calendar renders in a portal (see below), so it needs an absolute
+  // viewport position rather than being placed relative to the trigger.
+  const [coords, setCoords] = React.useState<{ top: number; left: number; width: number } | null>(null);
 
   const years = React.useMemo(() => {
     const start = startOfYear(subMonths(new Date(), 12 * 20));
@@ -28,12 +34,31 @@ export function DatePicker({
     return [...new Set(eachMonthOfInterval({ start, end }).map(d => getYear(d)))];
   }, []);
 
+  const updatePosition = React.useCallback(() => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) setCoords({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+  }, []);
+
+  // Reposition while open so the calendar tracks the field on scroll/resize.
+  React.useEffect(() => {
+    if (!isOpen) return;
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen, updatePosition]);
+
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setSelectMode('month');
-      }
+      const target = event.target as Node;
+      // The calendar lives in a portal outside `containerRef`, so both the
+      // trigger and the popover must be treated as "inside".
+      if (containerRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
+      setIsOpen(false);
+      setSelectMode('month');
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -88,6 +113,7 @@ export function DatePicker({
         </label>
       )}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full px-4 py-3.5 rounded-xl border-2 transition-all duration-200 outline-none text-left flex items-center justify-between ${
@@ -102,8 +128,12 @@ export function DatePicker({
         <CalendarIcon className="text-gray-400 dark:text-slate-500" size={20} />
       </button>
 
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-50">
+      {isOpen && coords && typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            style={{ position: 'fixed', top: coords.top, left: coords.left, width: coords.width, zIndex: 9999 }}
+          >
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-navy to-navy-dark">
@@ -227,8 +257,9 @@ export function DatePicker({
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

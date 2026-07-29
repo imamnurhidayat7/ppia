@@ -362,52 +362,57 @@ export default function AuditLogsPage() {
             return (
               <Tr key={log.id}>
                 <Td>
-                  <span className="whitespace-nowrap text-slate-600 dark:text-slate-300">
+                  <span className="data-type whitespace-nowrap text-[12px] ink-body">
                     {formatTimestamp(log.createdAt)}
                   </span>
                 </Td>
                 <Td>
                   {log.user ? (
                     <div className="flex items-center gap-2.5">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF0EF] dark:bg-[#E8231A]/15">
-                        <UserIcon className="h-3.5 w-3.5 text-[#E8231A]" />
+                      {/* Porthole frame instead of a tinted disc. */}
+                      <span
+                        aria-hidden="true"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#E8231A]"
+                        style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 3px rgba(11,28,46,0.05)' }}
+                      >
+                        <UserIcon className="h-3.5 w-3.5" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                        <p className="truncate font-semibold ink-strong">
                           {log.user.name}
                         </p>
-                        <p className="truncate text-xs text-slate-400">{log.user.email}</p>
+                        <p className="truncate text-[12px] ink-muted">{log.user.email}</p>
                       </div>
                     </div>
                   ) : (
-                    <span className="text-slate-400">System</span>
+                    <span className="ink-muted">System</span>
                   )}
                 </Td>
                 <Td>
-                  <Badge variant={ACTION_VARIANT[log.action] ?? 'default'}>
+                  <Badge variant={ACTION_VARIANT[log.action] ?? 'default'} className="data-type uppercase">
                     {ACTION_LABEL[log.action] ?? log.action}
                   </Badge>
                 </Td>
                 <Td>
                   <span className="flex items-center gap-2">
-                    <EntityIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                    <EntityIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 ink-muted" />
+                    <span className="font-medium ink-strong">
                       {log.entity}
                     </span>
                   </span>
                   {log.entityId && (
-                    <span className="mt-0.5 block max-w-[10rem] truncate font-mono text-xs text-slate-400">
+                    <span className="data-type mt-0.5 block max-w-[10rem] truncate text-[12px] ink-muted">
                       {log.entityId}
                     </span>
                   )}
                 </Td>
                 <Td>
                   {summary ? (
-                    <code className="block max-w-sm truncate rounded bg-slate-100 px-2 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <code className="data-type block max-w-sm truncate rounded-[3px] bg-[#EDF5FB] px-2 py-1 text-[12px] ink-body dark:bg-slate-800">
                       {summary}
                     </code>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="ink-muted">—</span>
                   )}
                 </Td>
               </Tr>

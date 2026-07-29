@@ -8,12 +8,13 @@ import {
   checkInByCode,
   updateRegistrationStatus
 } from '../controllers/eventRegistrationController';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate, authorize, optionalAuthenticate } from '../middleware/auth';
 
 const router = Router();
 
-// Member routes
-router.post('/', authenticate, registerForEvent);
+// Registration is open to everyone: a signed-in member is linked to their
+// account, a guest supplies their own name and e-mail.
+router.post('/', optionalAuthenticate, registerForEvent);
 router.get('/my', authenticate, getMyRegistrations);
 router.delete('/:registrationId', authenticate, cancelRegistration);
 

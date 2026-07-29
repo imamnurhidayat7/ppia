@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import api from "@/lib/api";
+import WaveTransition from "@/components/sections/WaveTransition";
 import type { PublicResearch } from "@/lib/server-api";
 import {
   Calendar,
@@ -21,6 +22,13 @@ import {
   Eye,
   ArrowRight,
 } from "lucide-react";
+
+/**
+ * Seam colours for the waterline transition — they match the ends of the
+ * `.sea-deep` / `.sea-shore` gradients in globals.css.
+ */
+const DEEP_SEA = "#0B1C2E";
+const SHORE = "#FFFFFF";
 
 interface Comment {
   id: string;
@@ -99,10 +107,11 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString("en-US", {
+    // Printed as chart data, so the same en-NZ format as the homepage log lines.
+    return new Date(dateString).toLocaleDateString("en-NZ", {
+      day: "2-digit",
+      month: "short",
       year: "numeric",
-      month: "long",
-      day: "numeric",
     });
   };
 
@@ -111,37 +120,56 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
   const formattedDate = formatDate(research.publicationDate || research.createdAt);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="sea-shore relative min-h-screen overflow-hidden">
+      {/* Faint navigation-chart grid over the shore surface. */}
+      <div
+        aria-hidden="true"
+        className="sea-chart pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          maskImage: "radial-gradient(ellipse 85% 55% at 50% 30%, transparent 20%, black 90%)",
+          WebkitMaskImage: "radial-gradient(ellipse 85% 55% at 50% 30%, transparent 20%, black 90%)",
+        }}
+      />
 
-      <section className="relative pt-28 pb-12 mesh-gradient overflow-hidden">
-        <div
-          className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-15 pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${accentColor}, transparent 70%)` }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full opacity-10 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #8B5CF6, transparent 70%)" }}
-        />
+      {/* Masthead — below the waterline, matching every other public page. */}
+      <section className="sea-deep relative pt-28 pb-12 overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div
+            className="sea-chart-light absolute inset-0 opacity-[0.05]"
+            style={{
+              maskImage: "radial-gradient(ellipse 80% 75% at 30% 45%, transparent 15%, black 85%)",
+              WebkitMaskImage: "radial-gradient(ellipse 80% 75% at 30% 45%, transparent 15%, black 85%)",
+            }}
+          />
+          <div
+            className="absolute top-0 right-0 h-[400px] w-[400px] rounded-full opacity-15"
+            style={{ background: `radial-gradient(circle, ${accentColor}, transparent 70%)` }}
+          />
+          <div
+            className="absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full opacity-10"
+            style={{ background: "radial-gradient(circle, #8B5CF6, transparent 70%)" }}
+          />
+        </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <Link
             href="/activities/research-corner"
-            className="inline-flex items-center gap-2 text-white/60 hover:text-white mb-6 transition-colors text-sm"
+            className="data-type mb-6 inline-flex items-center gap-2 text-[12px] uppercase text-white/70 transition-colors hover:text-white"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={13} aria-hidden="true" />
             Back to Research Corner
           </Link>
 
           <div className="flex items-center gap-3 mb-4">
             <span
-              className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+              className="data-type inline-block rounded-[3px] px-2.5 py-1 text-[12px] font-bold uppercase"
               style={{ background: `${accentColor}25`, color: accentColor }}
             >
               {research.division?.name || research.researchType || "Research"}
             </span>
             {research.researchStatus && (
               <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                className={`data-type inline-block rounded-[3px] px-2.5 py-1 text-[12px] font-bold uppercase ${
                   research.researchStatus === "PUBLISHED"
                     ? "bg-green-500/20 text-green-300"
                     : "bg-amber-500/20 text-amber-300"
@@ -167,25 +195,27 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-6 text-white/80 text-sm">
+          <div className="flex flex-wrap items-center gap-5">
             <div className="flex items-center gap-2">
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+                className="flex h-8 w-8 items-center justify-center rounded-[3px] font-bold text-white"
                 style={{ background: accentColor }}
+                aria-hidden="true"
               >
                 {authorName.charAt(0).toUpperCase()}
               </div>
-              <span className="text-white font-medium">{authorName}</span>
+              <span className="text-sm font-medium text-white">{authorName}</span>
             </div>
+            <span aria-hidden="true" className="h-px w-8 bg-white/20" />
             {formattedDate && (
-              <div className="flex items-center gap-1.5">
-                <Calendar size={14} />
+              <div className="data-type flex items-center gap-1.5 text-[12px] uppercase text-white/70">
+                <Calendar size={11} aria-hidden="true" />
                 <span>{formattedDate}</span>
               </div>
             )}
             {research.venue && (
-              <div className="flex items-center gap-1.5">
-                <BookOpen size={14} />
+              <div className="data-type flex items-center gap-1.5 text-[12px] uppercase text-white/70">
+                <BookOpen size={11} aria-hidden="true" />
                 <span>{research.venue}</span>
               </div>
             )}
@@ -193,7 +223,10 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
         </div>
       </section>
 
-      <section className="py-12">
+      {/* Waterline: the paper itself is read ashore. */}
+      <WaveTransition from={DEEP_SEA} to={SHORE} />
+
+      <section className="relative py-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div className="lg:col-span-8">
@@ -201,15 +234,15 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-[#F8FAFC] rounded-2xl p-6 mb-8 border-l-4"
-                  style={{ borderColor: accentColor }}
+                  className="chart-paper mb-8 rounded-[5px] border border-[#DCE7F1] border-l-4 p-6"
+                  style={{ borderLeftColor: accentColor }}
                 >
-                  <h2 className="font-bold text-[#1A2B4A] text-lg mb-3 flex items-center gap-2">
+                  <h2 className="font-bold text-[#0F1B33] text-lg mb-3 flex items-center gap-2">
                     <FileText size={20} style={{ color: accentColor }} />
                     Abstract
                   </h2>
                   <div
-                    className="text-[#64748B] leading-relaxed prose prose-sm max-w-none [&_p]:my-2 [&_h1]:text-2xl [&_h1]:font-black [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-[#8B5CF6] [&_a]:underline [&_strong]:font-bold [&_em]:italic"
+                    className="ink-body leading-relaxed prose prose-sm max-w-none [&_p]:my-2 [&_h1]:text-2xl [&_h1]:font-black [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-[#8B5CF6] [&_a]:underline [&_strong]:font-bold [&_em]:italic"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(research.abstract) }}
                   />
                 </motion.div>
@@ -220,11 +253,11 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.05 }}
-                  className="bg-[#F8FAFC] rounded-2xl p-6 mb-8"
+                  className="chart-paper mb-8 rounded-[5px] border border-[#DCE7F1] p-6"
                 >
-                  <h2 className="font-bold text-[#1A2B4A] text-lg mb-3">Abstrak</h2>
+                  <h2 className="font-bold text-[#0F1B33] text-lg mb-3">Abstrak</h2>
                   <div
-                    className="text-[#64748B] leading-relaxed prose prose-sm max-w-none [&_p]:my-2 [&_h1]:text-2xl [&_h1]:font-black [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-[#8B5CF6] [&_a]:underline [&_strong]:font-bold [&_em]:italic"
+                    className="ink-body leading-relaxed prose prose-sm max-w-none [&_p]:my-2 [&_h1]:text-2xl [&_h1]:font-black [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-[#8B5CF6] [&_a]:underline [&_strong]:font-bold [&_em]:italic"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(research.abstractIndonesian) }}
                   />
                 </motion.div>
@@ -234,63 +267,64 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white rounded-2xl p-6 border border-gray-100 mb-8"
+                className="chart-paper mb-8 rounded-[5px] border border-[#DCE7F1] p-6"
               >
-                <h2 className="font-bold text-[#1A2B4A] text-lg mb-4">
+                <h2 className="font-bold text-[#0F1B33] text-lg mb-4">
                   Publication Details
                 </h2>
+                <div aria-hidden="true" className="rope-rule mb-5" />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {research.researchType && (
                     <div>
-                      <p className="text-[#64748B] text-xs uppercase tracking-wider mb-1">
+                      <p className="data-type mb-1 text-[12px] uppercase ink-muted">
                         Type
                       </p>
-                      <p className="text-[#1A2B4A] font-medium text-sm">
+                      <p className="text-[#0F1B33] font-medium text-sm">
                         {research.researchType.replace(/_/g, " ")}
                       </p>
                     </div>
                   )}
                   {research.venue && (
                     <div>
-                      <p className="text-[#64748B] text-xs uppercase tracking-wider mb-1">
+                      <p className="data-type mb-1 text-[12px] uppercase ink-muted">
                         Venue / Conference
                       </p>
-                      <p className="text-[#1A2B4A] font-medium text-sm">
+                      <p className="text-[#0F1B33] font-medium text-sm">
                         {research.venue}
                       </p>
                     </div>
                   )}
                   {formattedDate && (
                     <div>
-                      <p className="text-[#64748B] text-xs uppercase tracking-wider mb-1">
+                      <p className="data-type mb-1 text-[12px] uppercase ink-muted">
                         Published Date
                       </p>
-                      <p className="text-[#1A2B4A] font-medium text-sm">
+                      <p className="text-[#0F1B33] font-medium text-sm">
                         {formattedDate}
                       </p>
                     </div>
                   )}
                   {research.division && (
                     <div>
-                      <p className="text-[#64748B] text-xs uppercase tracking-wider mb-1">
+                      <p className="data-type mb-1 text-[12px] uppercase ink-muted">
                         Division
                       </p>
-                      <p className="text-[#1A2B4A] font-medium text-sm">
+                      <p className="text-[#0F1B33] font-medium text-sm">
                         {research.division.name}
                       </p>
                     </div>
                   )}
                   {research.doi && (
                     <div className="sm:col-span-2">
-                      <p className="text-[#64748B] text-xs uppercase tracking-wider mb-1">
+                      <p className="data-type mb-1 text-[12px] uppercase ink-muted">
                         DOI
                       </p>
                       <a
                         href={`https://doi.org/${research.doi}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#3B82F6] hover:underline font-mono text-sm break-all"
+                        className="data-type break-all text-sm text-[#3B82F6] hover:underline"
                       >
                         {research.doi}
                       </a>
@@ -299,14 +333,14 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                 </div>
 
                 {(research.pdfUrl || research.url) && (
-                  <div className="mt-6 pt-6 border-t border-gray-100 flex flex-wrap gap-3">
+                  <div className="mt-6 flex flex-wrap gap-3 border-t border-[#DCE7F1] pt-6">
                     {research.pdfUrl && (
                       <a
                         href={research.pdfUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={handleDownload}
-                        className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors"
+                        className="inline-flex items-center gap-2 rounded-[3px] px-5 py-2.5 font-semibold text-white transition-colors"
                         style={{ background: accentColor }}
                       >
                         <ExternalLink size={16} />
@@ -318,7 +352,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                         href={research.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-gray-100 text-[#1A2B4A] hover:bg-gray-200 px-5 py-2.5 rounded-xl font-semibold transition-colors"
+                        className="inline-flex items-center gap-2 rounded-[3px] border border-[#DCE7F1] px-5 py-2.5 font-semibold text-[#0F1B33] transition-colors hover:border-[#9FB3C6]"
                       >
                         <ExternalLink size={16} />
                         External Link
@@ -335,14 +369,14 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                   transition={{ delay: 0.15 }}
                   className="mb-8"
                 >
-                  <p className="text-[#64748B] text-xs uppercase tracking-wider mb-2">
+                  <p className="data-type mb-2 text-[12px] font-bold uppercase ink-muted">
                     Keywords
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {research.keywords.split(",").map((kw, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1 bg-[#F1F5F9] text-[#64748B] text-sm rounded-full"
+                        className="data-type rounded-[3px] border border-[#DCE7F1] px-2.5 py-1 text-[12px] font-bold uppercase text-[#5B6B7C]"
                       >
                         {kw.trim()}
                       </span>
@@ -355,13 +389,13 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl p-6 border border-gray-100 mb-8"
+                className="chart-paper mb-8 rounded-[5px] border border-[#DCE7F1] p-6"
               >
-                <h2 className="font-bold text-[#1A2B4A] text-lg mb-3 flex items-center gap-2">
-                  <FileText size={18} style={{ color: accentColor }} />
+                <h2 className="font-bold text-[#0F1B33] text-lg mb-3 flex items-center gap-2">
+                  <FileText size={18} style={{ color: accentColor }} aria-hidden="true" />
                   Cite This Research
                 </h2>
-                <div className="bg-[#F8FAFC] rounded-xl p-4 font-mono text-xs text-[#64748B] break-all">
+                <div className="data-type break-all rounded-[3px] border border-[#DCE7F1] bg-white/70 p-4 text-xs text-[#5B6B7C]">
                   {authorName} (
                   {new Date(
                     research.publicationDate || research.createdAt
@@ -380,7 +414,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
               >
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <MessageCircle className="w-5 h-5 text-[#E8231A]" />
+                    <MessageCircle className="w-5 h-5 accent-label" />
                     <h3 className="font-bold text-[#1A2B4A] text-xl">
                       Comments {comments.length > 0 && `(${comments.length})`}
                     </h3>
@@ -416,7 +450,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                 {showCommentForm && (
                   <form
                     onSubmit={(e) => handleSubmitComment(e)}
-                    className="mb-8 bg-[#F8FAFC] rounded-2xl p-6 border border-gray-100"
+                    className="chart-paper mb-8 rounded-[5px] border border-[#DCE7F1] p-6"
                   >
                     <h4 className="font-semibold text-[#1A2B4A] mb-4">
                       Leave a Comment
@@ -460,7 +494,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                           setShowCommentForm(false);
                           setCommentForm({ name: "", email: "", content: "" });
                         }}
-                        className="px-4 py-2 border border-gray-200 rounded-lg text-[#64748B] hover:bg-gray-50 text-sm"
+                        className="px-4 py-2 border border-gray-200 rounded-lg ink-body hover:bg-gray-50 text-sm"
                       >
                         Cancel
                       </button>
@@ -480,10 +514,10 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
 
                 {commentsLoading ? (
                   <div className="text-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#E8231A] mx-auto" />
+                    <Loader2 className="w-6 h-6 animate-spin accent-label mx-auto" />
                   </div>
                 ) : comments.length === 0 ? (
-                  <div className="text-center py-10 text-[#64748B] bg-[#F8FAFC] rounded-xl border border-gray-100">
+                  <div className="chart-paper rounded-[5px] border border-dashed border-[#C3D2E0] py-10 text-center ink-body">
                     <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-30" />
                     <p className="text-sm">
                       No comments yet. Be the first to comment!
@@ -494,10 +528,13 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                     {comments.map((comment) => (
                       <div
                         key={comment.id}
-                        className="bg-[#F8FAFC] rounded-xl p-5 border border-gray-100"
+                        className="chart-paper rounded-[5px] border border-[#DCE7F1] p-5"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="w-9 h-9 rounded-full bg-[#1A2B4A] flex items-center justify-center shrink-0">
+                          <div
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0B1C2E]"
+                            style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.35), 0 0 0 3px rgba(11,28,46,0.1)" }}
+                          >
                             <span className="text-white text-xs font-bold">
                               {comment.userName.charAt(0).toUpperCase()}
                             </span>
@@ -511,7 +548,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                                 {new Date(comment.createdAt).toLocaleDateString()}
                               </span>
                             </div>
-                            <p className="text-[#64748B] text-sm leading-relaxed">
+                            <p className="ink-body text-sm leading-relaxed">
                               {comment.content}
                             </p>
                             <button
@@ -521,7 +558,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                                 );
                                 setShowCommentForm(true);
                               }}
-                              className="text-xs text-[#E8231A] hover:underline mt-2 flex items-center gap-1"
+                              className="text-xs accent-label hover:underline mt-2 flex items-center gap-1"
                             >
                               <Reply className="w-3 h-3" /> Reply
                             </button>
@@ -557,7 +594,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                                     content: "",
                                   });
                                 }}
-                                className="px-3 py-1 border border-gray-200 rounded-lg text-[#64748B] hover:bg-gray-50 text-xs"
+                                className="px-3 py-1 border border-gray-200 rounded-lg ink-body hover:bg-gray-50 text-xs"
                               >
                                 Cancel
                               </button>
@@ -583,11 +620,11 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
 
             <div className="lg:col-span-4">
               <div className="sticky top-28 space-y-6">
-                <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-gray-100">
-                  <h4 className="font-semibold text-[#1A2B4A] text-sm mb-4">Stats</h4>
+                <div className="chart-paper rounded-[5px] border border-[#DCE7F1] p-5">
+                  <h4 className="data-type mb-4 text-[12px] font-bold uppercase ink-muted">Stats</h4>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-[#64748B] text-sm">
+                      <div className="flex items-center gap-2 ink-body text-sm">
                         <Eye size={14} />
                         <span>Views</span>
                       </div>
@@ -596,7 +633,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-[#64748B] text-sm">
+                      <div className="flex items-center gap-2 ink-body text-sm">
                         <Download size={14} />
                         <span>Downloads</span>
                       </div>
@@ -607,8 +644,8 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                   </div>
                 </div>
 
-                <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-gray-100">
-                  <h4 className="font-semibold text-[#1A2B4A] text-sm mb-4">Author</h4>
+                <div className="chart-paper rounded-[5px] border border-[#DCE7F1] p-5">
+                  <h4 className="data-type mb-4 text-[12px] font-bold uppercase ink-muted">Author</h4>
                   <div className="flex items-center gap-3">
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0"
@@ -619,15 +656,15 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                     <div>
                       <p className="font-semibold text-[#1A2B4A] text-sm">{authorName}</p>
                       {research.division && (
-                        <p className="text-[#64748B] text-xs">{research.division.name}</p>
+                        <p className="ink-body text-xs">{research.division.name}</p>
                       )}
                     </div>
                   </div>
                 </div>
 
                 {research.tags && research.tags.length > 0 && (
-                  <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-gray-100">
-                    <h4 className="font-semibold text-[#1A2B4A] text-sm mb-4">Tags</h4>
+                  <div className="chart-paper rounded-[5px] border border-[#DCE7F1] p-5">
+                    <h4 className="data-type mb-4 text-[12px] font-bold uppercase ink-muted">Tags</h4>
                     <div className="flex flex-wrap gap-2">
                       {research.tags.map((tag) => (
                         <span
@@ -647,7 +684,7 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
 
                 <Link
                   href="/activities/research-corner"
-                  className="flex items-center justify-between gap-2 bg-[#1A2B4A] hover:bg-[#0D1B33] text-white px-5 py-3 rounded-xl font-semibold transition-colors group"
+                  className="group sea-deep flex items-center justify-between gap-2 rounded-[4px] px-5 py-3 font-semibold text-white transition-opacity hover:opacity-90"
                 >
                   <span>More Research</span>
                   <ArrowRight

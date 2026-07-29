@@ -24,6 +24,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useEditableCanvas } from '@/lib/editable-canvas-context';
 import { CanvasSidebar } from '@/components/admin/CanvasSidebar';
@@ -54,8 +55,10 @@ export default function CanvasEditorPage() {
   const [saving, setSaving] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
 
-  // The homepage is site content, so both Super Admin and Board can edit it.
-  const canManage = user?.role === 'SUPER_ADMIN' || user?.role === 'BOARD';
+  // Page content is Super Admin only: every write route on /landing-sections is
+  // gated to SUPER_ADMIN, so admitting BOARD here produced an editor whose
+  // saves all failed with 403.
+  const canManage = user?.role === 'SUPER_ADMIN';
 
   /**
    * The inspector form has its own save logic; its function is handed up here so
@@ -95,6 +98,25 @@ export default function CanvasEditorPage() {
     setSaving(true);
     try {
       await saveRef.current();
+      // The homepage is ISR-cached, so drop the cached copy before reloading the
+      // preview — otherwise both the iframe and the live site keep serving the
+      // old content for up to the revalidate window.
+      try {
+        const token = api.getToken();
+        if (token) {
+          await fetch('/api/revalidate', {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ paths: ['/'] }),
+          });
+        }
+      } catch {
+        // The content is saved either way; a failed purge only means the public
+        // page updates on its own schedule instead of instantly.
+      }
       // Reload the section records, then refresh the iframe so the preview
       // reflects what was just written.
       await loadSections();
@@ -111,7 +133,7 @@ export default function CanvasEditorPage() {
   if (!canManage) {
     return (
       <AccessDenied
-        message="The homepage editor is limited to Super Admins and Board members."
+        message="The homepage editor is limited to Super Admins."
         backHref="/dashboard"
       />
     );
@@ -138,12 +160,12 @@ export default function CanvasEditorPage() {
       inspectorLabel="Section detail"
       inspector={
         <>
-          <div className="flex h-11 shrink-0 items-center border-b border-slate-200 px-3 dark:border-slate-800">
+          <div className="flex h-11 shrink-0 items-center border-b border-[#DCE7F1] px-3 dark:border-slate-800">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase leading-none tracking-wider text-slate-400">
+              <p className="data-type text-[12px] font-bold uppercase leading-none ink-muted">
                 Section detail
               </p>
-              <p className="mt-0.5 truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
+              <p className="mt-0.5 truncate text-[12px] font-semibold ink-strong">
                 {activeLabel}
               </p>
             </div>
@@ -163,7 +185,7 @@ export default function CanvasEditorPage() {
                 icon={MousePointer2}
                 title="Select a section"
                 description="Select a section in the left panel to edit its content: text, item lists, their order, and whether the section is shown."
-                className="rounded-xl border-2 border-dashed border-slate-200 py-10 dark:border-slate-700"
+                className="rounded-[4px] border-2 border-dashed border-[#DCE7F1] py-10 dark:border-slate-700"
               />
             )}
           </div>

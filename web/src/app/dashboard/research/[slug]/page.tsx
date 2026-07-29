@@ -73,7 +73,7 @@ interface ResearchResponse {
  * element styles are declared explicitly here.
  */
 const RICH_TEXT_CLASS = cn(
-  'max-w-none text-sm leading-relaxed text-slate-600 dark:text-slate-300',
+  'max-w-none text-sm leading-relaxed ink-body',
   '[&_p]:my-2 [&_strong]:font-bold [&_em]:italic',
   '[&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-1.5 [&_h2]:text-slate-900 dark:[&_h2]:text-slate-50',
   '[&_h3]:font-display [&_h3]:text-base [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-1.5 [&_h3]:text-slate-900 dark:[&_h3]:text-slate-50',
@@ -233,7 +233,7 @@ export default function DashboardResearchDetailPage() {
               <div className="space-y-4">
                 {keywords.length > 0 && (
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="data-type mb-2 text-[12px] font-bold uppercase ink-muted">
                       Keywords
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -247,7 +247,7 @@ export default function DashboardResearchDetailPage() {
                 )}
                 {research.tags && research.tags.length > 0 && (
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="data-type mb-2 text-[12px] font-bold uppercase ink-muted">
                       Tags
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -274,7 +274,16 @@ export default function DashboardResearchDetailPage() {
             {research.publicationDate && (
               <DetailItem
                 label="Publication date"
-                value={formatDate(research.publicationDate, { dateStyle: 'long' })}
+                value={
+                  /* Metadata, so it is set in the data face. */
+                  <span className="data-type">
+                    {formatDate(research.publicationDate, {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                }
                 icon={Calendar}
               />
             )}
@@ -296,7 +305,7 @@ export default function DashboardResearchDetailPage() {
                     href={`https://doi.org/${research.doi}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="break-all font-mono text-[#E8231A] hover:underline"
+                    className="data-type accent-label break-all hover:underline"
                   >
                     {research.doi}
                   </a>
@@ -312,7 +321,7 @@ export default function DashboardResearchDetailPage() {
                     href={research.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="break-all text-[#E8231A] hover:underline"
+                    className="accent-label break-all hover:underline"
                   >
                     {research.url}
                   </a>

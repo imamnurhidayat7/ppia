@@ -7,6 +7,7 @@ import {
   updateEvent,
   deleteEvent,
   getAllEventsAdmin,
+  getEventByIdAdmin,
   getEventIcs,
   getEventsIcsFeed
 } from '../controllers/eventController';
@@ -26,6 +27,10 @@ router.get('/slug/:slug', getEventBySlug);
 
 // Admin - get all events (including unpublished) — MUST be before :id param route
 router.get('/admin/all', authenticate, authorize('SUPER_ADMIN', 'BOARD'), getAllEventsAdmin);
+
+// Admin - get a single event (including unpublished drafts) for the editor.
+// Also before the public `/:id` route so it is not treated as an event id.
+router.get('/admin/:id', authenticate, authorize('SUPER_ADMIN', 'BOARD'), getEventByIdAdmin);
 
 // Protected routes (admin only)
 router.post('/', authenticate, authorize('SUPER_ADMIN', 'BOARD'), createEvent);

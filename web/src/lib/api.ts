@@ -44,10 +44,21 @@ class ApiClient {
     // Handle errors
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError<{ message?: string; errors?: Record<string, string[]> }>) => {
+      (error: AxiosError<{ message?: string; error?: string; errors?: Record<string, string[]> }>) => {
         if (error.response?.status === 401) {
           this.removeToken();
-          if (typeof window !== 'undefined') {
+          // A 401 on the sign-in/registration request itself is a failed
+          // attempt (bad credentials, unapproved account) — the caller shows
+          // the message. Only redirect when an *authenticated* request is
+          // rejected, and never bounce a page that is already /login, so the
+          // login screen no longer reloads out from under the error message.
+          const url = error.config?.url || '';
+          const isAuthAttempt = url.includes('/auth/login') || url.includes('/auth/register');
+          if (
+            typeof window !== 'undefined' &&
+            !isAuthAttempt &&
+            window.location.pathname !== '/login'
+          ) {
             window.location.href = '/login';
           }
         }
@@ -57,7 +68,7 @@ class ApiClient {
   }
 
   /** Parse Axios error into a consistent ApiError shape */
-  private parseError(error: AxiosError<{ message?: string; errors?: Record<string, string[]> }>): ApiError {
+  private parseError(error: AxiosError<{ message?: string; error?: string; errors?: Record<string, string[]> }>): ApiError {
     const status = error.response?.status;
     const data = error.response?.data;
     const messages: Record<number, string> = {
@@ -69,7 +80,11 @@ class ApiClient {
       429: 'Too many requests',
       500: 'A server error occurred',
     };
-    const message = data?.message || (status ? messages[status] : 'An unknown error occurred');
+    // The API returns its human message under `error`; some endpoints use
+    // `message`. Prefer either over the generic per-status fallback so specific
+    // messages (e.g. "awaiting admin approval") reach the user.
+    const message =
+      data?.error || data?.message || (status ? messages[status] : 'An unknown error occurred');
     return { success: false as const, message, errors: data?.errors, status };
   }
 
@@ -173,6 +188,12 @@ class ApiClient {
     return response.data;
   }
 
+  /** Admin fetch by id — includes unpublished drafts (for the editor). */
+  async getEventAdmin(id: string) {
+    const response = await this.client.get(`/events/admin/${id}`);
+    return response.data;
+  }
+
   async createEvent(data: EventInput) {
     const response = await this.client.post('/events', data);
     return response.data;
@@ -206,6 +227,12 @@ class ApiClient {
 
   async getArticleBySlug(slug: string) {
     const response = await this.client.get(`/articles/slug/${slug}`);
+    return response.data;
+  }
+
+  /** Admin fetch by id — includes unpublished drafts (for the editor). */
+  async getArticleAdmin(id: string) {
+    const response = await this.client.get(`/articles/admin/${id}`);
     return response.data;
   }
 
@@ -613,8 +640,20 @@ class ApiClient {
   // EVENT REGISTRATIONS
   // (mounted under /api/event-registration in the backend)
   // ===========================================
-  async registerForEvent(eventId: string) {
-    const response = await this.client.post('/event-registration', { eventId });
+  /**
+   * Register for an event. Signing in is optional: pass `guest` when there is no
+   * account, and the API records the registration against those details.
+   */
+  async registerForEvent(
+    eventId: string,
+    responses?: Record<string, string | string[]>,
+    guest?: { name: string; email: string }
+  ) {
+    const response = await this.client.post('/event-registration', {
+      eventId,
+      responses,
+      ...(guest ? { guestName: guest.name, guestEmail: guest.email } : {}),
+    });
     return response.data;
   }
 
@@ -899,7 +938,9 @@ class ApiClient {
     votingEnd: string;
     status?: string;
   }>) {
-    const response = await this.client.put(`/elections/${id}`, data);
+    // The API route is PATCH /elections/:id; a PUT here 404s, so editing an
+    // election's settings and publishing results silently failed.
+    const response = await this.client.patch(`/elections/${id}`, data);
     return response.data;
   }
 

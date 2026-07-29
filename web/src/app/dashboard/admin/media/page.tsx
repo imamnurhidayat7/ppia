@@ -37,6 +37,15 @@ import {
   Upload,
 } from 'lucide-react';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 interface MediaListResponse {
   media?: Media[];
   folders?: string[];
@@ -57,8 +66,8 @@ function MediaPreview({ item }: { item: Media }) {
 
   if (!src || !isImage || failed) {
     return (
-      <span className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-slate-800">
-        <FileText className="h-7 w-7 text-slate-400" />
+      <span className="flex h-full w-full items-center justify-center bg-[#EDF5FB] dark:bg-slate-800">
+        <FileText className="h-7 w-7 ink-muted" />
       </span>
     );
   }
@@ -219,10 +228,10 @@ export default function MediaLibraryPage() {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[0, 1, 2, 3].map((tile) => (
-            <div key={tile} className="h-24 rounded-2xl skeleton" />
+            <div key={tile} className="h-24 rounded-[5px] skeleton" />
           ))}
         </div>
-        <div className="h-11 rounded-xl skeleton" />
+        <div className="h-11 rounded-[4px] skeleton" />
         <LoadingCards count={8} columns={4} />
       </div>
     );
@@ -309,10 +318,10 @@ export default function MediaLibraryPage() {
             onClick={() => setSelectedFolder('')}
             aria-pressed={!selectedFolder}
             className={cn(
-              'rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors',
+              'rounded-[4px] px-3.5 py-2 text-sm font-semibold transition-colors',
               !selectedFolder
                 ? 'bg-[#0D1B33] text-white'
-                : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+                : 'chart-paper border border-[#DCE7F1] ink-body hover:border-[#C3D2E0] dark:border-slate-700'
             )}
           >
             All folders
@@ -324,10 +333,10 @@ export default function MediaLibraryPage() {
               onClick={() => setSelectedFolder(folder)}
               aria-pressed={selectedFolder === folder}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors',
+                'inline-flex items-center gap-1.5 rounded-[4px] px-3.5 py-2 text-sm font-semibold transition-colors',
                 selectedFolder === folder
                   ? 'bg-[#0D1B33] text-white'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+                  : 'chart-paper border border-[#DCE7F1] ink-body hover:border-[#C3D2E0] dark:border-slate-700'
               )}
             >
               <FolderOpen className="h-3.5 w-3.5" />
@@ -386,11 +395,11 @@ export default function MediaLibraryPage() {
           {media.map((item) => (
             <article
               key={item.id}
-              className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:border-slate-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+              className="chart-paper group overflow-hidden rounded-[5px] border border-[#DCE7F1] transition-all hover:border-[#C3D2E0] hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
             >
-              <div className="relative aspect-square bg-slate-100 dark:bg-slate-800">
+              <div className="relative aspect-square bg-[#EDF5FB] dark:bg-slate-800">
                 <MediaPreview item={item} />
-                <div className="absolute right-2 top-2 flex gap-1 rounded-lg bg-white/90 p-0.5 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900/90">
+                <div className="absolute right-2 top-2 flex gap-1 rounded-[4px] bg-white/90 p-0.5 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900/90">
                   <IconAction
                     icon={Pencil}
                     label={`Edit details for ${item.filename}`}
@@ -404,24 +413,26 @@ export default function MediaLibraryPage() {
                   />
                 </div>
                 {!item.altText?.trim() && (
-                  <span className="absolute bottom-2 left-2 rounded-md bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                  <span className="absolute bottom-2 left-2 rounded-[3px] bg-amber-500/90 px-1.5 py-0.5 data-type text-[12px] font-bold uppercase text-white">
                     No alt
                   </span>
                 )}
               </div>
               <div className="space-y-1 p-3">
                 <p
-                  className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100"
+                  className="truncate text-sm font-semibold ink-strong"
                   title={item.filename}
                 >
                   {item.filename}
                 </p>
-                <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                  <HardDrive className="h-3 w-3" />
+                <p className="data-type flex items-center gap-1.5 text-[12px] ink-muted">
+                  <HardDrive aria-hidden="true" className="h-3 w-3" />
                   {formatFileSize(item.size)}
                   {item.folder ? ` • ${item.folder}` : ''}
                 </p>
-                <p className="text-xs text-slate-400">{formatDate(item.createdAt)}</p>
+                <p className="data-type text-[12px] ink-muted">
+                  {formatDate(item.createdAt, DATE_OPTS)}
+                </p>
               </div>
             </article>
           ))}
@@ -437,7 +448,7 @@ export default function MediaLibraryPage() {
       >
         <form onSubmit={handleSaveEdit} className="space-y-4">
           {editingMedia && (
-            <div className="relative h-40 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+            <div className="relative h-40 overflow-hidden rounded-[4px] bg-[#EDF5FB] dark:bg-slate-800">
               <MediaPreview item={editingMedia} />
             </div>
           )}
@@ -453,7 +464,7 @@ export default function MediaLibraryPage() {
               value={editData.altText}
               onChange={(event) => setEditData({ ...editData, altText: event.target.value })}
               placeholder="For example: PPIA workshop attendees in discussion"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
 
@@ -465,7 +476,7 @@ export default function MediaLibraryPage() {
               onChange={(event) => setEditData({ ...editData, folder: event.target.value })}
               placeholder="For example: events, articles"
               list="media-folder-options"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
             <datalist id="media-folder-options">
               {folders.map((folder) => (

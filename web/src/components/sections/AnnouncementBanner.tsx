@@ -45,7 +45,7 @@ export default function AnnouncementBanner() {
   const isUrgent = data.variant === 'urgent';
   const bg = isUrgent
     ? 'bg-[#E8231A]'
-    : 'bg-[#1A2B4A]';
+    : 'bg-[#0B1C2E]';
 
   const content = (
     <span className="flex items-center gap-2 text-white text-xs md:text-sm font-medium">

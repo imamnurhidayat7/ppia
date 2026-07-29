@@ -51,6 +51,26 @@ function apiImagePatterns() {
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  /**
+   * Build output directory, overridable per invocation.
+   *
+   * A production build shares `.next` with a running dev server and leaves it
+   * holding build-time artifacts, after which the dev server only serves
+   * `/_not-found` — every route answers 404 until `.next` is deleted. Setting
+   * `NEXT_DIST_DIR=.next-build` lets a verification build run alongside `next
+   * dev` without touching the dev cache.
+   */
+  distDir: process.env.NEXT_DIST_DIR || '.next',
+  /**
+   * Pin the workspace root to this app.
+   *
+   * There are three lockfiles in play (the home directory, the repo root, and
+   * `web/`), so Turbopack was inferring `~` as the root and warning about it on
+   * every start. Naming the root removes the guess — and the warning.
+   */
+  turbopack: {
+    root: __dirname,
+  },
   poweredByHeader: false,
   reactStrictMode: true,
   reactCompiler: true,

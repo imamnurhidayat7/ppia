@@ -11,6 +11,15 @@ import { formatDate, getImageUrl } from '@/lib/utils';
 import type { AdminArticle } from './shared';
 import { stripHtml } from './shared';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 /**
  * Thumbnails come from arbitrary URLs (uploads or pasted links), so they are
  * served unoptimized and fall back to an icon when the file is missing.
@@ -21,13 +30,13 @@ function ArticleThumb({ item, icon: Icon }: { item: AdminArticle; icon: LucideIc
 
   if (!src || failed) {
     return (
-      <span className="flex h-11 w-16 shrink-0 items-center justify-center rounded-lg bg-[#0D1B33] text-white/40">
+      <span className="flex h-11 w-16 shrink-0 items-center justify-center rounded-[4px] bg-[#0D1B33] text-white/40">
         <Icon className="h-4 w-4" />
       </span>
     );
   }
   return (
-    <span className="relative h-11 w-16 shrink-0 overflow-hidden rounded-lg bg-[#0D1B33]">
+    <span className="relative h-11 w-16 shrink-0 overflow-hidden rounded-[4px] bg-[#0D1B33]">
       <Image
         src={src}
         alt=""
@@ -93,13 +102,13 @@ export function ArticleTable({
                 <div className="min-w-0">
                   <Link
                     href={editHref(item)}
-                    className="block truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                    className="block truncate text-sm font-semibold ink-strong hover:underline"
                   >
                     {item.title}
                   </Link>
-                  <p className="truncate text-xs text-slate-400">/{item.slug}</p>
+                  <p className="data-type truncate text-[12px] ink-muted">/{item.slug}</p>
                   {snippet && (
-                    <p className="mt-0.5 line-clamp-1 max-w-xs text-xs text-slate-500 dark:text-slate-400">
+                    <p className="mt-0.5 line-clamp-1 max-w-xs text-[12px] ink-muted">
                       {snippet}
                     </p>
                   )}
@@ -110,7 +119,7 @@ export function ArticleTable({
               <Td>
                 {item.division ? (
                   <span
-                    className="inline-flex rounded-full px-2 py-1 text-xs font-medium"
+                    className="data-type inline-flex rounded-[3px] px-2 py-1 text-[12px] font-bold uppercase"
                     style={{
                       backgroundColor: `${item.division.color || '#6366F1'}20`,
                       color: item.division.color || '#6366F1',
@@ -119,19 +128,19 @@ export function ArticleTable({
                     {item.division.name}
                   </span>
                 ) : (
-                  <span className="text-slate-400">&mdash;</span>
+                  <span className="ink-muted">&mdash;</span>
                 )}
               </Td>
             )}
             <Td>
               <div className="flex flex-wrap items-center gap-1.5">
                 {item.published ? (
-                  <Badge variant="success">Published</Badge>
+                  <Badge variant="success" className="data-type uppercase">Published</Badge>
                 ) : (
-                  <Badge variant="warning">Draft</Badge>
+                  <Badge variant="warning" className="data-type uppercase">Draft</Badge>
                 )}
                 {item.isFeatured && (
-                  <Badge variant="primary" className="gap-1">
+                  <Badge variant="primary" className="data-type uppercase gap-1">
                     <Star className="h-3 w-3" />
                     Featured
                   </Badge>
@@ -142,10 +151,10 @@ export function ArticleTable({
               <span className="truncate text-sm">{item.author?.name || 'Admin'}</span>
             </Td>
             <Td>
-              <span className="whitespace-nowrap">{formatDate(item.createdAt)}</span>
+              <span className="data-type whitespace-nowrap text-[12px]">{formatDate(item.createdAt, DATE_OPTS)}</span>
             </Td>
             <Td align="center">
-              <span className="font-semibold text-slate-900 dark:text-slate-100">
+              <span className="data-type font-semibold ink-strong">
                 {(item.views || 0).toLocaleString('en-NZ')}
               </span>
             </Td>

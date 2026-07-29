@@ -158,7 +158,7 @@ export default function AdminSearchPage() {
           <div className="h-8 w-60 rounded skeleton" />
           <div className="h-4 w-80 rounded skeleton" />
         </div>
-        <div className="h-40 rounded-2xl skeleton" />
+        <div className="h-40 rounded-[5px] skeleton" />
         <LoadingRows rows={4} />
       </div>
     );
@@ -184,20 +184,20 @@ export default function AdminSearchPage() {
         title="Run a query"
         description="Queries are sent to the public search endpoint. It is read-only and safe to run any time."
         icon={Play}
-        action={<Badge variant="success">Active</Badge>}
+        action={<Badge variant="success" className="data-type uppercase">Active</Badge>}
       >
         <form onSubmit={runSearch} className="space-y-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
             <Field label="Keyword" htmlFor="search-query" className="flex-1">
               <div className="relative">
-                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ink-muted" />
                 <input
                   id="search-query"
                   type="search"
                   value={queryInput}
                   onChange={(event) => setQueryInput(event.target.value)}
                   placeholder="For example: scholarships, webinar, or a member's name"
-                  className="input-base input-with-icon"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 input-with-icon"
                 />
               </div>
             </Field>
@@ -206,7 +206,7 @@ export default function AdminSearchPage() {
                 id="search-type"
                 value={searchType}
                 onChange={(event) => setSearchType(event.target.value as SearchType)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               >
                 {SEARCH_TYPES.map((option) => (
                   <option key={option.value || 'all'} value={option.value}>
@@ -278,14 +278,14 @@ export default function AdminSearchPage() {
             </>
           }
           footer={
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div className="data-type flex flex-wrap items-center justify-between gap-2 border-t border-[#E7EFF7] px-5 py-3 text-[12px] ink-muted dark:border-slate-800">
               <span>
                 {results.length} results shown
                 {typeof payload?.total === 'number' && payload.total !== results.length
                   ? ` of ${payload.total}`
                   : ''}
               </span>
-              <span className="font-mono">
+              <span>
                 q=&quot;{ranQuery}&quot;{ranType ? `, type=${ranType}` : ''}
               </span>
             </div>
@@ -299,25 +299,27 @@ export default function AdminSearchPage() {
               <Tr key={item.id ?? `${item.slug ?? 'result'}-${index}`}>
                 <Td>
                   <span className="flex items-center gap-2">
-                    <Icon className={`h-3.5 w-3.5 shrink-0 ${meta?.className ?? 'text-slate-400'}`} />
-                    <span className="font-semibold text-slate-900 dark:text-slate-100">
+                    <Icon className={`h-3.5 w-3.5 shrink-0 ${meta?.className ?? 'ink-muted'}`} />
+                    <span className="font-semibold ink-strong">
                       {item.title || item.name || `Result ${index + 1}`}
                     </span>
                   </span>
                   {item.slug && (
-                    <span className="mt-0.5 block text-xs text-slate-400">/{item.slug}</span>
+                    <span className="data-type mt-0.5 block text-[12px] ink-muted">
+                      /{item.slug}
+                    </span>
                   )}
                 </Td>
                 <Td>
-                  <Badge variant="outline">{meta?.label ?? 'Other'}</Badge>
+                  <Badge variant="outline" className="data-type uppercase">{meta?.label ?? 'Other'}</Badge>
                 </Td>
                 <Td>
                   {summary ? (
-                    <span className="line-clamp-2 max-w-lg text-slate-600 dark:text-slate-300">
+                    <span className="line-clamp-2 max-w-lg ink-body">
                       {summary}
                     </span>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="ink-muted">—</span>
                   )}
                 </Td>
               </Tr>

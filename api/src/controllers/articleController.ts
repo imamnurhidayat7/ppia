@@ -399,6 +399,42 @@ export const deleteArticle = async (req: AuthRequest, res: Response): Promise<vo
 };
 
 // Get all articles (admin - including unpublished)
+/**
+ * Fetch a single article for the admin editor, including unpublished drafts.
+ * The public `getArticleById` 404s anything not published, which blocked
+ * editing or publishing a draft.
+ */
+export const getArticleByIdAdmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { id } = req.params as { id: string };
+
+    const article = await prisma.article.findUnique({
+      where: { id },
+      include: {
+        User: { select: { id: true, name: true, avatar: true } },
+        tags: { select: { id: true, name: true, slug: true, color: true } },
+        Division: { select: { id: true, name: true, slug: true, color: true } }
+      }
+    });
+
+    if (!article) {
+      res.status(404).json({ error: 'Article not found' });
+      return;
+    }
+
+    res.json({ article });
+  } catch (error) {
+    console.error('Get article (admin) error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export const getAllArticlesAdmin = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;

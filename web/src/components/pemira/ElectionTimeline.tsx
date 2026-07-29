@@ -55,7 +55,7 @@ export default function ElectionTimeline({ phases, currentIndex }: { phases: Pha
                   }`}>
                     {phase.label}
                     {isCurrent && (
-                      <span className="ml-2 text-[10px] font-black bg-[#E8231A]/10 text-[#E8231A] px-2 py-0.5 rounded-full align-middle">
+                      <span className="ml-2 text-[12px] font-black bg-[#E8231A]/10 text-[#C41E16] px-2 py-0.5 rounded-full align-middle">
                         Now
                       </span>
                     )}

@@ -68,6 +68,49 @@ export const authenticate = async (
   }
 };
 
+/**
+ * Attach the signed-in user when a valid token is present, otherwise continue
+ * as a guest.
+ *
+ * For endpoints that anyone may call but that behave differently for members —
+ * event registration links to the member's account and pre-fills from their
+ * profile, while a guest supplies their own details. A bad or expired token is
+ * treated as "not signed in" rather than an error, so a stale token in a
+ * browser cannot block a public action.
+ */
+export const optionalAuthenticate = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    next();
+    return;
+  }
+
+  try {
+    const decoded = jwt.verify(authHeader.slice(7), JWT_SECRET) as { userId?: string };
+    if (decoded.userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: { id: true, role: true, divisionId: true, membershipStatus: true }
+      });
+      // Only an approved member acts as themselves; anyone else is a guest.
+      if (user && user.membershipStatus === 'APPROVED') {
+        req.user = {
+          userId: user.id,
+          role: user.role,
+          ...(user.divisionId ? { divisionId: user.divisionId } : {})
+        };
+      }
+    }
+  } catch {
+    // Ignore: proceed as a guest.
+  }
+  next();
+};
+
 export const authorize = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {

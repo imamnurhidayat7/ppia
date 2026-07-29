@@ -43,6 +43,15 @@ import {
   Users,
 } from 'lucide-react';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 interface DivisionRef {
   id: string;
   name: string;
@@ -101,13 +110,13 @@ function EventThumb({ event }: { event: AdminEvent }) {
 
   if (!src || failed) {
     return (
-      <span className="flex h-11 w-16 shrink-0 items-center justify-center rounded-lg bg-[#0D1B33] text-white/40">
+      <span className="flex h-11 w-16 shrink-0 items-center justify-center rounded-[4px] bg-[#0D1B33] text-white/40">
         <Calendar className="h-4 w-4" />
       </span>
     );
   }
   return (
-    <span className="relative h-11 w-16 shrink-0 overflow-hidden rounded-lg bg-[#0D1B33]">
+    <span className="relative h-11 w-16 shrink-0 overflow-hidden rounded-[4px] bg-[#0D1B33]">
       <Image
         src={src}
         alt=""
@@ -386,7 +395,7 @@ export default function AdminEventsPage() {
             </>
           }
           footer={
-            <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div className="data-type border-t border-[#E7EFF7] px-5 py-3 text-[12px] ink-muted dark:border-slate-800">
               Showing {filteredEvents.length} of {counts.all} events
             </div>
           }
@@ -403,13 +412,13 @@ export default function AdminEventsPage() {
                     <div className="min-w-0">
                       <Link
                         href={`/dashboard/admin/events/${event.id}/edit`}
-                        className="block truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                        className="block truncate text-sm font-semibold ink-strong hover:underline"
                       >
                         {event.title}
                       </Link>
-                      <p className="truncate text-xs text-slate-400">/{event.slug}</p>
+                      <p className="data-type truncate text-[12px] ink-muted">/{event.slug}</p>
                       {snippet && (
-                        <p className="mt-0.5 line-clamp-1 max-w-xs text-xs text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 line-clamp-1 max-w-xs text-[12px] ink-muted">
                           {snippet}
                         </p>
                       )}
@@ -417,11 +426,11 @@ export default function AdminEventsPage() {
                   </div>
                 </Td>
                 <Td>
-                  <span className="flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="data-type flex items-center gap-1.5 whitespace-nowrap text-[12px]">
                     <CalendarClock className="h-3.5 w-3.5 text-[#E8231A]" />
-                    {formatDate(event.startDate)}
+                    {formatDate(event.startDate, DATE_OPTS)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-400">
+                  <span className="mt-0.5 block text-[12px] ink-muted">
                     {formatTime(event.startDate)}
                     {event.endDate ? ` – ${formatTime(event.endDate)}` : ''}
                   </span>
@@ -429,17 +438,17 @@ export default function AdminEventsPage() {
                 <Td>
                   {event.location ? (
                     <span className="flex items-start gap-1.5">
-                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 ink-muted" />
                       <span className="line-clamp-2 max-w-[10rem]">{event.location}</span>
                     </span>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="ink-muted">—</span>
                   )}
                 </Td>
                 <Td>
                   {event.division ? (
                     <span
-                      className="inline-flex rounded-full px-2 py-1 text-xs font-medium"
+                      className="data-type inline-flex rounded-[3px] px-2 py-1 text-[12px] font-bold uppercase"
                       style={{
                         backgroundColor: `${event.division.color || '#6366F1'}20`,
                         color: event.division.color || '#6366F1',
@@ -448,28 +457,28 @@ export default function AdminEventsPage() {
                       {event.division.name}
                     </span>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="ink-muted">—</span>
                   )}
                 </Td>
                 <Td align="center">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="data-type font-semibold ink-strong">
                     {event._count?.registrations ?? 0}
                   </span>
                   {event.capacity ? (
-                    <span className="text-xs text-slate-400"> / {event.capacity}</span>
+                    <span className="text-[12px] ink-muted"> / {event.capacity}</span>
                   ) : null}
                 </Td>
                 <Td>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {event.published ? (
-                      <Badge variant="success">Published</Badge>
+                      <Badge variant="success" className="data-type uppercase">Published</Badge>
                     ) : (
-                      <Badge variant="warning">Draft</Badge>
+                      <Badge variant="warning" className="data-type uppercase">Draft</Badge>
                     )}
                     {isPast ? (
-                      <Badge variant="default">Past</Badge>
+                      <Badge variant="default" className="data-type uppercase">Past</Badge>
                     ) : (
-                      <Badge variant="outline">Upcoming</Badge>
+                      <Badge variant="outline" className="data-type uppercase">Upcoming</Badge>
                     )}
                   </div>
                 </Td>

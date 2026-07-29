@@ -8,7 +8,7 @@ import EventsSection from "@/components/sections/EventsSection";
 import ArticlesSection from "@/components/sections/ArticlesSection";
 import FAQSection from "@/components/sections/FAQSection";
 import MembershipSection from "@/components/sections/MembershipSection";
-import SectionDivider from "@/components/sections/SectionDivider";
+import WaveTransition from "@/components/sections/WaveTransition";
 import AnnouncementBanner from "@/components/sections/AnnouncementBanner";
 import Footer from "@/components/Footer";
 import {
@@ -23,6 +23,18 @@ import {
  * first paint fast while staying current enough for visitors and crawlers.
  */
 export const revalidate = 300;
+
+/**
+ * Seam colours for the wave transitions.
+ *
+ * These have to match the ends of the `.sea-deep` / `.sea-shore` gradients in
+ * globals.css, otherwise a hairline of the wrong colour shows at each seam.
+ */
+const DEEP_SEA_EDGE = "#050D18"; // the hero's bottom vignette
+const DEEP_SEA = "#0B1C2E"; // .sea-deep, end of gradient
+const SHORE = "#FFFFFF"; // .sea-shore, start of gradient
+const SHORE_DEEP = "#EDF5FB"; // .sea-shore, end of gradient
+const FOOTER_SEA = "#071321"; // Footer background
 
 /**
  * Homepage composition.
@@ -52,7 +64,8 @@ export default async function HomePage() {
   // Fetch everything the content sections need on the server, in parallel, so
   // the HTML ships with events and articles already rendered instead of each
   // section firing its own request from the browser after hydration.
-  const [events, articles, eventsSection, articlesSection] = await Promise.all([
+  const [heroSection, events, articles, eventsSection, articlesSection] = await Promise.all([
+    fetchLandingSection("hero"),
     fetchHomeEvents(8),
     fetchHomeArticles(3),
     fetchLandingSection("events"),
@@ -64,17 +77,30 @@ export default async function HomePage() {
       <AnnouncementBanner />
       <Navbar />
       <main>
-        <HeroSection />
+        <HeroSection initialSection={heroSection} />
+        <WaveTransition from={DEEP_SEA_EDGE} to={SHORE} />
         <PartnersStrip />
         <AboutSection />
+        <WaveTransition from={SHORE_DEEP} to={DEEP_SEA} />
         <VideoSection />
-        <SectionDivider variant="gradient" className="bg-[#0D1B33]" />
+        {/* Video and events share the deep-sea surface, so they read as one
+            block. A hairline is enough to mark the seam; a wave here would
+            imply a change of surface that is not happening. */}
+        <div className="sea-deep" aria-hidden="true">
+          <div className="mx-auto max-w-7xl px-6">
+            <span className="block h-px bg-white/10" />
+          </div>
+        </div>
         <EventsSection initialEvents={events} initialSection={eventsSection} />
+        <WaveTransition from={DEEP_SEA} to={SHORE} mirror />
         <TestimonialSection />
         <ArticlesSection initialArticles={articles} initialSection={articlesSection} />
+        <WaveTransition from={SHORE_DEEP} to={DEEP_SEA} />
         <MembershipSection />
+        <WaveTransition from={DEEP_SEA} to={SHORE} mirror />
         <FAQSection />
       </main>
+      <WaveTransition from={SHORE_DEEP} to={FOOTER_SEA} />
       <Footer />
     </>
   );

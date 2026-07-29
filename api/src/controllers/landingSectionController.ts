@@ -393,13 +393,18 @@ export const createBlock = async (req: AuthRequest, res: Response): Promise<void
     }
 
     const { id } = req.params as { id: string }; // sectionId
+    // `*Id` fields carry the Indonesian variant; see updateBlock.
     const {
       type,
       title,
+      titleId,
       subtitle,
+      subtitleId,
       content,
+      contentId,
       linkUrl,
       linkText,
+      linkTextId,
       imageUrl,
       iconName,
       color,
@@ -441,10 +446,14 @@ export const createBlock = async (req: AuthRequest, res: Response): Promise<void
         sectionId: id,
         type,
         title,
+        titleId,
         subtitle,
+        subtitleId,
         content,
+        contentId,
         linkUrl,
         linkText,
+        linkTextId,
         imageUrl,
         iconName,
         color,
@@ -486,13 +495,20 @@ export const updateBlock = async (req: AuthRequest, res: Response): Promise<void
     }
 
     const { id, blockId } = req.params as { id: string; blockId: string };
+    // The `*Id` fields are the Indonesian variants. They were missing from this
+    // destructure, so the editor could send them but they were silently dropped
+    // and the Indonesian copy never changed.
     const {
       type,
       title,
+      titleId,
       subtitle,
+      subtitleId,
       content,
+      contentId,
       linkUrl,
       linkText,
+      linkTextId,
       imageUrl,
       iconName,
       color,
@@ -506,10 +522,14 @@ export const updateBlock = async (req: AuthRequest, res: Response): Promise<void
       data: {
         type,
         title,
+        titleId,
         subtitle,
+        subtitleId,
         content,
+        contentId,
         linkUrl,
         linkText,
+        linkTextId,
         imageUrl,
         iconName,
         color,

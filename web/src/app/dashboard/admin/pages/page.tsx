@@ -104,7 +104,7 @@ function formatDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
   return date.toLocaleDateString('en-NZ', {
-    day: 'numeric',
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
   });
@@ -141,7 +141,9 @@ function AdminPagesView() {
   const [submitting, setSubmitting] = useState(false);
 
   // CMS pages are site content, so both Super Admin and Board can manage them.
-  const canManage = user?.role === 'SUPER_ADMIN' || user?.role === 'BOARD';
+  // Pages are Super Admin only — every write route on /pages is gated to
+  // SUPER_ADMIN, so admitting BOARD here produced an editor that always 403'd.
+  const canManage = user?.role === 'SUPER_ADMIN';
   // Site configuration (menus, footer, colours) stays Super Admin only.
   const canManageSiteSettings = user?.role === 'SUPER_ADMIN';
 
@@ -347,7 +349,7 @@ function AdminPagesView() {
   if (!canManage) {
     return (
       <AccessDenied
-        message="Managing pages is limited to Super Admins and Board members."
+        message="Managing pages is limited to Super Admins."
         backHref="/dashboard"
       />
     );
@@ -466,8 +468,8 @@ function AdminPagesView() {
             </>
           }
           footer={
-            <div className="border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-              <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="border-t border-[#E7EFF7] px-5 py-3 dark:border-slate-800">
+              <p className="data-type mb-2 text-[12px] ink-muted">
                 Showing {filteredPages.length} of {pagination.total} pages
               </p>
               <Pagination
@@ -494,27 +496,33 @@ function AdminPagesView() {
                   <div className="flex items-start gap-3">
                     <span
                       className={cn(
-                        'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-                        page.published
-                          ? 'bg-[#0D1B33] text-white'
-                          : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                        // Porthole marker: published pages get the filled navy
+                        // disc, drafts only the ring.
+                        'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
+                        page.published ? 'bg-[#0B1C2E] text-white' : 'ink-muted'
                       )}
+                      style={{
+                        boxShadow: page.published
+                          ? 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 4px rgba(11,28,46,0.10)'
+                          : 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)',
+                      }}
+                      aria-hidden="true"
                     >
                       <FileText className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
                       <Link
                         href={getPageEditorHref(page)}
-                        className="block truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                        className="block truncate text-sm font-semibold ink-strong hover:underline"
                       >
                         {page.title}
                       </Link>
-                      <p className="truncate font-mono text-xs text-slate-400">/{page.slug}</p>
+                      <p className="data-type truncate text-[12px] ink-muted">/{page.slug}</p>
                     </div>
                   </div>
                 </Td>
                 <Td>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                  <span className="data-type text-[12px] uppercase ink-muted">
                     {PAGE_TYPE_LABEL[page.pageType] ?? page.pageType ?? '—'}
                   </span>
                 </Td>
@@ -522,17 +530,17 @@ function AdminPagesView() {
                   {author ? (
                     <span className="truncate">{author.name}</span>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="ink-muted">—</span>
                   )}
                 </Td>
                 <Td>
-                  <span className="whitespace-nowrap text-xs">{formatDate(page.updatedAt)}</span>
+                  <span className="data-type whitespace-nowrap text-[12px]">{formatDate(page.updatedAt)}</span>
                 </Td>
                 <Td>
                   {page.published ? (
-                    <Badge variant="success">Published</Badge>
+                    <Badge variant="success" className="data-type uppercase">Published</Badge>
                   ) : (
-                    <Badge variant="warning">Draft</Badge>
+                    <Badge variant="warning" className="data-type uppercase">Draft</Badge>
                   )}
                 </Td>
                 <Td align="right">
@@ -605,7 +613,7 @@ function AdminPagesView() {
                 required
                 value={formData.title}
                 onChange={(changeEvent) => handleTitleChange(changeEvent.target.value)}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="About PPIA"
               />
             </Field>
@@ -621,18 +629,18 @@ function AdminPagesView() {
                 required
                 value={formData.slug}
                 onChange={(changeEvent) => handleSlugChange(changeEvent.target.value)}
-                className="input-base font-mono"
+                className="input-base data-type rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="about-ppia"
               />
             </Field>
           </FormGrid>
 
-          <div className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div className="space-y-4 rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
             <div>
-              <p className="font-display text-sm font-bold text-slate-900 dark:text-slate-50">
+              <p className="font-display text-sm font-bold ink-strong">
                 Page header
               </p>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 text-[12px] ink-muted">
                 Optional. Used by pages that show a header banner, for example activity submenus.
               </p>
             </div>
@@ -645,7 +653,7 @@ function AdminPagesView() {
                   onChange={(changeEvent) =>
                     setFormData((prev) => ({ ...prev, headerLabel: changeEvent.target.value }))
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                   placeholder="Activities"
                 />
               </Field>
@@ -657,7 +665,7 @@ function AdminPagesView() {
                   onChange={(changeEvent) =>
                     setFormData((prev) => ({ ...prev, headerTitle: changeEvent.target.value }))
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                   placeholder="PPIA"
                 />
               </Field>
@@ -669,7 +677,7 @@ function AdminPagesView() {
                   onChange={(changeEvent) =>
                     setFormData((prev) => ({ ...prev, headerTitleAccent: changeEvent.target.value }))
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                   placeholder="Events"
                 />
               </Field>
@@ -684,7 +692,7 @@ function AdminPagesView() {
                       headerDescription: changeEvent.target.value,
                     }))
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                   placeholder="Short description on the header banner"
                 />
               </Field>
@@ -698,7 +706,7 @@ function AdminPagesView() {
             placeholder="Write the page content here…"
           />
 
-          <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div className="rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
             <Toggle
               id="page-published"
               label="Publish page"

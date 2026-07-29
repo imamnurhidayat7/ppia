@@ -47,7 +47,7 @@ export default function CountdownTimer({ targetMs, label }: { targetMs: number; 
               >
                 <span className="text-2xl font-black text-white tabular-nums">{pad(item.value)}</span>
               </motion.div>
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{item.label}</span>
+              <span className="text-[12px] text-slate-300 uppercase tracking-wider font-bold">{item.label}</span>
             </div>
           ))}
         </div>

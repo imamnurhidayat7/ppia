@@ -277,7 +277,7 @@ export default function AdminSettingsPage() {
           <div className="h-4 w-80 rounded skeleton" />
         </div>
         {[0, 1, 2].map((card) => (
-          <div key={card} className="h-56 rounded-2xl skeleton" />
+          <div key={card} className="h-56 rounded-[5px] skeleton" />
         ))}
       </div>
     );
@@ -315,7 +315,7 @@ export default function AdminSettingsPage() {
             value={whatsappGroupLink}
             onChange={(event) => setWhatsappGroupLink(event.target.value)}
             placeholder="https://chat.whatsapp.com/…"
-            className="input-base"
+            className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
           />
         </Field>
       </SectionCard>
@@ -334,7 +334,7 @@ export default function AdminSettingsPage() {
                 value={organization.name}
                 onChange={(event) => setOrganization({ ...organization, name: event.target.value })}
                 placeholder="PPIA Auckland"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="Tagline" htmlFor="org-tagline">
@@ -346,7 +346,7 @@ export default function AdminSettingsPage() {
                   setOrganization({ ...organization, tagline: event.target.value })
                 }
                 placeholder="Indonesian Students Association in Auckland"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="Founded" htmlFor="org-year">
@@ -358,7 +358,7 @@ export default function AdminSettingsPage() {
                   setOrganization({ ...organization, establishedYear: event.target.value })
                 }
                 placeholder="2000"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
           </FormGrid>
@@ -371,7 +371,7 @@ export default function AdminSettingsPage() {
                 setOrganization({ ...organization, description: event.target.value })
               }
               placeholder="A short description of the organisation"
-              className="input-base resize-y"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-y"
             />
           </Field>
         </div>
@@ -391,7 +391,7 @@ export default function AdminSettingsPage() {
                 value={contact.email}
                 onChange={(event) => setContact({ ...contact, email: event.target.value })}
                 placeholder="contact@ppiauckland.org"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="Phone" htmlFor="contact-phone">
@@ -401,7 +401,7 @@ export default function AdminSettingsPage() {
                 value={contact.phone}
                 onChange={(event) => setContact({ ...contact, phone: event.target.value })}
                 placeholder="+64 21 000 0000"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
           </FormGrid>
@@ -412,7 +412,7 @@ export default function AdminSettingsPage() {
               value={contact.address}
               onChange={(event) => setContact({ ...contact, address: event.target.value })}
               placeholder="Auckland, New Zealand"
-              className="input-base resize-y"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-y"
             />
           </Field>
         </div>
@@ -431,7 +431,7 @@ export default function AdminSettingsPage() {
               value={socialMedia.linkedin}
               onChange={(event) => setSocialMedia({ ...socialMedia, linkedin: event.target.value })}
               placeholder="https://linkedin.com/company/…"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
           <Field label="Instagram" htmlFor="social-instagram">
@@ -443,7 +443,7 @@ export default function AdminSettingsPage() {
                 setSocialMedia({ ...socialMedia, instagram: event.target.value })
               }
               placeholder="https://instagram.com/…"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
           <Field label="Twitter / X" htmlFor="social-twitter">
@@ -453,7 +453,7 @@ export default function AdminSettingsPage() {
               value={socialMedia.twitter}
               onChange={(event) => setSocialMedia({ ...socialMedia, twitter: event.target.value })}
               placeholder="https://x.com/…"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
           <Field label="YouTube" htmlFor="social-youtube">
@@ -463,7 +463,7 @@ export default function AdminSettingsPage() {
               value={socialMedia.youtube}
               onChange={(event) => setSocialMedia({ ...socialMedia, youtube: event.target.value })}
               placeholder="https://youtube.com/…"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
           <Field label="Facebook" htmlFor="social-facebook">
@@ -473,7 +473,7 @@ export default function AdminSettingsPage() {
               value={socialMedia.facebook}
               onChange={(event) => setSocialMedia({ ...socialMedia, facebook: event.target.value })}
               placeholder="https://facebook.com/…"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
         </FormGrid>
@@ -501,7 +501,7 @@ export default function AdminSettingsPage() {
                   setColorError(null);
                 }}
                 aria-label="Primary colour picker"
-                className="h-11 w-14 cursor-pointer rounded-lg border border-slate-200 dark:border-slate-700"
+                className="h-11 w-14 cursor-pointer rounded-[4px] border border-[#DCE7F1] dark:border-slate-700"
               />
               <input
                 id="branding-color"
@@ -512,7 +512,7 @@ export default function AdminSettingsPage() {
                   setColorError(null);
                 }}
                 placeholder="#E8231A"
-                className="input-base font-mono"
+                className="input-base data-type rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </div>
           </Field>
@@ -523,7 +523,7 @@ export default function AdminSettingsPage() {
               value={branding.logoUrl}
               onChange={(event) => setBranding({ ...branding, logoUrl: event.target.value })}
               placeholder="/logo.png"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
           <Field label="Favicon URL" htmlFor="branding-favicon">
@@ -533,7 +533,7 @@ export default function AdminSettingsPage() {
               value={branding.faviconUrl}
               onChange={(event) => setBranding({ ...branding, faviconUrl: event.target.value })}
               placeholder="/favicon.ico"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
         </FormGrid>
@@ -583,7 +583,7 @@ export default function AdminSettingsPage() {
                 setInterfaceLanguage(next);
                 window.localStorage.setItem(LOCAL_LANGUAGE_KEY, next.toLowerCase());
               }}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               {LANGUAGE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -601,12 +601,12 @@ export default function AdminSettingsPage() {
         icon={AlertCircle}
         className="border-danger-200 dark:border-danger-900/50"
       >
-        <div className="flex flex-col gap-4 rounded-xl border border-danger-100 bg-danger-50 p-4 md:flex-row md:items-center md:justify-between dark:border-danger-900/50 dark:bg-danger-900/20">
+        <div className="flex flex-col gap-4 rounded-[4px] border border-danger-100 bg-danger-50 p-4 md:flex-row md:items-center md:justify-between dark:border-danger-900/50 dark:bg-danger-900/20">
           <div className="min-w-0">
             <p className="text-sm font-bold text-danger-900 dark:text-danger-100">
               Restore all settings to defaults
             </p>
-            <p className="mt-0.5 text-xs text-danger-800 dark:text-danger-200">
+            <p className="mt-0.5 text-[12px] text-danger-800 dark:text-danger-200">
               Every section on this page returns to its initial value. The WhatsApp link already
               saved on the server is not removed.
             </p>
@@ -623,7 +623,7 @@ export default function AdminSettingsPage() {
       </SectionCard>
 
       <FormActions>
-        <span className="mr-auto text-xs text-slate-500 dark:text-slate-400">
+        <span className="mr-auto text-[12px] ink-muted">
           Saving applies every section on this page to the server, except the interface language.
         </span>
         <Button variant="secondary" onClick={() => fetchSettings()} disabled={saving}>

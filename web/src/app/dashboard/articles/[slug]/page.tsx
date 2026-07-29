@@ -92,17 +92,19 @@ const CATEGORY_LABELS: Record<string, string> = {
  * element styles are declared explicitly here.
  */
 const RICH_TEXT_CLASS = cn(
-  'max-w-none text-sm leading-relaxed text-slate-700 dark:text-slate-300',
+  'max-w-none text-sm leading-relaxed ink-body',
   '[&_p]:my-3 [&_strong]:font-bold [&_em]:italic',
   '[&_h1]:font-display [&_h1]:text-2xl [&_h1]:font-black [&_h1]:mt-6 [&_h1]:mb-2',
   '[&_h2]:font-display [&_h2]:text-xl [&_h2]:font-black [&_h2]:mt-6 [&_h2]:mb-2',
   '[&_h3]:font-display [&_h3]:text-lg [&_h3]:font-bold [&_h3]:mt-5 [&_h3]:mb-2',
+  // Descendant selectors cannot carry the ink component classes, so the
+  // heading colours stay explicit here.
   '[&_h1]:text-slate-900 [&_h2]:text-slate-900 [&_h3]:text-slate-900',
   'dark:[&_h1]:text-slate-50 dark:[&_h2]:text-slate-50 dark:[&_h3]:text-slate-50',
   '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6',
   '[&_a]:text-[#E8231A] [&_a]:underline',
-  '[&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[#E8231A] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-500',
-  '[&_img]:rounded-xl'
+  '[&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[#E8231A] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-500 dark:[&_blockquote]:text-slate-400',
+  '[&_img]:rounded-[5px]'
 );
 
 /**
@@ -198,10 +200,10 @@ function CommentComposer({
             className="input-base resize-y"
           />
           {error && (
-            <p className="mt-1.5 text-xs text-danger-600 dark:text-danger-400">{error}</p>
+            <p className="mt-1.5 text-[12px] text-danger-600 dark:text-danger-400">{error}</p>
           )}
           <div className="mt-2 flex items-center justify-between gap-3">
-            <span className="text-xs text-slate-400">Posting as {authorName}</span>
+            <span className="data-type text-[12px] ink-muted">Posting as {authorName}</span>
             <div className="flex items-center gap-2">
               {onCancel && (
                 <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
@@ -363,7 +365,7 @@ export default function DashboardArticleDetailPage() {
 
       <SectionCard flush>
         {bannerImageUrl && (
-          <div className="relative h-56 w-full overflow-hidden bg-slate-100 sm:h-72 lg:h-96 dark:bg-slate-800">
+          <div className="relative h-56 w-full overflow-hidden bg-[#EDF5FB] sm:h-72 lg:h-96 dark:bg-slate-800">
             {/* The banner is the largest image on the page and above the fold,
                 so it is given priority rather than lazy-loaded. */}
             <Image
@@ -378,39 +380,44 @@ export default function DashboardArticleDetailPage() {
         )}
 
         <div className="p-5 sm:p-8">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-slate-100 pb-5 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-[#DCE7F1] pb-5 text-sm ink-muted dark:border-slate-800">
             {author?.name ? (
               <span className="flex items-center gap-2">
                 <Avatar src={author.avatar ?? undefined} name={author.name} size="sm" />
-                <span className="font-semibold text-slate-800 dark:text-slate-100">
+                <span className="font-semibold ink-strong">
                   {author.name}
                 </span>
               </span>
             ) : (
               <span className="flex items-center gap-1.5">
-                <User className="h-4 w-4" />
+                <User aria-hidden="true" className="h-4 w-4" />
                 PPIA Auckland
               </span>
             )}
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              {formatDate(article.createdAt, { dateStyle: 'long' })}
+            {/* Published date and reading time are metadata, set as data. */}
+            <span className="data-type flex items-center gap-1.5 text-[12px]">
+              <Calendar aria-hidden="true" className="h-4 w-4" />
+              {formatDate(article.createdAt, {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })}
             </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
+            <span className="data-type flex items-center gap-1.5 text-[12px]">
+              <Clock aria-hidden="true" className="h-4 w-4" />
               {readMinutes} min read
             </span>
           </div>
 
           {article.excerpt && (
-            <p className="mt-6 border-l-4 border-[#E8231A] pl-5 text-base font-medium leading-relaxed text-slate-600 dark:text-slate-300">
+            <p className="mt-6 border-l-4 border-[#E8231A] pl-5 text-base font-medium leading-relaxed ink-body">
               {article.excerpt}
             </p>
           )}
 
           <div className={cn('mt-6', RICH_TEXT_CLASS)}>
             {!rawContent ? (
-              <p className="italic text-slate-400">This article has no content yet.</p>
+              <p className="italic ink-muted">This article has no content yet.</p>
             ) : isHtmlContent ? (
               <RichText html={rawContent} />
             ) : (
@@ -422,8 +429,8 @@ export default function DashboardArticleDetailPage() {
           </div>
 
           {article.tags && article.tags.length > 0 && (
-            <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
-              <Tag className="h-4 w-4 text-slate-400" />
+            <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-[#DCE7F1] pt-5 dark:border-slate-800">
+              <Tag aria-hidden="true" className="h-4 w-4 ink-muted" />
               {article.tags.map((tag) => (
                 <Badge key={tag.id} variant="default">
                   {tag.name}
@@ -453,8 +460,8 @@ export default function DashboardArticleDetailPage() {
             onSubmit={(content) => postComment(content)}
           />
         ) : (
-          <p className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
-            <Link href="/login" className="font-semibold text-[#E8231A] hover:underline">
+          <p className="mb-5 rounded-[5px] border border-[#DCE7F1] bg-[#F5FAFD] p-4 text-sm ink-body dark:border-slate-800 dark:bg-slate-800/50">
+            <Link href="/login" className="accent-label font-semibold hover:underline">
               Sign in
             </Link>{' '}
             to join the discussion.
@@ -472,7 +479,7 @@ export default function DashboardArticleDetailPage() {
             {comments.map((comment) => (
               <li
                 key={comment.id}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+                className="rounded-[5px] border border-[#DCE7F1] bg-[#F5FAFD] p-4 dark:border-slate-800 dark:bg-slate-800/50"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <Avatar
@@ -480,19 +487,25 @@ export default function DashboardArticleDetailPage() {
                     src={comment.User?.avatar ?? undefined}
                     size="xs"
                   />
-                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="text-sm font-semibold ink-strong">
                     {comment.userName}
                   </span>
-                  <span className="text-xs text-slate-400">{formatDate(comment.createdAt)}</span>
+                  <span className="data-type text-[12px] ink-muted">
+                    {formatDate(comment.createdAt, {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="mt-2 text-sm leading-relaxed ink-body">
                   {comment.content}
                 </p>
 
                 {/* Replies, one level deep. Indented with a rule rather than a
                     card so the thread reads as a continuation. */}
                 {comment.replies && comment.replies.length > 0 && (
-                  <ul className="mt-4 space-y-3 border-l-2 border-slate-200 pl-4 dark:border-slate-700">
+                  <ul className="mt-4 space-y-3 border-l-2 border-[#DCE7F1] pl-4 dark:border-slate-700">
                     {comment.replies.map((reply) => (
                       <li key={reply.id}>
                         <div className="flex flex-wrap items-center gap-2">
@@ -501,14 +514,18 @@ export default function DashboardArticleDetailPage() {
                             src={reply.User?.avatar ?? undefined}
                             size="xs"
                           />
-                          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          <span className="text-sm font-semibold ink-strong">
                             {reply.userName}
                           </span>
-                          <span className="text-xs text-slate-400">
-                            {formatDate(reply.createdAt)}
+                          <span className="data-type text-[12px] ink-muted">
+                            {formatDate(reply.createdAt, {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
                           </span>
                         </div>
-                        <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                        <p className="mt-1.5 text-sm leading-relaxed ink-body">
                           {reply.content}
                         </p>
                       </li>
@@ -533,9 +550,9 @@ export default function DashboardArticleDetailPage() {
                       <button
                         type="button"
                         onClick={() => setReplyingTo(comment.id)}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-[#E8231A] dark:text-slate-400"
+                        className="inline-flex items-center gap-1.5 text-[12px] font-semibold ink-muted transition-colors hover:text-[#C41E16] dark:hover:text-[#FF8A84]"
                       >
-                        <Reply className="h-3.5 w-3.5" />
+                        <Reply aria-hidden="true" className="h-3.5 w-3.5" />
                         Reply
                       </button>
                     )}

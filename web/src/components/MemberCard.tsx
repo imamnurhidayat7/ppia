@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download, Building2, Calendar, User, Award } from 'lucide-react';
+import { Download, Sailboat } from 'lucide-react';
 
 interface MemberCardProps {
   member: {
@@ -26,47 +26,58 @@ interface MemberCardProps {
   showDownload?: boolean;
 }
 
+/**
+ * The member card borrows the ticket shape the landing page's membership section
+ * already draws — chart paper, a red header band carrying the PPIA logo, a torn
+ * perforation between the card and its stub, and a QR code on the stub — so the
+ * two read as the same object. It is titled "Member card" throughout: it is
+ * membership identification, not travel document cosplay.
+ */
+
 const formatDate = (date: string | Date | undefined) => {
   if (!date) return '-';
-  return new Date(date).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
+  return new Date(date).toLocaleDateString('en-NZ', { month: 'short', year: 'numeric' });
 };
 
-const formatShortDate = (date: string | Date | undefined) => {
-  if (!date) return '-';
-  return new Date(date).toLocaleDateString('en-US', {
-    month: 'short',
-    year: 'numeric',
-  });
+/**
+ * The card shows "Member" for everyone.
+ *
+ * It used to print the internal role as a travel class — Captain / Officer /
+ * Crew — which put an admin's privilege level on a document people show to each
+ * other. The card identifies someone as a member of PPIA Auckland; their role in
+ * the committee is not what it is for.
+ */
+const MEMBER_BADGE = {
+  label: 'Member',
+  className: 'bg-[#0B7A55]/12 text-[#0B7A55] ring-[#0B7A55]/25',
 };
 
-const getRoleBadge = (role: string) => {
-  const badges: Record<string, { label: string; bg: string; text: string }> = {
-    SUPER_ADMIN: { label: 'Super Admin', bg: 'bg-rose-500/20', text: 'text-rose-300' },
-    BOARD: { label: 'Board', bg: 'bg-indigo-500/20', text: 'text-indigo-300' },
-    MEMBER: { label: 'Member', bg: 'bg-emerald-500/20', text: 'text-emerald-300' },
-  };
-  return badges[role] ?? badges.MEMBER;
-};
-
-const getInitials = (name: string) => {
-  return name
+const getInitials = (name: string) =>
+  name
     .split(' ')
     .map((p) => p[0])
     .slice(0, 2)
     .join('')
     .toUpperCase();
-};
+
+/**
+ * Barcode bar heights, as percentages. Fixed rather than random so the markup
+ * is identical on the server and the client (no hydration mismatch).
+ */
+const BARCODE = [
+  86, 54, 96, 40, 72, 100, 48, 64, 92, 36, 80, 58, 100, 44, 76, 62, 90, 50, 84, 68,
+];
 
 export default function MemberCard({ member, variant = 'default', showDownload = true }: MemberCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const roleBadge = getRoleBadge(member.role);
+  const role = MEMBER_BADGE;
   const memberId = member.studentId || `PPIA-${member.id.slice(0, 6).toUpperCase()}`;
-  const validationUrl = typeof window !== 'undefined' ? `${window.location.origin}/verify/${memberId}` : `/verify/${memberId}`;
+  const validationUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/verify/${memberId}`
+      : `/verify/${memberId}`;
 
-  // Compute expiry: graduationDate if available, else createdAt + 1 year
+  // Expiry: graduationDate if present, else one year after joining.
   const expiryDate = (() => {
     if (member.graduationDate) return new Date(member.graduationDate);
     if (member.createdAt) {
@@ -78,117 +89,133 @@ export default function MemberCard({ member, variant = 'default', showDownload =
   })();
   const isExpired = expiryDate ? expiryDate < new Date() : false;
 
+  /**
+   * Downloadable PNG, drawn to match the on-screen pass: cream paper, a red
+   * header band, the coupon on the left and a stub with the QR on the right.
+   */
   const handleDownload = async () => {
     if (!cardRef.current) return;
-
     try {
-      const card = cardRef.current;
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      const scale = 2;
-
-      canvas.width = 1014 * scale;
-      canvas.height = 638 * scale;
-
       if (!ctx) return;
+      const scale = 2;
+      const W = 1014;
+      const H = 500;
+      canvas.width = W * scale;
+      canvas.height = H * scale;
+      ctx.scale(scale, scale);
 
-      // Draw gradient background
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, '#0D1B33');
-      gradient.addColorStop(0.5, '#1A2B4A');
-      gradient.addColorStop(1, '#0D1B33');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Paper
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, W, H);
 
-      // Draw decorative circles
-      ctx.fillStyle = 'rgba(232, 35, 26, 0.1)';
-      ctx.beginPath();
-      ctx.arc(canvas.width - 100 * scale, -50 * scale, 300 * scale, 0, Math.PI * 2);
-      ctx.fill();
+      // Navy header band with a red accent rule, matching the on-screen card.
+      ctx.fillStyle = '#0F1B33';
+      ctx.fillRect(0, 0, W, 76);
+      ctx.fillStyle = '#E8231A';
+      ctx.fillRect(0, 0, W, 5);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `800 26px Poppins, sans-serif`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText('PPIA AUCKLAND', 40, 38);
+      ctx.font = `700 15px ui-monospace, monospace`;
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.textAlign = 'right';
+      ctx.fillText('MEMBER CARD', W - 40, 38);
+      ctx.textAlign = 'left';
 
-      ctx.fillStyle = 'rgba(232, 35, 26, 0.05)';
-      ctx.beginPath();
-      ctx.arc(100 * scale, canvas.height + 100 * scale, 250 * scale, 0, Math.PI * 2);
-      ctx.fill();
+      const stubX = W - 300;
 
-      // Draw PPIA logo text
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${48 * scale}px Poppins, sans-serif`;
-      ctx.fillText('PPIA', 60 * scale, 80 * scale);
-      ctx.font = `${18 * scale}px Poppins, sans-serif`;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.fillText('Auckland', 60 * scale, 105 * scale);
+      // Route: IDN -> AKL
+      ctx.fillStyle = '#475569';
+      ctx.font = `600 13px ui-monospace, monospace`;
+      ctx.fillText('FROM', 40, 130);
+      ctx.textAlign = 'right';
+      ctx.fillText('TO', stubX - 40, 130);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#0F1B33';
+      ctx.font = `900 44px Poppins, sans-serif`;
+      ctx.fillText('IDN', 40, 168);
+      ctx.textAlign = 'right';
+      ctx.fillText('AKL', stubX - 40, 168);
+      ctx.textAlign = 'left';
 
-      // Draw member info
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${36 * scale}px Poppins, sans-serif`;
-      ctx.fillText(member.name, 60 * scale, 200 * scale);
+      // Name + membership line ("Member" for everyone, as on screen)
+      ctx.fillStyle = '#0F1B33';
+      ctx.font = `900 30px Poppins, sans-serif`;
+      ctx.fillText(member.name, 40, 232);
+      ctx.fillStyle = '#475569';
+      ctx.font = `600 14px ui-monospace, monospace`;
+      ctx.fillText(role.label.toUpperCase(), 40, 262);
 
-      ctx.font = `${16 * scale}px Poppins, sans-serif`;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      const positionText = member.position?.replace(/_/g, ' ') || member.role;
-      ctx.fillText(positionText.toUpperCase(), 60 * scale, 235 * scale);
+      /**
+       * Details, laid out like the on-screen card: Member ID and University on
+       * their own lines so a full institution name is not clipped, then the two
+       * dates side by side.
+       */
+      const drawDetail = (label: string, value: string, x: number, y: number, max: number) => {
+        ctx.fillStyle = '#475569';
+        ctx.font = `600 12px ui-monospace, monospace`;
+        ctx.fillText(label, x, y);
+        ctx.fillStyle = label.startsWith('EXPIRED') ? '#C41E16' : '#28394F';
+        ctx.font = `700 15px Poppins, sans-serif`;
+        ctx.fillText(value.slice(0, max), x, y + 24);
+      };
 
-      // Draw divider line
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.lineWidth = 1 * scale;
-      ctx.beginPath();
-      ctx.moveTo(60 * scale, 270 * scale);
-      ctx.lineTo(300 * scale, 270 * scale);
-      ctx.stroke();
+      const detailWidth = stubX - 80;
+      drawDetail('MEMBER ID', memberId, 40, 306, 40);
+      // Full row, so it has roughly twice the characters of a half-width cell.
+      drawDetail('UNIVERSITY', member.university || '-', 40, 368, 52);
+      drawDetail('MEMBER SINCE', formatDate(member.createdAt), 40, 430, 24);
+      drawDetail(
+        isExpired ? 'EXPIRED' : 'VALID UNTIL',
+        formatDate(expiryDate ?? undefined),
+        40 + detailWidth / 2,
+        430,
+        24
+      );
 
-      // Draw details
-      const details = [
-        { label: 'Member ID', value: memberId },
-        { label: 'Division', value: member.division?.name || '-' },
-        { label: 'University', value: member.university || '-' },
-        { label: 'Member Since', value: formatDate(member.createdAt) },
-      ];
-
-      if (expiryDate) {
-        details.push({ label: 'Valid Until', value: formatDate(expiryDate) });
+      // Perforated seam
+      ctx.fillStyle = '#CBD5E1';
+      for (let y = 90; y < H - 10; y += 16) {
+        ctx.beginPath();
+        ctx.arc(stubX, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      details.forEach((detail, i) => {
-        const y = 320 * scale + i * 45 * scale;
-        ctx.font = `${12 * scale}px Poppins, sans-serif`;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.fillText(detail.label, 60 * scale, y);
-        ctx.font = `bold ${16 * scale}px Poppins, sans-serif`;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(detail.value, 60 * scale, y + 22 * scale);
-      });
+      // Stub label
+      ctx.fillStyle = '#475569';
+      ctx.font = `600 12px ui-monospace, monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText('SCAN TO VALIDATE', stubX + 150, 120);
+      ctx.textAlign = 'left';
 
-      // Draw QR code area background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(700 * scale, 150 * scale, 270 * scale, 340 * scale);
-      ctx.fillStyle = '#0D1B33';
-      ctx.fillRect(710 * scale, 160 * scale, 250 * scale, 250 * scale);
-
-      // Draw QR code SVG to canvas
+      // QR
       const qrSvg = cardRef.current.querySelector('svg');
+      const finish = () => {
+        const link = document.createElement('a');
+        link.download = `PPIA-Member-Card-${memberId}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      };
       if (qrSvg) {
         const svgData = new XMLSerializer().serializeToString(qrSvg);
         const img = new window.Image();
         img.onload = () => {
-          ctx.drawImage(img, 720 * scale, 170 * scale, 230 * scale, 230 * scale);
-
-          // Draw validation text below QR
-          ctx.fillStyle = '#0D1B33';
-          ctx.font = `${12 * scale}px Poppins, sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.fillText('Scan to validate', 835 * scale, 420 * scale);
-          ctx.font = `bold ${10 * scale}px Poppins, sans-serif`;
+          const qrSize = 200;
+          const qrX = stubX + 150 - qrSize / 2;
+          ctx.drawImage(img, qrX, 150, qrSize, qrSize);
           ctx.fillStyle = '#64748B';
-          ctx.fillText('ppiaauckland.org', 835 * scale, 440 * scale);
-
-          // Download
-          const link = document.createElement('a');
-          link.download = `PPIA-Member-Card-${memberId}.png`;
-          link.href = canvas.toDataURL('image/png');
-          link.click();
+          ctx.font = `700 12px ui-monospace, monospace`;
+          ctx.textAlign = 'center';
+          ctx.fillText(memberId, stubX + 150, 380);
+          ctx.textAlign = 'left';
+          finish();
         };
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      } else {
+        finish();
       }
     } catch (error) {
       console.error('Failed to download card:', error);
@@ -197,24 +224,28 @@ export default function MemberCard({ member, variant = 'default', showDownload =
 
   if (variant === 'compact') {
     return (
-      <div className="bg-gradient-to-br from-[#0D1B33] via-[#1A2B4A] to-[#0D1B33] rounded-2xl p-6 text-white shadow-xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
-              {member.avatar ? (
-                <Image src={member.avatar} alt={member.name} width={64} height={64} className="w-full h-full object-cover" unoptimized />
-              ) : (
-                getInitials(member.name)
-              )}
-            </div>
-            <div>
-              <h3 className="font-bold text-lg">{member.name}</h3>
-              <p className="text-white/60 text-sm">{member.position?.replace(/_/g, ' ') || member.role}</p>
-              <p className="text-white/40 text-xs font-mono mt-1">{memberId}</p>
-            </div>
+      <div className="chart-paper relative overflow-hidden rounded-[6px] border border-[#DCE7F1] shadow-[0_20px_44px_-30px_rgba(7,19,33,0.5)]">
+        <div className="flex items-center justify-between gap-3 bg-[#E8231A] px-4 py-2.5">
+          <span className="data-type text-[12px] font-black uppercase tracking-[0.14em] text-white">
+            PPIA Auckland
+          </span>
+          <span className="data-type text-[12px] font-bold uppercase text-white/80">Member card</span>
+        </div>
+        <div className="flex items-center gap-4 p-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[5px] bg-[#0F1B33] text-lg font-black text-white">
+            {member.avatar ? (
+              <Image src={member.avatar} alt={member.name} width={56} height={56} className="h-full w-full object-cover" unoptimized />
+            ) : (
+              getInitials(member.name)
+            )}
           </div>
-          <div className="bg-white rounded-xl p-2">
-            <QRCodeSVG value={validationUrl} size={64} level="M" />
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-base font-black text-[#0F1B33]">{member.name}</h3>
+            <p className="truncate text-sm ink-muted">{role.label}</p>
+            <p className="data-type mt-0.5 text-[12px] uppercase ink-muted">{memberId}</p>
+          </div>
+          <div className="shrink-0 rounded-[4px] border border-[#DCE7F1] bg-white p-1.5">
+            <QRCodeSVG value={validationUrl} size={56} level="M" />
           </div>
         </div>
       </div>
@@ -225,118 +256,148 @@ export default function MemberCard({ member, variant = 'default', showDownload =
     <div className="relative">
       <div
         ref={cardRef}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0D1B33] via-[#1A2B4A] to-[#0D1B33] p-8 text-white shadow-2xl"
+        className="chart-paper relative overflow-hidden rounded-[6px] border border-[#DCE7F1] shadow-[0_40px_80px_-36px_rgba(7,19,33,0.7)]"
       >
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#E8231A]/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#E8231A]/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+        {/*
+          Header band.
 
-        <div className="relative z-10">
-          {/* Header with Logo */}
-          <div className="flex items-start justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="h-10 flex items-center overflow-hidden">
-                <Image
-                  src="/Logo-PPIA-2025-White.png"
-                  alt="PPIA Auckland"
-                  width={140}
-                  height={40}
-                  className="h-full w-auto object-contain"
-                  unoptimized
+          Navy, not red: the logo is a white wordmark with red in it, so on a red
+          band those parts vanished and the mark read as an unidentifiable smudge.
+          The red is kept as the accent rule along the top edge instead.
+        */}
+        <div className="bg-[#0F1B33]">
+          <div aria-hidden="true" className="h-1 bg-[#E8231A]" />
+          <div className="flex items-center justify-between gap-4 px-6 py-4">
+            <Image
+              src="/Logo-PPIA-2025-White.png"
+              alt="PPIA Auckland"
+              width={200}
+              height={80}
+              priority
+              className="h-7 w-auto"
+            />
+            <span className="data-type text-[12px] font-bold uppercase text-white/70">Member card</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row">
+          {/* Main coupon */}
+          <div className="min-w-0 flex-1 p-6">
+            {/* Route line */}
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="data-type text-[12px] uppercase ink-muted">From</p>
+                <p
+                  className="text-2xl font-black leading-none text-[#0F1B33]"
+                  style={{ fontFamily: 'var(--font-poppins), Poppins, sans-serif' }}
+                >
+                  IDN
+                </p>
+              </div>
+              <div className="relative mb-1 h-4 flex-1" aria-hidden="true">
+                <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 border-t border-dashed border-[#C3D2E0]" />
+                <Sailboat
+                  size={16}
+                  strokeWidth={2.2}
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-0.5 text-[#C41E16]"
                 />
               </div>
+              <div className="text-right">
+                <p className="data-type text-[12px] uppercase ink-muted">To</p>
+                <p
+                  className="text-2xl font-black leading-none text-[#0F1B33]"
+                  style={{ fontFamily: 'var(--font-poppins), Poppins, sans-serif' }}
+                >
+                  AKL
+                </p>
+              </div>
             </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold ${roleBadge.bg} ${roleBadge.text}`}>
-              {roleBadge.label}
-            </span>
+
+            {/* Passenger */}
+            <div className="mt-6 flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[5px] bg-[#0F1B33] text-2xl font-black text-white">
+                {member.avatar ? (
+                  <Image src={member.avatar} alt={member.name} width={64} height={64} className="h-full w-full object-cover" unoptimized />
+                ) : (
+                  getInitials(member.name)
+                )}
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate text-xl font-black leading-tight text-[#0F1B33]">{member.name}</h2>
+                <span
+                  className={`data-type mt-1.5 inline-block rounded-[3px] px-2 py-0.5 text-[12px] font-bold uppercase ring-1 ring-inset ${role.className}`}
+                >
+                  {role.label}
+                </span>
+              </div>
+            </div>
+
+            {/*
+              Details.
+
+              University sits on its own full-width row and is allowed to wrap:
+              sharing a three-column row with the dates truncated most real
+              institution names to "University of Auckl…". The two dates then pair
+              up on the row below, where short values fit comfortably.
+            */}
+            <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4">
+              {(
+                [
+                  ['Member ID', memberId, false],
+                  ['University', member.university || '-', true],
+                  ['Member since', formatDate(member.createdAt), false],
+                  ...(expiryDate
+                    ? [[isExpired ? 'Expired' : 'Valid until', formatDate(expiryDate), false] as const]
+                    : []),
+                ] as ReadonlyArray<readonly [string, string, boolean]>
+              ).map(([label, value, wide]) => (
+                <div key={label} className={`min-w-0 ${wide ? 'col-span-2' : ''}`}>
+                  <dt className="data-type text-[12px] uppercase ink-muted">{label}</dt>
+                  <dd
+                    className={`mt-1 text-[13px] font-semibold ${
+                      wide ? 'break-words' : 'truncate'
+                    } ${label.startsWith('Expired') ? 'text-[#C41E16]' : 'text-[#28394F]'}`}
+                  >
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            {/* Barcode */}
+            <div className="mt-6 flex h-10 items-end gap-[3px]" aria-hidden="true">
+              {BARCODE.map((height, i) => (
+                <span
+                  key={i}
+                  className="flex-1 bg-[#0F1B33]"
+                  style={{ height: `${height}%`, opacity: i % 3 === 0 ? 0.85 : 0.55 }}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Member Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-5">
-              {/* Avatar and Name */}
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#E8231A] to-[#A31510] flex items-center justify-center text-3xl font-black shadow-lg overflow-hidden border-4 border-white/20">
-                  {member.avatar ? (
-                    <Image src={member.avatar} alt={member.name} width={80} height={80} className="w-full h-full object-cover" unoptimized />
-                  ) : (
-                    getInitials(member.name)
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black">{member.name}</h2>
-                  <p className="text-white/60 text-sm">{member.position?.replace(/_/g, ' ') || 'Member'}</p>
-                </div>
-              </div>
+          {/* Perforated seam */}
+          <div className="perforation-v hidden w-[9px] shrink-0 sm:block" aria-hidden="true" />
+          <span aria-hidden="true" className="rope-rule mx-6 block opacity-60 sm:hidden" />
 
-              {/* Details */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <User className="w-4 h-4 text-white/40" />
-                  <div>
-                    <p className="text-white/40 text-xs">Member ID</p>
-                    <p className="font-mono font-bold text-sm">{memberId}</p>
-                  </div>
-                </div>
-                {member.division && (
-                  <div className="flex items-center gap-3">
-                    <Building2 className="w-4 h-4 text-white/40" />
-                    <div>
-                      <p className="text-white/40 text-xs">Division</p>
-                      <p className="font-medium text-sm">{member.division.name}</p>
-                    </div>
-                  </div>
-                )}
-                {member.university && (
-                  <div className="flex items-center gap-3">
-                    <Building2 className="w-4 h-4 text-white/40" />
-                    <div>
-                      <p className="text-white/40 text-xs">University</p>
-                      <p className="font-medium text-sm">{member.university}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4 text-white/40" />
-                  <div>
-                    <p className="text-white/40 text-xs">Member Since</p>
-                    <p className="font-medium text-sm">{formatDate(member.createdAt)}</p>
-                  </div>
-                </div>
-                {expiryDate && (
-                  <div className="flex items-center gap-3">
-                    <Award className="w-4 h-4 text-white/40" />
-                    <div>
-                      <p className="text-white/40 text-xs">{isExpired ? 'Expired' : 'Valid Until'}</p>
-                      <p className={`font-medium text-sm ${isExpired ? 'text-red-300' : ''}`}>{formatDate(expiryDate)}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+          {/* Stub with QR */}
+          <div className="flex shrink-0 flex-col items-center justify-center gap-3 border-t border-dashed border-[#C3D2E0] px-6 py-6 text-center sm:w-[220px] sm:border-l sm:border-t-0">
+            <div className="rounded-[5px] border border-[#DCE7F1] bg-white p-3 shadow-sm">
+              <QRCodeSVG value={validationUrl} size={132} level="M" />
             </div>
-
-            {/* QR Code */}
-            <div className="flex flex-col items-center justify-center">
-              <div className="bg-white rounded-2xl p-4 shadow-xl">
-                <QRCodeSVG value={validationUrl} size={160} level="M" includeMargin />
-              </div>
-              <p className="text-white/50 text-xs mt-4 text-center">
-                Scan to validate membership<br />
-                <span className="text-white/30">ppiaauckland.org/verify/{memberId}</span>
-              </p>
-            </div>
+            <p className="data-type text-[12px] uppercase ink-muted">Scan to validate</p>
+            <p className="data-type text-[12px] font-bold uppercase text-[#28394F]">{memberId}</p>
           </div>
         </div>
       </div>
 
-      {/* Download Button */}
       {showDownload && (
         <button
           onClick={handleDownload}
-          className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-colors"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-[4px] bg-[#0F1B33] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1A2B4A]"
         >
-          <Download className="w-4 h-4" />
-          Download Member Card
+          <Download className="h-4 w-4" />
+          Download member card
         </button>
       )}
     </div>

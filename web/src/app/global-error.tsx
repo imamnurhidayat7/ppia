@@ -68,11 +68,11 @@ export default function GlobalError({
         {/* Error Details (only in development) */}
         {process.env.NODE_ENV === "development" && (
           <div className="mt-8 p-4 bg-white/5 rounded-xl border border-white/10 text-left">
-            <p className="text-[#64748B] text-xs font-mono">
+            <p className="text-[#94A3B8] text-xs font-mono">
               {error.message || "Unknown error"}
             </p>
             {error.digest && (
-              <p className="text-[#64748B] text-xs font-mono mt-2">
+              <p className="text-[#94A3B8] text-xs font-mono mt-2">
                 Error ID: {error.digest}
               </p>
             )}

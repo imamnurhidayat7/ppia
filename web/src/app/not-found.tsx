@@ -44,7 +44,7 @@ export default function NotFound() {
 
         {/* Helpful Links */}
         <div className="mt-16 pt-10 border-t border-white/10">
-          <p className="text-[#64748B] text-sm mb-4">Popular pages:</p>
+          <p className="text-[#94A3B8] text-sm mb-4">Popular pages:</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             {[
               { label: 'About Us', href: '/about/ambition-action' },

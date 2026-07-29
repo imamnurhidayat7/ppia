@@ -19,6 +19,10 @@ It powers three things:
 
 Prerequisites: **Node.js 20+**, **npm**, and a **PostgreSQL 14+** database.
 
+A single variable decides where data lives — `DATA_SOURCE=local` uses a local
+Postgres with uploads on disk, `DATA_SOURCE=supabase` uses Supabase for both. See
+[Choosing where data lives](docs/getting-started.md#choosing-where-data-lives-local-or-supabase).
+
 ```bash
 # 1. Install dependencies for the root, api, and web
 npm run install:all
@@ -30,8 +34,11 @@ cp api/.env.example api/.env
 # 3. Configure the web app (defaults to the local API)
 #    web/.env.local already points at http://localhost:4000
 
+# 3b. Optional: start a local Postgres (no Supabase account needed)
+docker compose -f docker-compose.dev.yml up -d
+
 # 4. Apply the committed database migrations
-cd api && npx prisma migrate deploy && npm run db:generate && cd ..
+cd api && npm run db:deploy && npm run db:generate && cd ..
 
 # 5. Run both apps together (API on :4000, web on :3001)
 npm run dev
@@ -81,7 +88,8 @@ Inside `api/`:
 | `npm start` | Run the compiled API |
 | `npm run typecheck` | Type-check API and test sources without emitting files |
 | `npm test` | Run API unit tests once |
-| `npx prisma migrate deploy` | Apply committed migrations without creating a shadow database |
+| `npm run db:deploy` | Apply committed migrations to the selected database |
+| `npm run db:status` | Show migration state of the selected database |
 | `npm run db:migrate` | Create/develop migrations locally (`prisma migrate dev`) |
 | `npm run db:studio` | Open Prisma Studio |
 

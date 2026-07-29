@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import api from "@/lib/api";
+import WaveTransition from "@/components/sections/WaveTransition";
 import { getImageUrl } from "@/lib/utils";
 import type { PublicArticle } from "@/lib/server-api";
 import {
@@ -21,6 +22,13 @@ import {
   CheckCircle2,
   BookOpen,
 } from "lucide-react";
+
+/**
+ * Seam colours for the waterline transition — they match the ends of the
+ * `.sea-deep` / `.sea-shore` gradients in globals.css.
+ */
+const DEEP_SEA = "#0B1C2E";
+const SHORE = "#FFFFFF";
 
 function TwitterIcon({ size = 18 }: { size?: number }) {
   return (
@@ -131,10 +139,11 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    // Printed as chart data, so the same en-NZ format as the homepage log lines.
+    return new Date(dateString).toLocaleDateString("en-NZ", {
+      day: "2-digit",
+      month: "short",
       year: "numeric",
-      month: "long",
-      day: "numeric",
     });
   };
 
@@ -143,32 +152,49 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
   const bannerImageUrl = article.imageUrl ? getImageUrl(article.imageUrl) : null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="sea-shore relative min-h-screen overflow-hidden">
+      {/* Faint navigation-chart grid over the shore surface. */}
+      <div
+        aria-hidden="true"
+        className="sea-chart pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          maskImage: "radial-gradient(ellipse 85% 55% at 50% 30%, transparent 20%, black 90%)",
+          WebkitMaskImage: "radial-gradient(ellipse 85% 55% at 50% 30%, transparent 20%, black 90%)",
+        }}
+      />
 
-      {/* Header */}
-      <section className="relative pt-28 pb-12 mesh-gradient overflow-hidden">
-        {/* Decorative orb */}
-        <div
-          className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-15 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #E8231A, transparent 70%)", transform: "translate3d(0,0,0)" }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full opacity-10 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #3B82F6, transparent 70%)", transform: "translate3d(0,0,0)" }}
-        />
+      {/* Header — below the waterline, matching the masthead on every other page. */}
+      <section className="sea-deep relative pt-28 pb-12 overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div
+            className="sea-chart-light absolute inset-0 opacity-[0.05]"
+            style={{
+              maskImage: "radial-gradient(ellipse 80% 75% at 30% 45%, transparent 15%, black 85%)",
+              WebkitMaskImage: "radial-gradient(ellipse 80% 75% at 30% 45%, transparent 15%, black 85%)",
+            }}
+          />
+          <div
+            className="absolute top-0 right-0 h-[400px] w-[400px] rounded-full opacity-15"
+            style={{ background: "radial-gradient(circle, #E8231A, transparent 70%)", transform: "translate3d(0,0,0)" }}
+          />
+          <div
+            className="absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full opacity-10"
+            style={{ background: "radial-gradient(circle, #3B82F6, transparent 70%)", transform: "translate3d(0,0,0)" }}
+          />
+        </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <Link
             href="/activities/news-articles"
-            className="inline-flex items-center gap-2 text-white/60 hover:text-white mb-6 transition-colors text-sm"
+            className="data-type mb-6 inline-flex items-center gap-2 text-[12px] uppercase text-white/70 transition-colors hover:text-white"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={13} aria-hidden="true" />
             Back to Articles
           </Link>
 
           <div className="flex items-center gap-3 mb-4">
             {article.category && (
-              <span className="inline-block px-3 py-1 bg-[#E8231A] text-white text-xs font-semibold rounded-full">
+              <span className="data-type inline-block rounded-[3px] bg-[#E8231A] px-2.5 py-1 text-[12px] font-bold uppercase text-white">
                 {article.category}
               </span>
             )}
@@ -183,48 +209,55 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
             {article.title}
           </motion.h1>
 
-          <div className="flex flex-wrap items-center gap-6 text-white/80 text-sm">
+          <div className="flex flex-wrap items-center gap-5">
             {article.author && (
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#E8231A] flex items-center justify-center">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-[#E8231A]"
+                  aria-hidden="true"
+                >
                   <span className="text-white text-sm font-bold">
                     {article.author.name.charAt(0)}
                   </span>
                 </div>
-                <span className="text-white font-medium">{article.author.name}</span>
+                <span className="text-sm font-medium text-white">{article.author.name}</span>
               </div>
             )}
-            <div className="flex items-center gap-1.5">
-              <Calendar size={14} />
+            <span aria-hidden="true" className="h-px w-8 bg-white/20" />
+            <div className="data-type flex items-center gap-1.5 text-[12px] uppercase text-white/70">
+              <Calendar size={11} aria-hidden="true" />
               <span>{formatDate(article.createdAt)}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Clock size={14} />
+            <div className="data-type flex items-center gap-1.5 text-[12px] uppercase text-white/70">
+              <Clock size={11} aria-hidden="true" />
               <span>{readTime} min read</span>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Waterline: the article body comes ashore. */}
+      <WaveTransition from={DEEP_SEA} to={SHORE} />
+
       {/* Content */}
-      <section className="py-12">
+      <section className="relative py-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             {/* Sidebar - Share */}
             <div className="hidden lg:block lg:col-span-1">
               <div className="sticky top-28">
-                <p className="text-[#94A3B8] text-xs font-medium mb-3 uppercase tracking-wider">Share</p>
+                <p className="data-type mb-3 text-[12px] font-bold uppercase ink-muted">Share</p>
                 <div className="flex flex-col gap-2">
-                  <button className="w-10 h-10 rounded-full bg-[#F1F5F9] hover:bg-[#E2E8F0] flex items-center justify-center transition-colors">
+                  <button className="chart-paper flex h-10 w-10 items-center justify-center rounded-[3px] border border-[#DCE7F1] text-[#5B6B7C] transition-colors hover:border-[#9FB3C6] hover:text-[#0F1B33]">
                     <FacebookIcon size={16} />
                   </button>
-                  <button className="w-10 h-10 rounded-full bg-[#F1F5F9] hover:bg-[#E2E8F0] flex items-center justify-center transition-colors">
+                  <button className="chart-paper flex h-10 w-10 items-center justify-center rounded-[3px] border border-[#DCE7F1] text-[#5B6B7C] transition-colors hover:border-[#9FB3C6] hover:text-[#0F1B33]">
                     <TwitterIcon size={16} />
                   </button>
-                  <button className="w-10 h-10 rounded-full bg-[#F1F5F9] hover:bg-[#E2E8F0] flex items-center justify-center transition-colors">
+                  <button className="chart-paper flex h-10 w-10 items-center justify-center rounded-[3px] border border-[#DCE7F1] text-[#5B6B7C] transition-colors hover:border-[#9FB3C6] hover:text-[#0F1B33]">
                     <LinkedinIcon size={16} />
                   </button>
-                  <button className="w-10 h-10 rounded-full bg-[#F1F5F9] hover:bg-[#E2E8F0] flex items-center justify-center transition-colors">
+                  <button className="chart-paper flex h-10 w-10 items-center justify-center rounded-[3px] border border-[#DCE7F1] text-[#5B6B7C] transition-colors hover:border-[#9FB3C6] hover:text-[#0F1B33]">
                     <Share2 size={16} />
                   </button>
                 </div>
@@ -238,7 +271,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative w-full h-[280px] md:h-[400px] rounded-2xl overflow-hidden bg-[#F1F5F9] mb-8"
+                  className="relative mb-8 h-[280px] w-full overflow-hidden rounded-[5px] border border-[#DCE7F1] bg-[#EDF5FB] md:h-[400px]"
                 >
                   <Image
                     src={bannerImageUrl}
@@ -256,7 +289,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-xl text-[#64748B] font-medium mb-8 leading-relaxed border-l-4 border-[#E8231A] pl-6"
+                  className="text-xl ink-body font-medium mb-8 leading-relaxed border-l-4 border-[#E8231A] pl-6"
                 >
                   {article.excerpt}
                 </motion.p>
@@ -286,7 +319,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                   if (/<[a-z][\s\S]*>/i.test(rawContent)) {
                     return (
                       <div
-                        className="text-base md:text-[17px] space-y-4 [&_p]:my-3 [&_h1]:text-3xl [&_h1]:font-black [&_h1]:text-[#1A2B4A] [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-2xl [&_h2]:font-black [&_h2]:text-[#1A2B4A] [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[#1A2B4A] [&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-3 [&_li]:my-1 [&_a]:text-[#E8231A] [&_a]:underline [&_a:hover]:text-[#C41E16] [&_blockquote]:border-l-4 [&_blockquote]:border-[#E8231A] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#64748B] [&_blockquote]:my-4 [&_strong]:font-bold [&_em]:italic"
+                        className="text-base md:text-[17px] space-y-4 [&_p]:my-3 [&_h1]:text-3xl [&_h1]:font-black [&_h1]:text-[#1A2B4A] [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-2xl [&_h2]:font-black [&_h2]:text-[#1A2B4A] [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[#1A2B4A] [&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-3 [&_li]:my-1 [&_a]:accent-label [&_a]:underline [&_a:hover]:text-[#C41E16] [&_blockquote]:border-l-4 [&_blockquote]:border-[#E8231A] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:ink-body [&_blockquote]:my-4 [&_strong]:font-bold [&_em]:italic"
                         dangerouslySetInnerHTML={{ __html: sanitizeHtml(rawContent) }}
                       />
                     );
@@ -345,14 +378,14 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="mt-10 pt-8 border-t border-gray-100"
+                  className="mt-10 border-t border-[#DCE7F1] pt-8"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <Tag size={15} className="text-[#94A3B8]" />
                     {article.tags.map((tag) => (
                       <span
                         key={tag.id}
-                        className="px-3 py-1 text-sm rounded-full hover:bg-[#E2E8F0] cursor-pointer transition-colors"
+                        className="data-type cursor-pointer rounded-[3px] px-2.5 py-1 text-[12px] font-bold uppercase transition-colors hover:brightness-95"
                         style={{
                           background: tag.color ? `${tag.color}15` : "#F1F5F9",
                           color: tag.color || "#64748B",
@@ -371,17 +404,17 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
-                  className="mt-8 bg-[#F8FAFC] rounded-2xl p-6 border border-gray-100"
+                  className="chart-paper mt-8 rounded-[5px] border border-[#DCE7F1] p-6"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-[#E8231A] flex items-center justify-center shrink-0">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[3px] bg-[#E8231A]" aria-hidden="true">
                       <span className="text-white text-xl font-bold">
                         {article.author.name.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <p className="font-semibold text-[#1A2B4A]">{article.author.name}</p>
-                      <p className="text-[#64748B] text-sm mt-0.5">Contributor, PPI Auckland</p>
+                      <p className="font-semibold text-[#0F1B33]">{article.author.name}</p>
+                      <p className="data-type mt-1 text-[12px] uppercase ink-muted">Contributor, PPI Auckland</p>
                     </div>
                   </div>
                 </motion.div>
@@ -392,19 +425,19 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-12 pt-8 border-t border-gray-200"
+                className="mt-12 border-t border-[#DCE7F1] pt-8"
               >
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <MessageCircle className="w-5 h-5 text-[#E8231A]" />
-                    <h3 className="font-bold text-[#1A2B4A] text-xl">
+                    <MessageCircle className="w-5 h-5 accent-label" />
+                    <h3 className="font-bold text-[#0F1B33] text-xl">
                       Comments {comments.length > 0 && `(${comments.length})`}
                     </h3>
                   </div>
                   {!showCommentForm && (
                     <button
                       onClick={() => setShowCommentForm(true)}
-                      className="px-4 py-2 bg-[#E8231A] text-white rounded-lg hover:bg-[#C41E16] text-sm font-medium flex items-center gap-2 transition-colors"
+                      className="data-type flex items-center gap-2 rounded-[3px] bg-[#E8231A] px-4 py-2 text-[12px] font-bold uppercase text-white transition-colors hover:bg-[#C41E16]"
                     >
                       <MessageCircle className="w-4 h-4" />
                       Add Comment
@@ -414,7 +447,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
 
                 {commentToast && (
                   <div
-                    className={`mb-4 p-4 rounded-xl flex items-center gap-3 text-sm ${
+                    className={`mb-4 flex items-center gap-3 rounded-[3px] p-4 text-sm ${
                       commentToast.type === "success"
                         ? "bg-green-50 text-green-800"
                         : "bg-red-50 text-red-800"
@@ -432,9 +465,9 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                 {showCommentForm && (
                   <form
                     onSubmit={(e) => handleSubmitComment(e)}
-                    className="mb-8 bg-[#F8FAFC] rounded-2xl p-6 border border-gray-100"
+                    className="chart-paper mb-8 rounded-[5px] border border-[#DCE7F1] p-6"
                   >
-                    <h4 className="font-semibold text-[#1A2B4A] mb-4">Leave a Comment</h4>
+                    <h4 className="data-type mb-4 text-[12px] font-bold uppercase ink-muted">Leave a Comment</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                       <input
                         type="text"
@@ -444,7 +477,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                         onChange={(e) =>
                           setCommentForm({ ...commentForm, name: e.target.value })
                         }
-                        className="px-4 py-3 rounded-xl border border-gray-200 focus:border-[#E8231A] focus:ring-1 focus:ring-[#E8231A] outline-none transition-colors text-sm"
+                        className="rounded-[3px] border border-[#DCE7F1] bg-white/70 px-4 py-3 text-sm outline-none transition-colors focus:border-[#E8231A] focus:ring-1 focus:ring-[#E8231A]"
                       />
                       <input
                         type="email"
@@ -454,7 +487,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                         onChange={(e) =>
                           setCommentForm({ ...commentForm, email: e.target.value })
                         }
-                        className="px-4 py-3 rounded-xl border border-gray-200 focus:border-[#E8231A] focus:ring-1 focus:ring-[#E8231A] outline-none transition-colors text-sm"
+                        className="rounded-[3px] border border-[#DCE7F1] bg-white/70 px-4 py-3 text-sm outline-none transition-colors focus:border-[#E8231A] focus:ring-1 focus:ring-[#E8231A]"
                       />
                     </div>
                     <textarea
@@ -465,7 +498,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                       onChange={(e) =>
                         setCommentForm({ ...commentForm, content: e.target.value })
                       }
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#E8231A] focus:ring-1 focus:ring-[#E8231A] outline-none resize-none mb-4 text-sm"
+                      className="mb-4 w-full resize-none rounded-[3px] border border-[#DCE7F1] bg-white/70 px-4 py-3 text-sm outline-none transition-colors focus:border-[#E8231A] focus:ring-1 focus:ring-[#E8231A]"
                     />
                     <div className="flex items-center justify-end gap-3">
                       <button
@@ -474,14 +507,14 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                           setShowCommentForm(false);
                           setCommentForm({ name: "", email: "", content: "" });
                         }}
-                        className="px-4 py-2 border border-gray-200 rounded-lg text-[#64748B] hover:bg-gray-50 text-sm transition-colors"
+                        className="data-type rounded-[3px] border border-[#DCE7F1] px-4 py-2 text-[12px] font-bold uppercase text-[#5B6B7C] transition-colors hover:border-[#9FB3C6] hover:text-[#0F1B33]"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={submittingComment}
-                        className="px-5 py-2 bg-[#E8231A] text-white rounded-lg hover:bg-[#C41E16] text-sm font-medium disabled:opacity-50 flex items-center gap-2 transition-colors"
+                        className="data-type flex items-center gap-2 rounded-[3px] bg-[#E8231A] px-5 py-2 text-[12px] font-bold uppercase text-white transition-colors hover:bg-[#C41E16] disabled:opacity-50"
                       >
                         {submittingComment && <Loader2 className="w-4 h-4 animate-spin" />}
                         Post Comment
@@ -492,33 +525,33 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
 
                 {commentsLoading ? (
                   <div className="text-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#E8231A] mx-auto" />
+                    <Loader2 className="w-6 h-6 animate-spin accent-label mx-auto" />
                   </div>
                 ) : comments.length === 0 ? (
-                  <div className="text-center py-10 text-[#64748B] bg-[#F8FAFC] rounded-xl border border-gray-100">
+                  <div className="chart-paper rounded-[5px] border border-[#DCE7F1] py-10 text-center text-[#5B6B7C]">
                     <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-30" />
                     <p className="text-sm">No comments yet. Be the first to comment!</p>
                   </div>
                 ) : (
                   <div className="space-y-5">
                     {comments.map((comment) => (
-                      <div key={comment.id} className="bg-[#F8FAFC] rounded-xl p-5 border border-gray-100">
+                      <div key={comment.id} className="chart-paper rounded-[5px] border border-[#DCE7F1] p-5">
                         <div className="flex items-start gap-3">
-                          <div className="w-9 h-9 rounded-full bg-[#1A2B4A] flex items-center justify-center shrink-0">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] bg-[#0F2438]" aria-hidden="true">
                             <span className="text-white text-xs font-bold">
                               {comment.userName.charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1.5">
-                              <span className="font-semibold text-[#1A2B4A] text-sm">
+                              <span className="font-semibold text-[#0F1B33] text-sm">
                                 {comment.userName}
                               </span>
-                              <span className="text-xs text-[#94A3B8]">
-                                {new Date(comment.createdAt).toLocaleDateString()}
+                              <span className="data-type text-[12px] uppercase ink-muted">
+                                {formatDate(comment.createdAt)}
                               </span>
                             </div>
-                            <p className="text-[#64748B] text-sm leading-relaxed">
+                            <p className="ink-body text-sm leading-relaxed">
                               {comment.content}
                             </p>
                             <button
@@ -526,7 +559,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                                 setReplyingTo(replyingTo === comment.id ? null : comment.id);
                                 setShowCommentForm(true);
                               }}
-                              className="text-xs text-[#E8231A] hover:underline mt-2 flex items-center gap-1"
+                              className="text-xs accent-label hover:underline mt-2 flex items-center gap-1"
                             >
                               <Reply className="w-3 h-3" /> Reply
                             </button>
@@ -534,18 +567,18 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                         </div>
 
                         {comment.replies && comment.replies.length > 0 && (
-                          <div className="ml-12 mt-4 space-y-3 border-l-2 border-gray-100 pl-4">
+                          <div className="ml-12 mt-4 space-y-3 border-l border-[#DCE7F1] pl-4">
                             {comment.replies.map((reply) => (
-                              <div key={reply.id} className="bg-white rounded-lg p-4 border border-gray-100">
+                              <div key={reply.id} className="rounded-[3px] border border-[#DCE7F1] bg-white/70 p-4">
                                 <div className="flex items-center gap-2 mb-1.5">
-                                  <span className="font-semibold text-[#1A2B4A] text-xs">
+                                  <span className="font-semibold text-[#0F1B33] text-xs">
                                     {reply.userName}
                                   </span>
-                                  <span className="text-xs text-[#94A3B8]">
-                                    {new Date(reply.createdAt).toLocaleDateString()}
+                                  <span className="data-type text-[12px] uppercase ink-muted">
+                                    {formatDate(reply.createdAt)}
                                   </span>
                                 </div>
-                                <p className="text-[#64748B] text-xs leading-relaxed">
+                                <p className="ink-body text-xs leading-relaxed">
                                   {reply.content}
                                 </p>
                               </div>
@@ -556,7 +589,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                         {replyingTo === comment.id && showCommentForm && (
                           <form
                             onSubmit={(e) => handleSubmitComment(e, comment.id)}
-                            className="ml-12 mt-3 bg-white rounded-xl p-4 border border-gray-100"
+                            className="ml-12 mt-3 rounded-[3px] border border-[#DCE7F1] bg-white/70 p-4"
                           >
                             <textarea
                               rows={2}
@@ -566,7 +599,7 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                               onChange={(e) =>
                                 setCommentForm({ ...commentForm, content: e.target.value })
                               }
-                              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-[#E8231A] outline-none resize-none text-xs mb-2"
+                              className="mb-2 w-full resize-none rounded-[3px] border border-[#DCE7F1] px-3 py-2 text-xs outline-none transition-colors focus:border-[#E8231A]"
                             />
                             <div className="flex items-center justify-end gap-2">
                               <button
@@ -576,14 +609,14 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
                                   setShowCommentForm(false);
                                   setCommentForm({ name: "", email: "", content: "" });
                                 }}
-                                className="px-3 py-1 border border-gray-200 rounded-lg text-[#64748B] hover:bg-gray-50 text-xs"
+                                className="data-type rounded-[3px] border border-[#DCE7F1] px-3 py-1 text-[12px] font-bold uppercase text-[#5B6B7C] transition-colors hover:border-[#9FB3C6] hover:text-[#0F1B33]"
                               >
                                 Cancel
                               </button>
                               <button
                                 type="submit"
                                 disabled={submittingComment}
-                                className="px-3 py-1 bg-[#E8231A] text-white rounded-lg hover:bg-[#C41E16] text-xs disabled:opacity-50 flex items-center gap-1"
+                                className="data-type flex items-center gap-1 rounded-[3px] bg-[#E8231A] px-3 py-1 text-[12px] font-bold uppercase text-white transition-colors hover:bg-[#C41E16] disabled:opacity-50"
                               >
                                 {submittingComment && <Loader2 className="w-3 h-3 animate-spin" />}
                                 Reply
@@ -601,38 +634,40 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
             {/* Right Sidebar */}
             <div className="lg:col-span-3">
               <div className="sticky top-28 space-y-6">
-                <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-gray-100">
-                  <h4 className="font-semibold text-[#1A2B4A] text-sm mb-4">About this article</h4>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-center gap-2 text-[#64748B]">
-                      <Calendar size={13} />
+                <div className="chart-paper rounded-[5px] border border-[#DCE7F1] p-5">
+                  <h4 className="data-type text-[12px] font-bold uppercase ink-muted">About this article</h4>
+                  <div aria-hidden="true" className="rope-rule my-3" />
+                  <div className="data-type space-y-3 text-[12px] uppercase ink-muted">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={11} aria-hidden="true" />
                       <span>{formatDate(article.createdAt)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-[#64748B]">
-                      <Clock size={13} />
+                    <div className="flex items-center gap-2">
+                      <Clock size={11} aria-hidden="true" />
                       <span>{readTime} min read</span>
                     </div>
                     {article.category && (
-                      <div className="flex items-center gap-2 text-[#64748B]">
-                        <Tag size={13} />
+                      <div className="flex items-center gap-2">
+                        <Tag size={11} aria-hidden="true" />
                         <span>{article.category}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-gray-100">
+                <div className="chart-paper rounded-[5px] border border-[#DCE7F1] p-5">
                   <Link href="/activities/news-articles" className="block">
-                    <h4 className="font-semibold text-[#1A2B4A] text-sm mb-4 hover:text-[#E8231A] transition-colors">
+                    <h4 className="data-type text-[12px] font-bold uppercase ink-muted transition-colors hover:text-[#C41E16]">
                       More Articles
                     </h4>
                   </Link>
+                  <div aria-hidden="true" className="rope-rule my-3" />
                   <div className="space-y-4">
                     <Link
                       href="/activities/news-articles"
-                      className="flex items-center gap-3 text-sm text-[#64748B] hover:text-[#E8231A] transition-colors"
+                      className="flex items-center gap-3 text-sm text-[#5B6B7C] transition-colors hover:text-[#C41E16]"
                     >
-                      <BookOpen size={14} />
+                      <BookOpen size={14} aria-hidden="true" />
                       Browse all articles
                     </Link>
                   </div>

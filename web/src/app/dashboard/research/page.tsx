@@ -194,43 +194,51 @@ export default function DashboardResearchPage() {
             const division = paper.Division ?? paper.division ?? null;
             return (
               <Link key={paper.id} href={href} className="group block">
-                <SectionCard className="transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:hover:border-slate-700">
+                <SectionCard className="transition-all hover:-translate-y-0.5 hover:border-[#C3D2E0] hover:shadow-lg dark:hover:border-slate-700">
                   <div className="flex flex-wrap items-center gap-2">
                     {topic && <Badge variant="primary">{topic}</Badge>}
                     {division?.name && <Badge variant="outline">{division.name}</Badge>}
                     {paper.publicationDate && (
-                      <span className="inline-flex items-center gap-1 text-xs text-slate-400">
-                        <Calendar className="h-3 w-3" />
-                        {formatDate(paper.publicationDate)}
+                      <span className="data-type inline-flex items-center gap-1 text-[12px] ink-muted">
+                        <Calendar aria-hidden="true" className="h-3 w-3" />
+                        {formatDate(paper.publicationDate, {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
                       </span>
                     )}
                   </div>
 
-                  <h3 className="mt-3 font-display text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-[#E8231A] dark:text-slate-50">
+                  <h3 className="mt-3 font-display text-lg font-bold leading-snug ink-strong transition-colors group-hover:text-[#C41E16] dark:group-hover:text-[#FF8A84]">
                     {paper.title}
                   </h3>
 
                   {abstract && (
-                    <p className="mt-2 line-clamp-2 border-l-4 border-slate-200 pl-3 text-sm leading-relaxed text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                    <p className="mt-2 line-clamp-2 border-l-4 border-[#DCE7F1] pl-3 text-sm leading-relaxed ink-body dark:border-slate-700">
                       {abstract}
                     </p>
                   )}
 
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                    <span className="inline-flex min-w-0 items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                      <span className="truncate">{paper.authors || 'Anonymous'}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-3 text-slate-400">
-                      <span className="inline-flex items-center gap-1">
-                        <Eye className="h-3.5 w-3.5" />
-                        {paper.viewCount || 0}
+                  <div className="mt-4 pt-3">
+                    <span aria-hidden="true" className="rope-rule mb-3 block opacity-60" />
+                    {/* Author line and the two counters: the paper's log entry. */}
+                    <div className="data-type flex flex-wrap items-center justify-between gap-3 text-[12px] ink-muted">
+                      <span className="inline-flex min-w-0 items-center gap-1.5">
+                        <Users aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{paper.authors || 'Anonymous'}</span>
                       </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Download className="h-3.5 w-3.5" />
-                        {paper.downloadCount || 0}
+                      <span className="inline-flex items-center gap-3">
+                        <span className="inline-flex items-center gap-1">
+                          <Eye aria-hidden="true" className="h-3.5 w-3.5" />
+                          {paper.viewCount || 0}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Download aria-hidden="true" className="h-3.5 w-3.5" />
+                          {paper.downloadCount || 0}
+                        </span>
                       </span>
-                    </span>
+                    </div>
                   </div>
                 </SectionCard>
               </Link>

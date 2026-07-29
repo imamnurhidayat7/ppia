@@ -1,0 +1,31 @@
+# Local development database.
+#
+# Only Postgres runs here — the API and web app stay on the host so hot reload
+# keeps working. Start it with:
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# The data lives in a named volume, so `down` keeps it and `down -v` wipes it.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ppia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ppia
+      POSTGRES_PASSWORD: ppia_local_dev
+      POSTGRES_DB: ppia
+    ports:
+      # 5433 on the host on purpose: it will not collide with a Postgres a
+      # developer already runs on the default 5432.
+      - '5433:5432'
+    volumes:
+      - ppia_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ppia -d ppia']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ppia_pgdata:

@@ -47,7 +47,7 @@ export default function EditArticlePage() {
       const [divisionsRes, tagsRes, articleRes] = await Promise.all([
         api.getDivisions(),
         api.getTags(),
-        api.getArticle(id),
+        api.getArticleAdmin(id),
       ]);
       setDivisions(unwrapList<DivisionRef>(divisionsRes, 'divisions'));
       setTags(unwrapList<TagRef>(tagsRes, 'tags'));

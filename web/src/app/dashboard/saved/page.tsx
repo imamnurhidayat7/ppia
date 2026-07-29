@@ -151,9 +151,9 @@ export default function SavedArticlesPage() {
                 <SectionCard
                   flush
                   bodyClassName="flex h-full flex-col"
-                  className="h-full transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:hover:border-slate-700"
+                  className="h-full transition-all hover:-translate-y-0.5 hover:border-[#C3D2E0] hover:shadow-lg dark:hover:border-slate-700"
                 >
-                  <div className="relative h-40 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  <div className="relative h-40 overflow-hidden bg-[#EDF5FB] dark:bg-slate-800">
                     {image ? (
                       <Image
                         src={image}
@@ -164,15 +164,16 @@ export default function SavedArticlesPage() {
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <BookOpen className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+                        <BookOpen aria-hidden="true" className="h-10 w-10 ink-muted opacity-50" />
                       </div>
                     )}
                     {article.category && (
-                      <span className="absolute left-3 top-3 rounded-full bg-[#0D1B33]/90 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                      /* Stamped classification rather than a pill. */
+                      <span className="data-type absolute left-3 top-3 rounded-[3px] bg-[#0B1C2E]/90 px-2 py-1 text-[12px] font-bold uppercase text-white backdrop-blur-sm">
                         {article.category}
                       </span>
                     )}
-                    <div className="absolute right-2 top-2 rounded-lg bg-white/90 backdrop-blur-sm dark:bg-slate-900/90">
+                    <div className="absolute right-2 top-2 rounded-[3px] bg-white/90 backdrop-blur-sm dark:bg-slate-900/90">
                       <BookmarkButton
                         articleId={article.id}
                         saved
@@ -182,29 +183,38 @@ export default function SavedArticlesPage() {
                   </div>
 
                   <div className="flex flex-1 flex-col p-5">
-                    <h3 className="line-clamp-2 font-display text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-[#E8231A] dark:text-slate-50">
+                    <h3 className="line-clamp-2 font-display text-base font-bold leading-snug ink-strong transition-colors group-hover:text-[#C41E16] dark:group-hover:text-[#FF8A84]">
                       {article.title}
                     </h3>
                     {excerpt && (
-                      <p className="mb-4 mt-2 line-clamp-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                      <p className="mb-4 mt-2 line-clamp-3 text-sm leading-relaxed ink-body">
                         {excerpt}
                       </p>
                     )}
-                    <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-400 dark:border-slate-800">
-                      {article.User?.name && (
+                    {/* Byline, reading time and save date: the card's log entry. */}
+                    <div className="mt-auto pt-3">
+                      <span aria-hidden="true" className="rope-rule mb-3 block opacity-60" />
+                      <div className="data-type flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] ink-muted">
+                        {article.User?.name && (
+                          <span className="inline-flex items-center gap-1">
+                            <User aria-hidden="true" className="h-3 w-3" />
+                            {article.User.name}
+                          </span>
+                        )}
                         <span className="inline-flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {article.User.name}
+                          <Clock aria-hidden="true" className="h-3 w-3" />
+                          {readingMinutes(article.readingTime)}
                         </span>
-                      )}
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {readingMinutes(article.readingTime)}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        Saved {formatDate(item.savedAt)}
-                      </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar aria-hidden="true" className="h-3 w-3" />
+                          Saved{' '}
+                          {formatDate(item.savedAt, {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </SectionCard>

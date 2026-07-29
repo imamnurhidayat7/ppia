@@ -1,24 +1,22 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
-import { Loader2, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, MailCheck } from 'lucide-react';
+import AuthShell from '@/components/auth/AuthShell';
+import AuthNotice from '@/components/auth/AuthNotice';
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get('token');
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (!token) {
-      // Use async IIFE to avoid synchronous setState in effect
+      // Async so the state write is not synchronous inside the effect body.
       (async () => {
         setError('Verification token is missing');
         setIsLoading(false);
@@ -29,10 +27,9 @@ function VerifyEmailContent() {
     const verify = async () => {
       try {
         await api.verifyEmail(token);
-        setSuccess(true);
       } catch (err) {
-        const error = err as { response?: { data?: { error?: string } } };
-        setError(error.response?.data?.error || 'Failed to verify email');
+        const axiosErr = err as { response?: { data?: { error?: string } } };
+        setError(axiosErr.response?.data?.error || 'Failed to verify email');
       } finally {
         setIsLoading(false);
       }
@@ -43,68 +40,66 @@ function VerifyEmailContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen mesh-gradient flex items-center justify-center px-4">
-        <div className="w-full max-w-md text-center">
-          <Loader2 size={48} className="animate-spin text-[#E8231A] mx-auto mb-4" />
-          <p className="text-gray-600">Verifying your email...</p>
-        </div>
-      </div>
+      <AuthNotice eyebrow="Please wait" title="Verifying your e-mail" icon={Loader2} tone="info">
+        <p className="text-center">This only takes a moment.</p>
+      </AuthNotice>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen mesh-gradient flex items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <div className="glass-light rounded-2xl shadow-2xl p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-6">
-              <AlertCircle size={32} className="text-red-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-[#1A2B4A] mb-4">Verification Failed</h1>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <Link
-              href="/login"
-              className="inline-block bg-[#E8231A] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#c91e16] transition-colors"
-            >
-              Go to Login
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AuthNotice
+        eyebrow="Verification"
+        title="Verification failed"
+        icon={AlertCircle}
+        tone="error"
+        actions={[
+          { label: 'Go to sign in', href: '/login' },
+          { label: 'Back to home', href: '/', variant: 'secondary' },
+        ]}
+      >
+        <p className="text-center">{error}</p>
+      </AuthNotice>
     );
   }
 
   return (
-    <div className="min-h-screen mesh-gradient flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="glass-light rounded-2xl shadow-2xl p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 size={32} className="text-green-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-[#1A2B4A] mb-4">Email Verified!</h1>
-          <p className="text-gray-600 mb-6">
-            Your email has been successfully verified. You can now access all features of PPIA Auckland.
-          </p>
-          <Link
-            href="/dashboard"
-            className="inline-block bg-[#E8231A] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#c91e16] transition-colors"
-          >
-            Go to Dashboard
-          </Link>
-        </div>
-      </div>
-    </div>
+    <AuthNotice
+      eyebrow="Verification"
+      title="E-mail verified"
+      icon={CheckCircle2}
+      tone="success"
+      actions={[{ label: 'Go to dashboard', href: '/dashboard' }]}
+    >
+      <p className="text-center">
+        Your e-mail address is confirmed. Once your membership is approved you can use every part of PPIA Auckland.
+      </p>
+    </AuthNotice>
   );
 }
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen mesh-gradient flex items-center justify-center">
-        <Loader2 size={48} className="animate-spin text-[#E8231A]" />
-      </div>
-    }>
-      <VerifyEmailContent />
-    </Suspense>
+    <AuthShell
+      eyebrow="E-mail confirmation"
+      headline={
+        <>
+          Confirming
+          <br />
+          your address
+        </>
+      }
+      blurb="Confirming your e-mail lets us reach you about your membership and the events you register for."
+    >
+      <Suspense
+        fallback={
+          <AuthNotice eyebrow="Please wait" title="Verifying your e-mail" icon={MailCheck} tone="info">
+            <p className="text-center">This only takes a moment.</p>
+          </AuthNotice>
+        }
+      >
+        <VerifyEmailContent />
+      </Suspense>
+    </AuthShell>
   );
 }

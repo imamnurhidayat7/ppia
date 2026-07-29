@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
+import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { buildIcsCalendar, icsFilename } from '../lib/ics';
+import { sanitizeRegistrationFields } from '../lib/event-registration';
+import { sanitizeMapEmbedUrl } from '../lib/maps';
 
 interface AuthRequest extends Request {
   user?: {
@@ -29,12 +32,17 @@ export const getAllEvents = async (req: Request, res: Response): Promise<void> =
       })
     };
 
+    // Newest first, same convention as articles/research: the most recently
+    // added event leads. `startDate: 'asc'` used to run this list, which put
+    // the single oldest event of all time first the moment anything had
+    // published — effectively hiding newer events behind it once the list
+    // held more rows than the page size.
     const [events, total] = await Promise.all([
       prisma.event.findMany({
         where,
         skip,
         take: limitNum,
-        orderBy: { startDate: 'asc' },
+        orderBy: { createdAt: 'desc' },
         include: {
           User: {
             select: { id: true, name: true, avatar: true }
@@ -132,12 +140,20 @@ export const createEvent = async (req: AuthRequest, res: Response): Promise<void
       startDate,
       endDate,
       location,
+      locationMapUrl,
       divisionId,
-      published
+      published,
+      registrationFields
     } = req.body;
 
-    // BOARD can only create events for their division
-    if (userRole === 'BOARD' && divisionId !== userDivisionId) {
+    const cleanedFields = sanitizeRegistrationFields(registrationFields);
+    const cleanedMapUrl = sanitizeMapEmbedUrl(locationMapUrl);
+
+    // BOARD can only create events for their own division. Leaving the division
+    // unset is allowed — the create below falls back to the member's own
+    // division — so only an explicit *other* division is refused. Comparing
+    // strictly also rejected the common "no division selected" case.
+    if (userRole === 'BOARD' && divisionId && divisionId !== userDivisionId) {
       res.status(403).json({ error: 'You can only create events for your division' });
       return;
     }
@@ -162,8 +178,12 @@ export const createEvent = async (req: AuthRequest, res: Response): Promise<void
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
         location,
+        locationMapUrl: cleanedMapUrl,
         divisionId: divisionId || userDivisionId || null,
         published: published || false,
+        ...(cleanedFields !== undefined && {
+          registrationFields: cleanedFields as unknown as Prisma.InputJsonValue,
+        }),
         authorId: userId
       },
       include: {
@@ -205,9 +225,13 @@ export const updateEvent = async (req: AuthRequest, res: Response): Promise<void
       startDate,
       endDate,
       location,
+      locationMapUrl,
       divisionId,
-      published
+      published,
+      registrationFields
     } = req.body;
+
+    const cleanedFields = sanitizeRegistrationFields(registrationFields);
 
     // Check if event exists
     const event = await prisma.event.findUnique({
@@ -220,8 +244,8 @@ export const updateEvent = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // BOARD can only update events in their division
-    if (userRole === 'BOARD' && event.divisionId !== userDivisionId) {
+    // BOARD can update its own division's events and events with no division.
+    if (userRole === 'BOARD' && event.divisionId && event.divisionId !== userDivisionId) {
       res.status(403).json({ error: 'You can only update events in your division' });
       return;
     }
@@ -247,6 +271,11 @@ export const updateEvent = async (req: AuthRequest, res: Response): Promise<void
       }
     }
 
+    // `locationMapUrl` may be cleared, so an explicit empty string must reach
+    // the update as null rather than being skipped like an unset field.
+    const cleanedMapUrl =
+      locationMapUrl !== undefined ? sanitizeMapEmbedUrl(locationMapUrl) : undefined;
+
     const updatedEvent = await prisma.event.update({
       where: { id },
       data: {
@@ -258,8 +287,12 @@ export const updateEvent = async (req: AuthRequest, res: Response): Promise<void
         ...(startDate && { startDate: new Date(startDate) }),
         ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
         ...(location !== undefined && { location }),
+        ...(cleanedMapUrl !== undefined && { locationMapUrl: cleanedMapUrl }),
         ...(divisionId !== undefined && { divisionId }),
-        ...(published !== undefined && { published })
+        ...(published !== undefined && { published }),
+        ...(cleanedFields !== undefined && {
+          registrationFields: cleanedFields as unknown as Prisma.InputJsonValue,
+        })
       },
       include: {
         User: {
@@ -302,8 +335,8 @@ export const deleteEvent = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // BOARD can only delete events in their division
-    if (userRole === 'BOARD' && event.divisionId !== userDivisionId) {
+    // BOARD can delete its own division's events and events with no division.
+    if (userRole === 'BOARD' && event.divisionId && event.divisionId !== userDivisionId) {
       res.status(403).json({ error: 'You can only delete events in your division' });
       return;
     }
@@ -318,6 +351,54 @@ export const deleteEvent = async (req: AuthRequest, res: Response): Promise<void
 };
 
 // Get all events (admin - BOARD only sees their division)
+/**
+ * Fetch a single event for the admin editor, including unpublished drafts.
+ *
+ * The public `getEventById` 404s anything not published, which meant an admin
+ * could never open a draft to edit or publish it. This admin-only variant
+ * returns the event regardless of status; BOARD is still limited to its own
+ * division, matching the admin listing.
+ */
+export const getEventByIdAdmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+    const userDivisionId = req.user?.divisionId;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { id } = req.params as { id: string };
+
+    const event = await prisma.event.findUnique({
+      where: { id },
+      include: {
+        User: { select: { id: true, name: true, avatar: true } },
+        Division: { select: { id: true, name: true, slug: true } }
+      }
+    });
+
+    if (!event) {
+      res.status(404).json({ error: 'Event not found' });
+      return;
+    }
+
+    // BOARD can view its own division's events and events with no division,
+    // matching what the admin listing shows.
+    if (userRole === 'BOARD' && event.divisionId && event.divisionId !== userDivisionId) {
+      res.status(403).json({ error: 'You can only view events in your division' });
+      return;
+    }
+
+    res.json({ event });
+  } catch (error) {
+    console.error('Get event (admin) error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export const getAllEventsAdmin = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
@@ -335,10 +416,17 @@ export const getAllEventsAdmin = async (req: AuthRequest, res: Response): Promis
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
-    // BOARD can only see events in their division
+    /**
+     * BOARD sees its own division's events plus any event with no division.
+     *
+     * Filtering on `divisionId` alone returned nothing for a BOARD member,
+     * because events created without picking a division are stored with
+     * `divisionId: null` and so matched no division at all — the events list
+     * looked empty even though events existed.
+     */
     const where: any = {};
     if (userRole === 'BOARD') {
-      where.divisionId = userDivisionId;
+      where.OR = [{ divisionId: userDivisionId ?? null }, { divisionId: null }];
     }
 
     const [events, total] = await Promise.all([
@@ -353,7 +441,9 @@ export const getAllEventsAdmin = async (req: AuthRequest, res: Response): Promis
           }
         }
       }),
-      prisma.event.count()
+      // Count the same set that is listed; an unfiltered count reported totals
+      // (and page counts) that did not match what BOARD could actually see.
+      prisma.event.count({ where })
     ]);
 
     res.json({

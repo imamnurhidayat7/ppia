@@ -292,7 +292,8 @@ export default function MemberDirectoryPage() {
         </SectionCard>
       ) : (
         <>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          {/* A count, so it reads as a instrument reading. */}
+          <p className="data-type text-[12px] ink-muted">
             {total} {total === 1 ? 'member' : 'members'}
             {hasFilters ? ' matching your filters' : ''}
           </p>
@@ -309,17 +310,23 @@ export default function MemberDirectoryPage() {
               return (
                 <SectionCard key={member.id} className="flex h-full flex-col">
                   <div className="flex items-start gap-3">
-                    <Avatar src={member.avatar ?? undefined} name={member.name} size="lg" />
+                    {/* Porthole frame around the portrait, as elsewhere. */}
+                    <span
+                      className="shrink-0 rounded-full p-0.5"
+                      style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)' }}
+                    >
+                      <Avatar src={member.avatar ?? undefined} name={member.name} size="lg" />
+                    </span>
                     <div className="min-w-0 flex-1">
                       {/* Public profiles are keyed by username, and the route
                           already exposes only non-sensitive fields. */}
                       <Link
                         href={`/profile/${member.username}`}
-                        className="block truncate font-display text-base font-bold text-slate-900 transition-colors hover:text-[#E8231A] dark:text-slate-50"
+                        className="block truncate font-display text-base font-bold ink-strong transition-colors hover:text-[#C41E16] dark:hover:text-[#FF8A84]"
                       >
                         {member.name}
                       </Link>
-                      <p className="truncate text-xs text-slate-400">@{member.username}</p>
+                      <p className="data-type truncate text-[12px] ink-muted">@{member.username}</p>
                       {member.position && (
                         <Badge variant="primary" className="mt-1.5">
                           {humanise(member.position)}
@@ -329,25 +336,25 @@ export default function MemberDirectoryPage() {
                   </div>
 
                   {member.bio && (
-                    <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                    <p className="mt-3 line-clamp-2 text-sm leading-relaxed ink-body">
                       {member.bio}
                     </p>
                   )}
 
-                  <div className="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="mt-3 space-y-1.5 text-sm ink-body">
                     {member.university && (
                       <p className="flex items-start gap-2">
-                        <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <Building2 aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 ink-muted" />
                         <span className="min-w-0">{member.university}</span>
                       </p>
                     )}
                     {(member.major || degree) && (
                       <p className="flex items-start gap-2">
-                        <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <GraduationCap aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 ink-muted" />
                         <span className="min-w-0">
                           {[degree, member.major].filter(Boolean).join(' · ')}
                           {graduation && (
-                            <span className="text-slate-400"> — until {graduation}</span>
+                            <span className="data-type text-[12px] ink-muted"> — until {graduation}</span>
                           )}
                         </span>
                       </p>
@@ -355,7 +362,9 @@ export default function MemberDirectoryPage() {
                   </div>
 
                   {/* Pushed to the bottom so cards of differing heights line up. */}
-                  <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+                  <div className="mt-auto pt-4">
+                    <span aria-hidden="true" className="rope-rule mb-3 block opacity-60" />
+                    <div className="flex items-center justify-between gap-2">
                     {member.division?.name ? (
                       <Badge variant="outline">{member.division.name}</Badge>
                     ) : (
@@ -369,7 +378,7 @@ export default function MemberDirectoryPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`${member.name} on LinkedIn`}
-                            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#0A66C2] dark:hover:bg-slate-800"
+                            className="rounded-[3px] p-1.5 ink-muted transition-colors hover:bg-[#F5FAFD] hover:text-[#0A66C2] dark:hover:bg-slate-800"
                           >
                             <LinkedInIcon />
                           </a>
@@ -380,7 +389,7 @@ export default function MemberDirectoryPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`${member.name} on Instagram`}
-                            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#E1306C] dark:hover:bg-slate-800"
+                            className="rounded-[3px] p-1.5 ink-muted transition-colors hover:bg-[#F5FAFD] hover:text-[#E1306C] dark:hover:bg-slate-800"
                           >
                             <InstagramIcon />
                           </a>
@@ -391,13 +400,14 @@ export default function MemberDirectoryPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`${member.name} on X`}
-                            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800"
+                            className="rounded-[3px] p-1.5 ink-muted transition-colors hover:bg-[#F5FAFD] hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                           >
                             <XIcon />
                           </a>
                         )}
                       </span>
                     )}
+                    </div>
                   </div>
                 </SectionCard>
               );
@@ -414,7 +424,7 @@ export default function MemberDirectoryPage() {
               >
                 Previous
               </Button>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
+              <span className="data-type text-[12px] ink-muted">
                 Page {page} of {totalPages}
               </span>
               <Button

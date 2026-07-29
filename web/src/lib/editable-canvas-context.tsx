@@ -76,7 +76,11 @@ export function EditableCanvasProvider({ children }: { children: ReactNode }) {
   const loadSections = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.getLandingSections();
+      // The admin endpoint, not the public one: the public route filters
+      // `enabled: true` on both sections and blocks, so a section switched off
+      // (or soft-deleted, which sets enabled=false) vanished from the editor and
+      // could never be found or restored again.
+      const res = await api.getLandingSectionsAdmin();
       if (res.success && res.data) {
         const map: DraftSections = {};
         for (const s of res.data as LandingSection[]) {

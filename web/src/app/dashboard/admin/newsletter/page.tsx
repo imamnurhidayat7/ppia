@@ -39,6 +39,15 @@ import {
   Users,
 } from 'lucide-react';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 type StatusFilter = '' | 'active' | 'inactive';
 type NewsletterTab = 'subscribers' | 'compose';
 
@@ -384,32 +393,32 @@ export default function AdminNewsletterPage() {
                 <Tr key={subscriber.id}>
                   <Td>
                     <span className="flex items-center gap-2">
-                      <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                      <span className="font-medium text-slate-900 dark:text-slate-100">
+                      <Mail className="h-3.5 w-3.5 shrink-0 ink-muted" />
+                      <span className="font-medium ink-strong">
                         {subscriber.email}
                       </span>
                     </span>
                   </Td>
-                  <Td>{subscriber.name || <span className="text-slate-400">—</span>}</Td>
+                  <Td>{subscriber.name || <span className="ink-muted">—</span>}</Td>
                   <Td>
                     {subscriber.isActive ? (
-                      <Badge variant="success">Active</Badge>
+                      <Badge variant="success" className="data-type uppercase">Active</Badge>
                     ) : (
-                      <Badge variant="default">Unsubscribed</Badge>
+                      <Badge variant="default" className="data-type uppercase">Unsubscribed</Badge>
                     )}
                   </Td>
                   <Td>
                     {subscriber.subscribedAt ? (
-                      formatDate(subscriber.subscribedAt)
+                      formatDate(subscriber.subscribedAt, DATE_OPTS)
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="ink-muted">—</span>
                     )}
                   </Td>
                   <Td>
                     {subscriber.unsubscribedAt ? (
-                      formatDate(subscriber.unsubscribedAt)
+                      formatDate(subscriber.unsubscribedAt, DATE_OPTS)
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="ink-muted">—</span>
                     )}
                   </Td>
                 </Tr>
@@ -434,7 +443,7 @@ export default function AdminNewsletterPage() {
                   value={subject}
                   onChange={(event) => setSubject(event.target.value)}
                   placeholder="For example: PPIA Auckland news — July 2026"
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 />
               </Field>
 
@@ -451,7 +460,7 @@ export default function AdminNewsletterPage() {
                   value={content}
                   onChange={(event) => setContent(event.target.value)}
                   placeholder="Write the newsletter body here…"
-                  className="input-base resize-y font-mono text-sm"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-y font-mono text-sm"
                 />
               </Field>
             </div>

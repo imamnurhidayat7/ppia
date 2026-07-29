@@ -14,6 +14,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
+import { Anchor } from 'lucide-react';
 import { useLandingSection, getBlocksByType } from '@/lib/hooks/use-landing-section';
 import { getImageUrl } from '@/lib/utils';
 
@@ -104,18 +105,30 @@ export default function PartnersStrip() {
   };
 
   return (
-    <section className="py-12 bg-white border-y border-slate-100 overflow-hidden" aria-label="Our partners">
-      <div className="max-w-7xl mx-auto px-6 mb-6 text-center">
-        <p className="text-xs font-semibold tracking-widest uppercase text-slate-400">
-          {section?.title || 'Trusted by organisations across New Zealand'}
+    <section className="sea-shore relative overflow-hidden py-12" aria-label="Our partners">
+      {/* Rope hairlines rather than solid borders, so the strip reads as part of
+          the maritime theme the hero establishes. */}
+      <span aria-hidden="true" className="rope-rule absolute inset-x-0 top-0" />
+      <span aria-hidden="true" className="rope-rule absolute inset-x-0 bottom-0" />
+
+      {/* Labelled like a route board rather than a centred caption, so the
+          strip belongs to the maritime frame instead of floating above it. */}
+      <div className="mx-auto mb-6 flex max-w-7xl items-center gap-4 px-6">
+        <Anchor size={14} strokeWidth={2.4} className="shrink-0 text-[#94A3B8]" aria-hidden="true" />
+        <p className="data-type shrink-0 text-[12px] font-bold uppercase text-[#7A8B9E]">
+          {section?.title || 'Ports of call'}
+        </p>
+        <span aria-hidden="true" className="rope-rule flex-1 opacity-60" />
+        <p className="data-type hidden shrink-0 text-[12px] uppercase text-[#94A3B8] sm:block">
+          {String(partners.length).padStart(2, '0')} partners
         </p>
       </div>
 
       {/* Marquee — purely CSS, no JS timer */}
       <div className="relative group">
         {/* Fade edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+        <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-16 bg-gradient-to-r from-[#F5FAFD] to-transparent" />
+        <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-16 bg-gradient-to-l from-[#F5FAFD] to-transparent" />
 
         <div className="flex animate-marquee group-hover:[animation-play-state:paused]">
           {/* First set */}

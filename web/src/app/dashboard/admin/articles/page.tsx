@@ -39,6 +39,15 @@ import { ArticleTable } from './_components/article-table';
 import type { AdminArticle, DivisionRef } from './_components/shared';
 import { errorMessage, unwrapList } from './_components/shared';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 /** Matches the `category` column the API filters on. */
 type ContentType = 'News' | 'Article';
 
@@ -199,7 +208,7 @@ export default function AdminArticlesPage() {
 
   const openDetail = async (article: AdminArticle) => {
     try {
-      const res = await api.getArticle(article.id);
+      const res = await api.getArticleAdmin(article.id);
       const payload = res as { article?: AdminArticle };
       setSelectedArticle(payload.article ?? (res as AdminArticle));
     } catch (error) {
@@ -296,7 +305,7 @@ export default function AdminArticlesPage() {
           {(['Article', 'News'] as ContentType[]).map((type) => (
             <TabsTrigger key={type} value={type}>
               {TYPE_COPY[type].label}
-              <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+              <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-[12px] font-bold ink-body dark:bg-slate-900">
                 {categoryCounts[type]}
               </span>
             </TabsTrigger>
@@ -389,7 +398,7 @@ export default function AdminArticlesPage() {
           onDelete={handleDelete}
           footer={
             <>
-              <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <div className="data-type border-t border-[#E7EFF7] px-5 py-3 text-[12px] ink-muted dark:border-slate-800">
                 Showing {paginatedArticles.length} of {filteredArticles.length} {copy.lower}s
               </div>
               <Pagination
@@ -452,7 +461,7 @@ export default function AdminArticlesPage() {
                   label="Author"
                   value={selectedArticle.author?.name || 'Admin'}
                 />
-                <DetailItem label="Created" value={formatDate(selectedArticle.createdAt)} />
+                <DetailItem label="Created" value={formatDate(selectedArticle.createdAt, DATE_OPTS)} />
                 <DetailItem
                   label="Division"
                   value={selectedArticle.division?.name || '—'}
@@ -461,7 +470,7 @@ export default function AdminArticlesPage() {
                   label="Featured"
                   value={
                     selectedArticle.isFeatured ? (
-                      <Badge variant="primary" className="gap-1">
+                      <Badge variant="primary" className="data-type uppercase gap-1">
                         <Star className="h-3 w-3" />
                         Yes
                       </Badge>
@@ -476,11 +485,11 @@ export default function AdminArticlesPage() {
             <SectionCard title="Post content" icon={FileText}>
               {detailContent ? (
                 <div
-                  className="prose prose-sm max-w-none text-slate-600 dark:prose-invert dark:text-slate-300"
+                  className="prose prose-sm max-w-none ink-body dark:prose-invert"
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(detailContent) }}
                 />
               ) : (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm ink-muted">
                   No content to show yet.
                 </p>
               )}

@@ -29,6 +29,15 @@ import {
   X,
 } from 'lucide-react';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 const POSITIONS = [
   { value: 'PRESIDENT', label: 'President' },
   { value: 'VICE_PRESIDENT', label: 'Vice President' },
@@ -84,9 +93,9 @@ function statusOf(member: AdminMember): MembershipStatus {
 }
 
 function RoleBadge({ role }: { role: string }) {
-  if (role === 'SUPER_ADMIN') return <Badge variant="danger">Super Admin</Badge>;
-  if (role === 'BOARD') return <Badge variant="primary">Board</Badge>;
-  return <Badge variant="default">Member</Badge>;
+  if (role === 'SUPER_ADMIN') return <Badge variant="danger" className="data-type uppercase">Super Admin</Badge>;
+  if (role === 'BOARD') return <Badge variant="primary" className="data-type uppercase">Board</Badge>;
+  return <Badge variant="default" className="data-type uppercase">Member</Badge>;
 }
 
 function StatusPill({ status }: { status: MembershipStatus }) {
@@ -114,11 +123,11 @@ function StatusPill({ status }: { status: MembershipStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1',
+        'data-type inline-flex items-center gap-1.5 rounded-[3px] px-2.5 py-1 text-[12px] font-bold uppercase ring-1',
         style.className
       )}
     >
-      <span className={cn('h-1.5 w-1.5 rounded-full', style.dot)} />
+      <span aria-hidden="true" className={cn('h-1.5 w-1.5 rounded-full', style.dot)} />
       {style.label}
     </span>
   );
@@ -146,10 +155,10 @@ function SortHeader({
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          'inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide transition-colors',
+          'data-type inline-flex items-center gap-1.5 text-[12px] font-bold uppercase transition-colors',
           active
-            ? 'text-slate-900 dark:text-slate-100'
-            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+            ? 'ink-strong'
+            : 'ink-muted hover:text-slate-800 dark:hover:text-slate-200'
         )}
         aria-label={`Sort by ${label}`}
       >
@@ -177,7 +186,7 @@ function MembersLoading() {
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[0, 1, 2, 3].map((row) => (
-          <div key={row} className="h-24 rounded-2xl skeleton" />
+          <div key={row} className="h-24 rounded-[5px] skeleton" />
         ))}
       </div>
       <SkeletonTable rows={8} columns={6} />
@@ -367,6 +376,13 @@ function MembersManager() {
   }, [fetchData, refreshShellData]);
 
   const handleApprove = async (member: AdminMember) => {
+    const ok = await confirmCtx.confirm({
+      title: 'Approve member?',
+      message: `${member.name} will be able to log in and access member features right away.`,
+      confirmLabel: 'Yes, approve',
+      variant: 'warning',
+    });
+    if (!ok) return;
     try {
       await api.approveMember(member.id);
       showSuccess(`${member.name} approved`);
@@ -539,11 +555,11 @@ function MembersManager() {
   if (!isSuperAdmin) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-danger-50 dark:bg-danger-900/40">
+        <div aria-hidden="true" style={{ boxShadow: 'inset 0 0 0 1px #F3C9C6, 0 0 0 5px rgba(176,24,18,0.10)' }} className="mb-4 flex h-14 w-14 items-center justify-center rounded-full">
           <Ban className="h-7 w-7 text-danger-600 dark:text-danger-300" />
         </div>
-        <h2 className="mb-1 text-lg font-bold text-slate-900 dark:text-slate-100">Access denied</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <h2 className="mb-1 text-lg font-bold ink-strong">Access denied</h2>
+        <p className="text-sm ink-muted">
           Only Super Admin can manage members.
         </p>
       </div>
@@ -551,7 +567,7 @@ function MembersManager() {
   }
 
   const statusTabs = [
-    { key: '', label: 'All', count: counts.all, dot: 'bg-slate-400', active: 'bg-slate-100 dark:bg-slate-800' },
+    { key: '', label: 'All', count: counts.all, dot: 'bg-slate-400', active: 'bg-[#EDF5FB] dark:bg-slate-800' },
     { key: 'PENDING', label: 'Pending', count: counts.PENDING, dot: 'bg-amber-500', active: 'bg-amber-50 dark:bg-amber-900/25' },
     { key: 'APPROVED', label: 'Approved', count: counts.APPROVED, dot: 'bg-emerald-500', active: 'bg-emerald-50 dark:bg-emerald-900/25' },
     { key: 'REJECTED', label: 'Rejected', count: counts.REJECTED, dot: 'bg-danger-500', active: 'bg-danger-50 dark:bg-danger-900/25' },
@@ -613,19 +629,19 @@ function MembersManager() {
               }}
               aria-pressed={active}
               className={cn(
-                'rounded-2xl border p-4 text-left transition-all',
+                'rounded-[5px] border p-4 text-left transition-all',
                 active
-                  ? cn('border-transparent ring-2 ring-slate-300 dark:ring-slate-600', tab.active)
-                  : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700'
+                  ? cn('border-transparent ring-2 ring-[#C3D2E0] dark:ring-slate-600', tab.active)
+                  : 'chart-paper border-[#DCE7F1] hover:border-[#C3D2E0] dark:border-slate-800 dark:hover:border-slate-700'
               )}
             >
               <span className="flex items-center gap-2">
-                <span className={cn('h-2 w-2 rounded-full', tab.dot)} />
-                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span aria-hidden="true" className={cn('h-2 w-2 rounded-full', tab.dot)} />
+                <span className="data-type text-[12px] font-bold uppercase ink-muted">
                   {tab.label}
                 </span>
               </span>
-              <span className="mt-1 block font-display text-2xl font-black text-slate-900 dark:text-slate-50">
+              <span className="data-type mt-1 block font-display text-2xl font-black ink-strong">
                 {tab.count}
               </span>
             </button>
@@ -634,15 +650,19 @@ function MembersManager() {
       </div>
 
       {counts.PENDING > 0 && statusFilter !== 'PENDING' && (
-        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/50">
-            <Clock className="h-4 w-4 text-amber-700 dark:text-amber-300" />
+        <div className="flex items-start gap-3 rounded-[5px] border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20">
+          <span
+            aria-hidden="true"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-amber-700 dark:text-amber-300"
+            style={{ boxShadow: 'inset 0 0 0 1px rgba(146,64,14,0.25), 0 0 0 4px rgba(146,64,14,0.08)' }}
+          >
+            <Clock className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-amber-900 dark:text-amber-100">
               {counts.PENDING} registrations awaiting a decision
             </p>
-            <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-200">
+            <p className="mt-0.5 text-[13px] text-amber-800 dark:text-amber-200">
               Select multiple rows at once to approve or reject them in bulk.
             </p>
           </div>
@@ -652,7 +672,7 @@ function MembersManager() {
               setStatusFilter('PENDING');
               setCurrentPage(1);
             }}
-            className="shrink-0 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-amber-800 shadow-sm transition-colors hover:bg-amber-50 dark:bg-slate-800 dark:text-amber-200"
+            className="data-type shrink-0 rounded-[3px] bg-white px-3 py-1.5 text-[12px] font-bold uppercase text-amber-800 shadow-sm transition-colors hover:bg-amber-50 dark:bg-slate-800 dark:text-amber-200"
           >
             Review
           </button>
@@ -662,7 +682,7 @@ function MembersManager() {
       {/* Filters */}
       <div className="flex flex-col gap-3 lg:flex-row">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ink-muted" />
           <input
             type="search"
             placeholder="Search by name, email, university, division…"
@@ -671,7 +691,7 @@ function MembersManager() {
               setSearchQuery(event.target.value);
               setCurrentPage(1);
             }}
-            className="input-base input-with-icon"
+            className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 input-with-icon"
             aria-label="Search members"
           />
         </div>
@@ -682,7 +702,7 @@ function MembersManager() {
             setCurrentPage(1);
           }}
           aria-label="Filter by role"
-          className="input-base lg:w-44"
+          className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 lg:w-44"
         >
           <option value="">All roles</option>
           {ROLES.map((role) => (
@@ -698,7 +718,7 @@ function MembersManager() {
             setCurrentPage(1);
           }}
           aria-label="Filter by division"
-          className="input-base lg:w-48"
+          className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 lg:w-48"
         >
           <option value="">All divisions</option>
           <option value="NONE">No division</option>
@@ -717,15 +737,19 @@ function MembersManager() {
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="animate-fade-in-up sticky bottom-4 z-20 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg sm:flex-row sm:items-center dark:border-slate-700 dark:bg-slate-900">
+        <div className="chart-paper animate-fade-in-up sticky bottom-4 z-20 flex flex-col gap-3 rounded-[5px] border border-[#DCE7F1] p-3 shadow-lg sm:flex-row sm:items-center dark:border-slate-700">
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
-              <Users className="h-4 w-4 text-slate-500" />
+            <span
+              aria-hidden="true"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full ink-muted"
+              style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 3px rgba(11,28,46,0.05)' }}
+            >
+              <Users className="h-4 w-4" />
             </span>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <p className="data-type text-sm font-semibold ink-strong">
               {selected.size} selected
               {selectablePending.length > 0 && (
-                <span className="ml-1 font-normal text-slate-500 dark:text-slate-400">
+                <span className="ml-1 font-normal ink-muted">
                   ({selectablePending.length} pending)
                 </span>
               )}
@@ -767,11 +791,11 @@ function MembersManager() {
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className="chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] dark:border-slate-800">
         {filteredMembers.length === 0 ? (
           hasFilters ? (
             <div className="py-14 text-center">
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              <p className="text-sm font-medium ink-body">
                 No matching members
               </p>
               <button
@@ -788,7 +812,7 @@ function MembersManager() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
+              <thead className="border-b border-[#DCE7F1] bg-[#F5FAFD] dark:border-slate-800 dark:bg-slate-800/50">
                 <tr>
                   <th className="w-10 px-4 py-3">
                     <input
@@ -796,7 +820,7 @@ function MembersManager() {
                       checked={pageAllSelected}
                       onChange={togglePageSelection}
                       aria-label="Select all on this page"
-                      className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#E8231A] focus:ring-[#E8231A]/30"
+                      className="h-4 w-4 cursor-pointer rounded-[3px] border-[#C3D2E0] text-[#E8231A] focus:ring-[#E8231A]/30"
                     />
                   </th>
                   <SortHeader
@@ -820,7 +844,7 @@ function MembersManager() {
                     direction={sortDirection}
                     onSort={handleSort}
                   />
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-left data-type text-[12px] font-bold uppercase ink-muted">
                     Division
                   </th>
                   <SortHeader
@@ -830,12 +854,12 @@ function MembersManager() {
                     direction={sortDirection}
                     onSort={handleSort}
                   />
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-right data-type text-[12px] font-bold uppercase ink-muted">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-[#E7EFF7] dark:divide-slate-800">
                 {paginatedMembers.map((member) => {
                   const status = statusOf(member);
                   const isSelected = selected.has(member.id);
@@ -846,7 +870,7 @@ function MembersManager() {
                         'transition-colors',
                         isSelected
                           ? 'bg-[#FFF0EF] dark:bg-[#E8231A]/10'
-                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                          : 'hover:bg-[#F5FAFD] dark:hover:bg-slate-800/50'
                       )}
                     >
                       <td className="px-4 py-3">
@@ -855,7 +879,7 @@ function MembersManager() {
                           checked={isSelected}
                           onChange={() => toggleSelect(member.id)}
                           aria-label={`Select ${member.name}`}
-                          className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#E8231A] focus:ring-[#E8231A]/30"
+                          className="h-4 w-4 cursor-pointer rounded-[3px] border-[#C3D2E0] text-[#E8231A] focus:ring-[#E8231A]/30"
                         />
                       </td>
                       <td className="px-4 py-3">
@@ -864,15 +888,15 @@ function MembersManager() {
                           <div className="min-w-0">
                             <Link
                               href={`/dashboard/admin/members/${member.id}`}
-                              className="block truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                              className="block truncate text-sm font-semibold ink-strong hover:underline"
                             >
                               {member.name}
                             </Link>
-                            <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                            <p className="truncate text-[12px] ink-muted">
                               {member.email}
                             </p>
                             {member.university && (
-                              <p className="truncate text-xs text-slate-400">{member.university}</p>
+                              <p className="truncate text-[12px] ink-muted">{member.university}</p>
                             )}
                           </div>
                         </div>
@@ -880,7 +904,7 @@ function MembersManager() {
                       <td className="px-4 py-3">
                         <RoleBadge role={member.role} />
                         {member.position && (
-                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          <p className="mt-1 text-[12px] ink-muted">
                             {member.position}
                           </p>
                         )}
@@ -891,7 +915,7 @@ function MembersManager() {
                       <td className="px-4 py-3">
                         {member.division ? (
                           <span
-                            className="inline-flex rounded-full px-2 py-1 text-xs font-medium"
+                            className="data-type inline-flex rounded-[3px] px-2 py-1 text-[12px] font-bold uppercase"
                             style={{
                               backgroundColor: `${member.division.color || '#6366F1'}20`,
                               color: member.division.color || '#6366F1',
@@ -900,11 +924,11 @@ function MembersManager() {
                             {member.division.name}
                           </span>
                         ) : (
-                          <span className="text-sm text-slate-400">—</span>
+                          <span className="text-sm ink-muted">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-                        {formatDate(member.createdAt)}
+                      <td className="px-4 py-3 text-sm ink-body">
+                        {formatDate(member.createdAt, DATE_OPTS)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1.5">
@@ -931,7 +955,7 @@ function MembersManager() {
                           <Link
                             href={`/dashboard/admin/members/${member.id}`}
                             title="View details"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            className="flex h-8 w-8 items-center justify-center rounded-[3px] ink-muted transition-colors hover:bg-[#EDF5FB] hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
@@ -939,7 +963,7 @@ function MembersManager() {
                             type="button"
                             onClick={() => openEdit(member)}
                             title="Edit role & division"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            className="flex h-8 w-8 items-center justify-center rounded-[3px] ink-muted transition-colors hover:bg-[#EDF5FB] hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
@@ -947,7 +971,7 @@ function MembersManager() {
                             type="button"
                             onClick={() => handleDelete(member)}
                             title="Delete member"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-danger-600 transition-colors hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-900/30"
+                            className="flex h-8 w-8 items-center justify-center rounded-[3px] text-danger-600 transition-colors hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-900/30"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -989,7 +1013,7 @@ function MembersManager() {
           <div>
             <label
               htmlFor="member-role"
-              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
+              className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted"
             >
               Role
             </label>
@@ -997,7 +1021,7 @@ function MembersManager() {
               id="member-role"
               value={formData.role}
               onChange={(event) => setFormData({ ...formData, role: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               {ROLES.map((role) => (
                 <option key={role.value} value={role.value}>
@@ -1010,7 +1034,7 @@ function MembersManager() {
           <div>
             <label
               htmlFor="member-position"
-              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
+              className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted"
             >
               Position
             </label>
@@ -1018,7 +1042,7 @@ function MembersManager() {
               id="member-position"
               value={formData.position}
               onChange={(event) => setFormData({ ...formData, position: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               <option value="">No position</option>
               {POSITIONS.map((position) => (
@@ -1032,7 +1056,7 @@ function MembersManager() {
           <div>
             <label
               htmlFor="member-division"
-              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
+              className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted"
             >
               Division
             </label>
@@ -1040,7 +1064,7 @@ function MembersManager() {
               id="member-division"
               value={formData.divisionId}
               onChange={(event) => setFormData({ ...formData, divisionId: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               <option value="">No division</option>
               {divisions.map((division) => (
@@ -1050,7 +1074,7 @@ function MembersManager() {
               ))}
             </select>
             {formData.role === 'BOARD' && !formData.divisionId && !formData.position && (
-              <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+              <p className="mt-1.5 text-[12px] text-amber-600 dark:text-amber-400">
                 The Board role requires a division or position.
               </p>
             )}
@@ -1090,9 +1114,9 @@ function MembersManager() {
           <div>
             <label
               htmlFor="reject-reason"
-              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
+              className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted"
             >
-              Rejection reason <span className="text-slate-400">(optional)</span>
+              Rejection reason <span className="ink-muted">(optional)</span>
             </label>
             <textarea
               id="reject-reason"
@@ -1100,9 +1124,9 @@ function MembersManager() {
               value={rejectReason}
               onChange={(event) => setRejectReason(event.target.value)}
               placeholder="For example: the student details could not be verified."
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
             />
-            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-1.5 text-[12px] ink-muted">
               This reason is saved on the member record and can be reviewed later.
             </p>
           </div>

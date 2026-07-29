@@ -53,10 +53,10 @@ function stripHtml(value: string): string {
   return value.replace(/<[^>]+>/g, '').trim();
 }
 
+/** Log-entry form: 05 Mar 2025. */
 function formatEventDate(value: string): string {
   return new Date(value).toLocaleDateString('en-NZ', {
-    weekday: 'short',
-    day: 'numeric',
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
   });
@@ -217,9 +217,9 @@ export default function DashboardEventsPage() {
                 <SectionCard
                   flush
                   bodyClassName="flex h-full flex-col"
-                  className="h-full transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:hover:border-slate-700"
+                  className="h-full transition-all hover:-translate-y-0.5 hover:border-[#C3D2E0] hover:shadow-lg dark:hover:border-slate-700"
                 >
-                  <div className="relative h-40 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  <div className="relative h-40 overflow-hidden bg-[#EDF5FB] dark:bg-slate-800">
                     {image ? (
                       <Image
                         src={image}
@@ -230,14 +230,15 @@ export default function DashboardEventsPage() {
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <Calendar className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+                        <Calendar aria-hidden="true" className="h-10 w-10 ink-muted opacity-50" />
                       </div>
                     )}
-                    <span className="absolute left-3 top-3 flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-[#0D1B33] text-white shadow-lg">
-                      <span className="text-[10px] font-semibold uppercase leading-none">
+                    {/* Tide-table cell: month above, day below, both as data. */}
+                    <span className="sea-deep absolute left-3 top-3 flex h-12 w-12 flex-col items-center justify-center rounded-[5px] text-white shadow-lg">
+                      <span className="data-type text-[12px] font-bold uppercase leading-none">
                         {start.toLocaleDateString('en-NZ', { month: 'short' })}
                       </span>
-                      <span className="font-display text-lg font-black leading-none">
+                      <span className="data-type mt-0.5 text-base font-black leading-none">
                         {start.getDate()}
                       </span>
                     </span>
@@ -249,37 +250,41 @@ export default function DashboardEventsPage() {
                   </div>
 
                   <div className="flex flex-1 flex-col p-5">
-                    <h3 className="line-clamp-2 font-display text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-[#E8231A] dark:text-slate-50">
+                    <h3 className="line-clamp-2 font-display text-base font-bold leading-snug ink-strong transition-colors group-hover:text-[#C41E16] dark:group-hover:text-[#FF8A84]">
                       {event.title}
                     </h3>
                     {description && (
-                      <p className="mb-4 mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                      <p className="mb-4 mt-2 line-clamp-2 text-sm leading-relaxed ink-body">
                         {description}
                       </p>
                     )}
-                    <dl className="mt-auto space-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                        <dt className="sr-only">Time</dt>
-                        <dd>
-                          {formatEventDate(event.startDate)} • {formatEventTime(event.startDate)}
-                        </dd>
-                      </div>
-                      {event.location && (
+                    <div className="mt-auto pt-3">
+                      <span aria-hidden="true" className="rope-rule mb-3 block opacity-60" />
+                      {/* Time, place and capacity are the event's log entry. */}
+                      <dl className="data-type space-y-1.5 text-[12px] ink-muted">
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                          <dt className="sr-only">Location</dt>
-                          <dd className="line-clamp-1">{event.location}</dd>
+                          <Clock aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                          <dt className="sr-only">Time</dt>
+                          <dd>
+                            {formatEventDate(event.startDate)} • {formatEventTime(event.startDate)}
+                          </dd>
                         </div>
-                      )}
-                      {event.capacity && (
-                        <div className="flex items-center gap-2">
-                          <Users className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                          <dt className="sr-only">Capacity</dt>
-                          <dd>{event.capacity} attendees</dd>
-                        </div>
-                      )}
-                    </dl>
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                            <dt className="sr-only">Location</dt>
+                            <dd className="line-clamp-1">{event.location}</dd>
+                          </div>
+                        )}
+                        {event.capacity && (
+                          <div className="flex items-center gap-2">
+                            <Users aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                            <dt className="sr-only">Capacity</dt>
+                            <dd>{event.capacity} attendees</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
                   </div>
                 </SectionCard>
               </Link>

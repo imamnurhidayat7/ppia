@@ -32,7 +32,7 @@ interface ResearchFormProps {
  */
 function EditorLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">{children}</p>
+    <p className="mb-1.5 text-sm font-medium ink-body">{children}</p>
   );
 }
 
@@ -78,7 +78,7 @@ export function ResearchForm({
                       : { title: event.target.value }
                   )
                 }
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="Research title in its original language"
               />
             </Field>
@@ -92,7 +92,7 @@ export function ResearchForm({
                 type="text"
                 value={values.titleIndonesian}
                 onChange={(event) => onChange({ titleIndonesian: event.target.value })}
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 placeholder="Indonesian version of the title"
               />
             </Field>
@@ -112,7 +112,7 @@ export function ResearchForm({
               type="text"
               value={values.slug}
               onChange={(event) => onChange({ slug: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="research-title"
             />
           </Field>
@@ -169,7 +169,7 @@ export function ResearchForm({
               id={`${idPrefix}-type`}
               value={values.researchType}
               onChange={(event) => onChange({ researchType: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               {RESEARCH_TYPES.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -183,7 +183,7 @@ export function ResearchForm({
               id={`${idPrefix}-status`}
               value={values.researchStatus}
               onChange={(event) => onChange({ researchStatus: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               {RESEARCH_STATUSES.map((status) => (
                 <option key={status.value} value={status.value}>
@@ -197,7 +197,7 @@ export function ResearchForm({
               id={`${idPrefix}-division`}
               value={values.divisionId}
               onChange={(event) => onChange({ divisionId: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               <option value="">No division</option>
               {divisions.map((division) => (
@@ -212,7 +212,7 @@ export function ResearchForm({
               id={`${idPrefix}-citation`}
               value={values.citationFormat}
               onChange={(event) => onChange({ citationFormat: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             >
               {CITATION_FORMATS.map((format) => (
                 <option key={format} value={format}>
@@ -236,7 +236,7 @@ export function ResearchForm({
               type="text"
               value={values.authors}
               onChange={(event) => onChange({ authors: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="Nadia Putri, Rian Saputra"
             />
           </Field>
@@ -246,7 +246,7 @@ export function ResearchForm({
               type="date"
               value={values.publicationDate}
               onChange={(event) => onChange({ publicationDate: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
           <Field label="Venue" htmlFor={`${idPrefix}-venue`} hint="Journal or conference name.">
@@ -255,7 +255,7 @@ export function ResearchForm({
               type="text"
               value={values.venue}
               onChange={(event) => onChange({ venue: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="Journal of Indonesian Studies"
             />
           </Field>
@@ -265,7 +265,7 @@ export function ResearchForm({
               type="text"
               value={values.doi}
               onChange={(event) => onChange({ doi: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="10.1234/abcd"
             />
           </Field>
@@ -275,7 +275,7 @@ export function ResearchForm({
               type="url"
               value={values.url}
               onChange={(event) => onChange({ url: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="https://…"
             />
           </Field>
@@ -285,7 +285,7 @@ export function ResearchForm({
               type="url"
               value={values.pdfUrl}
               onChange={(event) => onChange({ pdfUrl: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="https://….pdf"
             />
           </Field>
@@ -300,7 +300,7 @@ export function ResearchForm({
               type="text"
               value={values.keywords}
               onChange={(event) => onChange({ keywords: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="diaspora, education, policy"
             />
           </Field>
@@ -321,7 +321,7 @@ export function ResearchForm({
           }
         >
           {tags.length === 0 ? (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm ink-muted">
               Create a tag in the Tags menu first to use it here.
             </p>
           ) : (
@@ -335,10 +335,10 @@ export function ResearchForm({
                     onClick={() => toggleTag(tag.id)}
                     aria-pressed={selected}
                     className={cn(
-                      'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                      'rounded-[4px] px-3 py-1.5 text-sm font-medium transition-colors',
                       selected
                         ? 'bg-[#E8231A] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                        : 'bg-[#EDF5FB] ink-body hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
                     )}
                     style={selected && tag.color ? { backgroundColor: tag.color } : undefined}
                   >
@@ -367,7 +367,7 @@ export function ResearchForm({
               type="text"
               value={values.metaTitle}
               onChange={(event) => onChange({ metaTitle: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="Title for search results"
             />
           </Field>
@@ -381,7 +381,7 @@ export function ResearchForm({
               rows={2}
               value={values.metaDescription}
               onChange={(event) => onChange({ metaDescription: event.target.value })}
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
               placeholder="Short summary for search engines"
             />
           </Field>
@@ -395,7 +395,7 @@ export function ResearchForm({
               type="text"
               value={values.metaKeywords}
               onChange={(event) => onChange({ metaKeywords: event.target.value })}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               placeholder="research, ppia, publication"
             />
           </Field>
@@ -408,7 +408,7 @@ export function ResearchForm({
         icon={Send}
       >
         <div className="space-y-5">
-          <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div className="rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
             <Toggle
               id={`${idPrefix}-published`}
               label="Publish now"
@@ -427,7 +427,7 @@ export function ResearchForm({
               type="date"
               value={values.scheduledPublishAt}
               onChange={(event) => onChange({ scheduledPublishAt: event.target.value })}
-              className="input-base sm:w-60"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 sm:w-60"
             />
           </Field>
         </div>

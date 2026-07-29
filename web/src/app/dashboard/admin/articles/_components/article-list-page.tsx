@@ -298,7 +298,7 @@ export function ArticleListPage({
           onDelete={handleDelete}
           footer={
             <>
-              <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <div className="data-type border-t border-[#E7EFF7] px-5 py-3 text-[12px] ink-muted dark:border-slate-800">
                 Showing {paginatedItems.length} of {filteredItems.length} {noun}s
               </div>
               <Pagination

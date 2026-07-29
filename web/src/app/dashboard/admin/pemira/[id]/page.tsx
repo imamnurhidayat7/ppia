@@ -28,6 +28,7 @@ import {
   Megaphone,
   RefreshCw,
   Settings2,
+  Trash2,
   Users,
   Vote,
 } from 'lucide-react';
@@ -85,7 +86,7 @@ function formatDateTime(value?: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
   return date.toLocaleString('en-NZ', {
-    day: 'numeric',
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
@@ -217,6 +218,25 @@ export default function ManageElectionPage() {
     } catch (error) {
       const err = error as { response?: { data?: { error?: string } }; message?: string };
       showError(err.response?.data?.error || err.message || 'Could not publish the results');
+    }
+  };
+
+  const handleDelete = async () => {
+    const ok = await confirmCtx.confirm({
+      title: 'Delete this election?',
+      message:
+        'The election, along with every candidate and vote in it, will be permanently removed. This cannot be undone. If no elections remain, PEMIRA disappears from the public menu.',
+      confirmLabel: 'Yes, delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await api.deleteElection(electionId);
+      showSuccess('Election deleted');
+      router.push('/dashboard/admin/pemira');
+    } catch (error) {
+      const err = error as { response?: { data?: { error?: string } }; message?: string };
+      showError(err.response?.data?.error || err.message || 'Could not delete the election');
     }
   };
 
@@ -387,13 +407,31 @@ export default function ManageElectionPage() {
             variant="primary"
             size="sm"
             disabled={isPublished}
-            leftIcon={<BadgeCheck className="h-4 w-4" />}
+            leftIcon={<BadgeCheck className="data-type uppercase h-4 w-4" />}
             onClick={handlePublish}
           >
             {isPublished ? 'Already published' : 'Publish results'}
           </Button>
         </SectionCard>
       </div>
+
+      {/* Danger zone: removing the last election also drops PEMIRA from the
+          public header, so it is called out on its own rather than tucked in
+          beside the everyday actions. */}
+      <SectionCard
+        title="Delete election"
+        description="Permanently removes this election and all of its candidates and votes. When no elections remain, PEMIRA is hidden from the public menu."
+        icon={Trash2}
+      >
+        <Button
+          variant="danger"
+          size="sm"
+          leftIcon={<Trash2 className="h-4 w-4" />}
+          onClick={handleDelete}
+        >
+          Delete election
+        </Button>
+      </SectionCard>
 
       <SectionCard
         title="Election schedule"
@@ -407,17 +445,17 @@ export default function ManageElectionPage() {
               <div
                 key={phase.key}
                 className={cn(
-                  'rounded-xl border p-4',
+                  'rounded-[4px] border p-4',
                   running
                     ? 'border-[#E8231A]/40 bg-[#FFF0EF] dark:border-[#E8231A]/40 dark:bg-[#E8231A]/10'
-                    : 'border-slate-200 dark:border-slate-800'
+                    : 'border-[#DCE7F1] dark:border-slate-800'
                 )}
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <h3 className="font-display text-sm font-bold text-slate-900 dark:text-slate-50">
+                  <h3 className="font-display text-sm font-bold ink-strong">
                     {phase.label}
                   </h3>
-                  {running && <Badge variant="danger">In progress</Badge>}
+                  {running && <Badge variant="danger" className="data-type uppercase">In progress</Badge>}
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <DetailItem label="Starts" value={formatDateTime(phase.start)} icon={phase.icon} />
@@ -444,7 +482,7 @@ export default function ManageElectionPage() {
               required
               value={editData.title}
               onChange={(changeEvent) => setEditValue('title', changeEvent.target.value)}
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
 
@@ -454,12 +492,12 @@ export default function ManageElectionPage() {
               rows={3}
               value={editData.description}
               onChange={(changeEvent) => setEditValue('description', changeEvent.target.value)}
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
             />
           </Field>
 
-          <div className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-            <p className="font-display text-sm font-bold text-slate-900 dark:text-slate-50">
+          <div className="space-y-4 rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
+            <p className="font-display text-sm font-bold ink-strong">
               Registration phase
             </p>
             <FormGrid columns={2}>
@@ -472,7 +510,7 @@ export default function ManageElectionPage() {
                   onChange={(changeEvent) =>
                     setEditValue('registrationStart', changeEvent.target.value)
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 />
               </Field>
               <Field label="Ends" htmlFor="edit-registration-end" required>
@@ -484,14 +522,14 @@ export default function ManageElectionPage() {
                   onChange={(changeEvent) =>
                     setEditValue('registrationEnd', changeEvent.target.value)
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 />
               </Field>
             </FormGrid>
           </div>
 
-          <div className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-            <p className="font-display text-sm font-bold text-slate-900 dark:text-slate-50">
+          <div className="space-y-4 rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
+            <p className="font-display text-sm font-bold ink-strong">
               Campaign phase
             </p>
             <FormGrid columns={2}>
@@ -504,7 +542,7 @@ export default function ManageElectionPage() {
                   onChange={(changeEvent) =>
                     setEditValue('campaignStart', changeEvent.target.value)
                   }
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 />
               </Field>
               <Field label="Ends" htmlFor="edit-campaign-end" required>
@@ -514,14 +552,14 @@ export default function ManageElectionPage() {
                   required
                   value={editData.campaignEnd}
                   onChange={(changeEvent) => setEditValue('campaignEnd', changeEvent.target.value)}
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 />
               </Field>
             </FormGrid>
           </div>
 
-          <div className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-            <p className="font-display text-sm font-bold text-slate-900 dark:text-slate-50">
+          <div className="space-y-4 rounded-[4px] border border-[#DCE7F1] p-4 dark:border-slate-800">
+            <p className="font-display text-sm font-bold ink-strong">
               Voting phase
             </p>
             <FormGrid columns={2}>
@@ -532,7 +570,7 @@ export default function ManageElectionPage() {
                   required
                   value={editData.votingStart}
                   onChange={(changeEvent) => setEditValue('votingStart', changeEvent.target.value)}
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 />
               </Field>
               <Field label="Ends" htmlFor="edit-voting-end" required>
@@ -542,7 +580,7 @@ export default function ManageElectionPage() {
                   required
                   value={editData.votingEnd}
                   onChange={(changeEvent) => setEditValue('votingEnd', changeEvent.target.value)}
-                  className="input-base"
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 />
               </Field>
             </FormGrid>

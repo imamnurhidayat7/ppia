@@ -13,17 +13,17 @@ async function main() {
     {
       key: 'hero',
       // The line break is deliberate — the headline is rendered pre-line.
-      title: 'Berlayar\nuntuk Indonesia',
-      titleId: 'Berlayar\nuntuk Indonesia',
-      subtitle: 'The home of Indonesian students in Auckland. A place to grow, connect, and build the future together.',
-      subtitleId: 'Rumah bagi pelajar Indonesia di Auckland. Tempat untuk tumbuh, terhubung, dan membangun masa depan bersama.',
+      title: 'Berlabuh.\nBertumbuh.\nBerlayar.',
+      titleId: 'Berlabuh.\nBertumbuh.\nBerlayar.',
+      subtitle: 'From our first anchor in Auckland to the next horizon, this is where Indonesian students find community, grow together, and move forward.',
+      subtitleId: 'Dari tempat berlabuh pertama di Auckland menuju cakrawala berikutnya, di sinilah pelajar Indonesia menemukan komunitas, bertumbuh bersama, dan melangkah maju.',
       description: null,
       descriptionId: null,
       enabled: true,
       order: 0,
       config: {
         location: 'Auckland, New Zealand',
-        titleHighlight: 'Indonesia',
+        titleHighlight: 'Berlayar.',
       },
       blocks: [
         {

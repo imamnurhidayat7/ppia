@@ -108,13 +108,19 @@ interface CandidateRegistrationInput {
   slogan?: string;
 }
 
+/** Log-entry form: 05 Mar 2025. */
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString('en-NZ', {
-    day: 'numeric',
-    month: 'long',
+    day: '2-digit',
+    month: 'short',
     year: 'numeric',
   });
 }
+
+/** Double-ring porthole used for the decorative markers on this page. */
+const PORTHOLE_RING = {
+  boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)',
+} as const;
 
 function ElectionItem({
   election,
@@ -236,31 +242,38 @@ function ElectionItem({
 
       <div className="flex flex-wrap items-start justify-between gap-4 p-5">
         <div className="flex min-w-0 items-start gap-3">
+          {/* Porthole marker; filled brand red only while a stage is live. */}
           <span
+            aria-hidden="true"
             className={
               isActive
-                ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#E8231A] text-white'
-                : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800'
+                ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E8231A] text-white'
+                : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full ink-muted'
+            }
+            style={
+              isActive
+                ? { boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 4px rgba(232,35,26,0.12)' }
+                : PORTHOLE_RING
             }
           >
             <Vote className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <h3 className="font-display text-base font-bold leading-tight text-slate-900 dark:text-slate-50">
+            <h3 className="font-display text-base font-bold leading-tight ink-strong">
               {election.title}
             </h3>
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="data-type text-[12px] font-bold uppercase ink-muted">
                 {STATUS_LABEL[election.status] ?? election.status}
               </span>
               {isActive && (
                 <Badge variant="danger">
-                  <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-[#E8231A]" />
+                  <span aria-hidden="true" className="mr-1.5 h-1.5 w-1.5 rounded-full bg-[#E8231A]" />
                   In progress
                 </Badge>
               )}
             </div>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="data-type mt-1 text-[12px] ink-muted">
               {formatDate(election.votingStart)} – {formatDate(election.votingEnd)}
             </p>
           </div>
@@ -271,7 +284,7 @@ function ElectionItem({
             href={`/pemira/${election.id}`}
             target="_blank"
             aria-label={`View the public page for ${election.title}`}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            className="flex h-9 w-9 items-center justify-center rounded-[3px] ink-muted transition-colors hover:bg-[#F5FAFD] hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <ExternalLink className="h-4 w-4" />
           </Link>
@@ -291,19 +304,19 @@ function ElectionItem({
       </div>
 
       {expanded && (
-        <div id={panelId} className="space-y-5 border-t border-slate-100 p-5 dark:border-slate-800">
+        <div id={panelId} className="space-y-5 border-t border-[#DCE7F1] p-5 dark:border-slate-800">
           {countdownTarget !== null && countdownTarget > 0 && (
             <CountdownTimer targetMs={countdownTarget} label={countdownLabel} />
           )}
 
           {myVote && (
-            <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-900/20">
+            <div className="flex items-start gap-3 rounded-[5px] border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-900/20">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
               <div className="min-w-0">
                 <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
                   Your vote has been recorded
                 </p>
-                <p className="mt-0.5 text-xs text-emerald-700 dark:text-emerald-300">
+                <p className="mt-0.5 text-[12px] text-emerald-700 dark:text-emerald-300">
                   You voted for{' '}
                   <span className="font-bold">{myVote.candidate?.user?.name || 'a candidate'}</span>
                 </p>
@@ -312,7 +325,7 @@ function ElectionItem({
           )}
 
           {myCandidate?.status === 'REJECTED' && !regSuccess && (
-            <div className="space-y-3 rounded-2xl border border-danger-200 bg-danger-50 p-4 dark:border-danger-900/50 dark:bg-danger-900/20">
+            <div className="space-y-3 rounded-[5px] border border-danger-200 bg-danger-50 p-4 dark:border-danger-900/50 dark:bg-danger-900/20">
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger-500" />
                 <div className="min-w-0">
@@ -320,7 +333,7 @@ function ElectionItem({
                     Registration rejected
                   </p>
                   {myCandidate.rejectionReason && (
-                    <p className="mt-1 flex items-start gap-1.5 text-xs leading-relaxed text-danger-700 dark:text-danger-300">
+                    <p className="mt-1 flex items-start gap-1.5 text-[12px] leading-relaxed text-danger-700 dark:text-danger-300">
                       <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                       <span>
                         <span className="font-bold">Reason: </span>
@@ -351,8 +364,8 @@ function ElectionItem({
             <div
               className={
                 myCandidate.status === 'APPROVED'
-                  ? 'flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-900/20'
-                  : 'flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20'
+                  ? 'flex items-start gap-3 rounded-[5px] border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-900/20'
+                  : 'flex items-start gap-3 rounded-[5px] border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20'
               }
             >
               <Info
@@ -375,7 +388,7 @@ function ElectionItem({
                     : 'Awaiting committee approval'}
                 </p>
                 {myCandidate.slogan && (
-                  <p className="mt-0.5 text-xs italic text-slate-600 dark:text-slate-300">
+                  <p className="mt-0.5 text-[12px] italic ink-body">
                     &ldquo;{myCandidate.slogan}&rdquo;
                   </p>
                 )}
@@ -384,7 +397,7 @@ function ElectionItem({
           )}
 
           {regSuccess && (
-            <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-900/20">
+            <div className="flex items-start gap-3 rounded-[5px] border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-900/20">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
               <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
                 Registration submitted. Awaiting committee verification.
@@ -424,7 +437,7 @@ function ElectionItem({
 
           {approvedCandidates.length > 0 && (
             <div>
-              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <p className="data-type mb-3 text-[12px] font-bold uppercase ink-muted">
                 {isClosed || election.status === 'PUBLISHED' ? 'Final results' : 'Live results'}
               </p>
               <ResultsBar results={approvedCandidates} totalVotes={results?.totalVotes ?? 0} />
@@ -492,7 +505,7 @@ export default function MemberPemiraPage() {
           <Link
             href="/pemira"
             target="_blank"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            className="inline-flex items-center gap-2 rounded-[5px] border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
           >
             <ExternalLink className="h-4 w-4" />
             Public page

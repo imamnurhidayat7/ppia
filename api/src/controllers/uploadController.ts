@@ -13,8 +13,8 @@ import {
  * proof of the actual bytes. So the declared MIME must be in an allowlist, the
  * stored extension is derived from that allowlist (never from the client-named
  * file), and the leading bytes are checked against the format signature before
- * the file is accepted. Files are held in memory and streamed to Supabase
- * Storage; nothing is written to the local disk.
+ * the file is accepted. Files are held in memory and then handed to the storage
+ * driver (local disk in development, Supabase Storage in deployment).
  */
 interface FileType {
   /** The extension the file will be stored with. */
@@ -91,7 +91,7 @@ function uniqueName(ext: string): string {
 }
 
 // Both endpoints hold the file in memory so the buffer can be signature-checked
-// and streamed straight to Supabase Storage.
+// before the storage driver writes it anywhere.
 export const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: makeFilter(IMAGE_TYPES, 'Only image files (JPEG, PNG, GIF, WebP) are allowed'),
@@ -119,7 +119,7 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
     }
 
     if (!isStorageConfigured()) {
-      console.error('Upload rejected: Supabase Storage env vars are not set.');
+      console.error('Upload rejected: storage driver is not configured.');
       res.status(500).json({ error: 'File storage is not configured on the server' });
       return;
     }
@@ -160,7 +160,7 @@ export const uploadDocumentFile = async (req: Request, res: Response): Promise<v
     }
 
     if (!isStorageConfigured()) {
-      console.error('Document upload rejected: Supabase Storage env vars are not set.');
+      console.error('Document upload rejected: storage driver is not configured.');
       res.status(500).json({ error: 'File storage is not configured on the server' });
       return;
     }

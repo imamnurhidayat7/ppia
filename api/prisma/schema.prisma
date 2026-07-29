@@ -192,6 +192,9 @@ model Event {
   startDate            DateTime
   endDate              DateTime?
   location             String?
+  /// Google Maps embed URL (the `src` from Maps' "Share > Embed a map"), shown
+  /// on the public event page. Null means no map is shown.
+  locationMapUrl       String?
   divisionId           String?
   published            Boolean              @default(false)
   createdAt            DateTime             @default(now())
@@ -200,6 +203,9 @@ model Event {
   capacity             Int?
   isFree               Boolean              @default(true)
   registrationDeadline DateTime?
+  /// Registration form field definitions (array of {id,type,label,required,options?,prefill?}).
+  /// Null means the event uses the built-in default fields.
+  registrationFields   Json?
   scheduledPublishAt   DateTime?
   scheduledUnpublishAt DateTime?
   User                 User                 @relation(fields: [authorId], references: [id])
@@ -223,14 +229,23 @@ model EventDocumentation {
 model EventRegistration {
   id           String             @id @default(cuid())
   eventId      String
-  userId       String
+  /// Null for a guest registration — signing in is not required to attend.
+  userId       String?
+  /// Guest identity, used only when there is no linked account.
+  guestName    String?
+  guestEmail   String?
   status       RegistrationStatus @default(REGISTERED)
+  /// Answers to the event's registration form, keyed by field id.
+  responses    Json?
   registeredAt DateTime           @default(now())
   checkedInAt  DateTime?
   Event        Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  User         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User         User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  /// Postgres treats NULLs as distinct, so this still guards one-per-member
+  /// while leaving guests unconstrained; guests are de-duplicated by e-mail.
   @@unique([eventId, userId])
+  @@index([eventId, guestEmail])
 }
 
 model Media {

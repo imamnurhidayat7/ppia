@@ -194,7 +194,7 @@ export default function AnalyticsPage() {
       const start = periodStart + index * bucketMs;
       return {
         label: new Date(start + bucketMs / 2).toLocaleDateString('en-NZ', {
-          day: 'numeric',
+          day: '2-digit',
           month: 'short',
         }),
         value: 0,
@@ -238,12 +238,12 @@ export default function AnalyticsPage() {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[0, 1, 2, 3].map((card) => (
-            <div key={card} className="h-36 rounded-2xl skeleton" />
+            <div key={card} className="h-36 rounded-[5px] skeleton" />
           ))}
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="h-72 rounded-2xl skeleton lg:col-span-2" />
-          <div className="h-72 rounded-2xl skeleton" />
+          <div className="h-72 rounded-[5px] skeleton lg:col-span-2" />
+          <div className="h-72 rounded-[5px] skeleton" />
         </div>
       </div>
     );
@@ -273,7 +273,7 @@ export default function AnalyticsPage() {
             <div
               role="group"
               aria-label="Select period"
-              className="flex rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900"
+              className="chart-paper flex rounded-[4px] border border-[#DCE7F1] p-1 dark:border-slate-700"
             >
               {PERIODS.map((option) => (
                 <button
@@ -282,10 +282,10 @@ export default function AnalyticsPage() {
                   onClick={() => setPeriod(option.value)}
                   aria-pressed={period === option.value}
                   className={cn(
-                    'rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors',
+                    'rounded-[4px] px-3 py-1.5 text-sm font-semibold transition-colors',
                     period === option.value
                       ? 'bg-[#0D1B33] text-white'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+                      : 'ink-muted hover:text-slate-900 dark:hover:text-slate-100'
                   )}
                 >
                   {option.label}
@@ -376,20 +376,20 @@ export default function AnalyticsPage() {
           />
           <dl className="mt-5 space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Published articles</dt>
-              <dd className="font-semibold text-slate-900 dark:text-slate-100">
+              <dt className="ink-muted">Published articles</dt>
+              <dd className="font-semibold ink-strong">
                 {totals.publishedArticles}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Published events</dt>
-              <dd className="font-semibold text-slate-900 dark:text-slate-100">
+              <dt className="ink-muted">Published events</dt>
+              <dd className="font-semibold ink-strong">
                 {totals.publishedEvents}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Average views</dt>
-              <dd className="font-semibold text-slate-900 dark:text-slate-100">
+              <dt className="ink-muted">Average views</dt>
+              <dd className="font-semibold ink-strong">
                 {totals.avgViews.toLocaleString('en-NZ')}
               </dd>
             </div>
@@ -432,25 +432,25 @@ export default function AnalyticsPage() {
             {topArticles.map((article, index) => (
               <Tr key={article.id}>
                 <Td>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-xs font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-[3px] bg-[#EDF5FB] text-[12px] font-bold ink-muted dark:bg-slate-800">
                     {index + 1}
                   </span>
                 </Td>
                 <Td>
-                  <span className="block max-w-lg truncate font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="block max-w-lg truncate font-semibold ink-strong">
                     {article.title}
                   </span>
                   {article.slug && (
-                    <span className="block truncate text-xs text-slate-400">/{article.slug}</span>
+                    <span className="data-type block truncate text-[12px] ink-muted">/{article.slug}</span>
                   )}
                 </Td>
                 <Td align="right">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="data-type font-semibold ink-strong">
                     {(article.views || 0).toLocaleString('en-NZ')}
                   </span>
                 </Td>
                 <Td align="right">
-                  <span className="whitespace-nowrap text-xs text-slate-400">
+                  <span className="data-type whitespace-nowrap text-[12px] ink-muted">
                     {formatRelativeTime(article.createdAt)}
                   </span>
                 </Td>
@@ -481,16 +481,16 @@ export default function AnalyticsPage() {
               description="Admin actions are recorded automatically in the audit trail."
             />
           ) : (
-            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="divide-y divide-[#E7EFF7] dark:divide-slate-800">
               {activity.map((item) => (
                 <li key={item.id} className="flex items-center gap-3 py-2.5">
-                  <Badge variant={ACTION_VARIANT[item.action] ?? 'default'}>
+                  <Badge variant={ACTION_VARIANT[item.action] ?? 'default'} className="data-type uppercase">
                     {ACTION_LABEL[item.action] ?? item.action}
                   </Badge>
-                  <span className="min-w-0 flex-1 truncate text-sm text-slate-700 dark:text-slate-300">
+                  <span className="min-w-0 flex-1 truncate text-sm ink-body">
                     {item.user?.name || 'System'} on {item.entity}
                   </span>
-                  <span className="shrink-0 text-xs text-slate-400">
+                  <span className="shrink-0 text-[12px] ink-muted">
                     {formatRelativeTime(item.createdAt)}
                   </span>
                 </li>

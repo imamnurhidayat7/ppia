@@ -84,7 +84,7 @@ export default function SiteSettingsPage() {
       </SectionCard>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4 flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+        <TabsList className="mb-4 flex flex-wrap gap-1 rounded-[4px] bg-[#EDF5FB] p-1 dark:bg-slate-800">
           <TabsTrigger value="menus" className="flex items-center gap-2">
             <MenuIcon className="h-4 w-4" />
             <span>Navigation menu</span>

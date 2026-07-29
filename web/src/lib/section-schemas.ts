@@ -250,6 +250,22 @@ export const SECTION_SCHEMAS: Record<string, SectionSchema> = {
         placeholder: 'Auckland, New Zealand',
         help: 'Small pill above the headline. Leave empty to hide it.',
       },
+      {
+        key: 'eyebrow',
+        label: 'Organisation line',
+        type: 'text',
+        configKey: 'eyebrow',
+        placeholder: 'Perhimpunan Pelajar Indonesia Auckland',
+        help: 'Small uppercase line directly above the headline. Leave empty to hide it.',
+      },
+      {
+        key: 'illustrationCaption',
+        label: 'Illustration caption',
+        type: 'text',
+        configKey: 'illustrationCaption',
+        placeholder: 'Tāmaki Makaurau · 36.8509° S',
+        help: 'Small pill on the illustration. Leave empty to hide it.',
+      },
     ],
     blockGroups: [
       {
@@ -329,8 +345,16 @@ export const SECTION_SCHEMAS: Record<string, SectionSchema> = {
     label: 'Video',
     description: 'A single featured video with a heading above it.',
     sectionFields: [
+      { key: 'badge', label: 'Eyebrow text', type: 'text', configKey: 'badge', placeholder: 'Watch', help: 'Small label above the heading.' },
       { key: 'title', label: 'Heading', type: 'text', placeholder: 'Watch our story' },
-      { key: 'subtitle', label: 'Supporting text', type: 'textarea', placeholder: 'See what PPIA Auckland is all about' },
+      {
+        key: 'featuredLabel',
+        label: 'Caption label',
+        type: 'text',
+        configKey: 'featuredLabel',
+        placeholder: 'Featured Video',
+        help: 'Small line in the caption strip under the player.',
+      },
     ],
     blockGroups: [
       {
@@ -360,10 +384,35 @@ export const SECTION_SCHEMAS: Record<string, SectionSchema> = {
     key: 'events',
     label: 'Events',
     description:
-      'Shows upcoming events. The events themselves come from the Events database — this section only controls the heading.',
+      'Shows upcoming events. The events themselves come from the Events database — this section only controls the heading and the link.',
+    headingPreview: { titleKey: 'title', highlightKey: 'titleHighlight' },
     sectionFields: [
+      { key: 'badge', label: 'Eyebrow text', type: 'text', configKey: 'badge', placeholder: 'Events', help: 'Small label above the heading.' },
       { key: 'title', label: 'Heading', type: 'text', placeholder: 'Upcoming events' },
-      { key: 'subtitle', label: 'Supporting text', type: 'textarea', placeholder: 'Join our upcoming events...' },
+      {
+        key: 'titleHighlight',
+        label: 'Words to highlight',
+        type: 'text',
+        configKey: 'titleHighlight',
+        placeholder: 'Events',
+        help: HIGHLIGHT_HELP,
+      },
+      {
+        key: 'viewAll',
+        label: 'Link label',
+        type: 'text',
+        configKey: 'viewAll',
+        placeholder: 'View all events',
+        group: 'View-all link',
+      },
+      {
+        key: 'viewAllHref',
+        label: 'Link target',
+        type: 'text',
+        configKey: 'viewAllHref',
+        placeholder: '/activities/events',
+        group: 'View-all link',
+      },
     ],
     blockGroups: [],
   },
@@ -375,10 +424,35 @@ export const SECTION_SCHEMAS: Record<string, SectionSchema> = {
     key: 'articles',
     label: 'Articles',
     description:
-      'Shows the latest articles. The articles come from the Articles database — this section only controls the heading.',
+      'Shows the latest articles. The articles come from the Articles database — this section only controls the heading and the link.',
+    headingPreview: { titleKey: 'title', highlightKey: 'titleHighlight' },
     sectionFields: [
-      { key: 'title', label: 'Heading', type: 'text', placeholder: 'Latest articles' },
-      { key: 'subtitle', label: 'Supporting text', type: 'textarea', placeholder: 'Read the latest from PPIA Auckland' },
+      { key: 'badge', label: 'Eyebrow text', type: 'text', configKey: 'badge', placeholder: 'Articles', help: 'Small label above the heading.' },
+      { key: 'title', label: 'Heading', type: 'text', placeholder: 'Read & Grow' },
+      {
+        key: 'titleHighlight',
+        label: 'Words to highlight',
+        type: 'text',
+        configKey: 'titleHighlight',
+        placeholder: 'Grow',
+        help: HIGHLIGHT_HELP,
+      },
+      {
+        key: 'viewAll',
+        label: 'Link label',
+        type: 'text',
+        configKey: 'viewAll',
+        placeholder: 'All articles',
+        group: 'View-all link',
+      },
+      {
+        key: 'viewAllHref',
+        label: 'Link target',
+        type: 'text',
+        configKey: 'viewAllHref',
+        placeholder: '/activities/news-articles',
+        group: 'View-all link',
+      },
     ],
     blockGroups: [],
   },
@@ -480,6 +554,7 @@ export const SECTION_SCHEMAS: Record<string, SectionSchema> = {
     label: 'FAQ',
     description: 'A short list of expandable questions, placed just before the membership call to action.',
     sectionFields: [
+      { key: 'badge', label: 'Eyebrow text', type: 'text', configKey: 'badge', placeholder: 'FAQ', help: 'Small label above the heading.' },
       { key: 'title', label: 'Heading', type: 'text', placeholder: 'Got questions?' },
       {
         key: 'subtitle',

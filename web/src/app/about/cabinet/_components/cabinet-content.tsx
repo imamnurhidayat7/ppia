@@ -29,9 +29,24 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
 import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
+import WaveTransition from "@/components/sections/WaveTransition";
 import { Mail, Users } from "lucide-react";
 import api from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
+
+/** Seam colours, matching the ends of the .sea-deep / .sea-shore gradients. */
+const DEEP = "#0B1C2E";
+const SHORE = "#FFFFFF";
+const SHORE_DEEP = "#EDF5FB";
+
+/**
+ * Porthole ring for a crew photo: a brass inner rim plus a soft outer halo in
+ * the division colour, both drawn with box-shadow so the ring never affects
+ * layout and works over any surface.
+ */
+function portholeRing(color: string, width = 2): string {
+  return `inset 0 0 0 1px rgba(255,255,255,0.55), 0 0 0 ${width}px ${color}, 0 0 0 ${width + 5}px ${color}1F`;
+}
 
 interface Person {
   name: string;
@@ -168,13 +183,11 @@ function Stat({ value, label }: { value: string; label: string }) {
       transition={{ duration: 0.4 }}
       className="text-center"
     >
-      <p
-        className="text-[clamp(1.75rem,4vw,3rem)] font-black leading-none tracking-[-0.03em] text-[#0F1B33]"
-        style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
-      >
+      {/* Counts are readings, so they are set in the data face. */}
+      <p className="data-type text-[clamp(1.5rem,3.4vw,2.5rem)] font-bold leading-none text-[#0F1B33]">
         {value}
       </p>
-      <p className="mt-2.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[#94A3B8]">
+      <p className="data-type mt-2.5 text-[12px] font-medium uppercase ink-muted">
         {label}
       </p>
     </motion.div>
@@ -196,7 +209,7 @@ function Heading({
     <div className={`${centered ? "mx-auto text-center" : ""} mb-12 max-w-3xl`}>
       {section.label && (
         <span
-          className={`inline-flex items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#E8231A] ${
+          className={`data-type inline-flex items-center gap-2.5 text-[12px] font-bold uppercase accent-label ${
             centered ? "justify-center" : ""
           }`}
         >
@@ -221,7 +234,7 @@ function Heading({
       {section.description && (
         <p
           className={`mt-5 text-[17px] leading-relaxed ${
-            tone === "dark" ? "text-white/60" : "text-[#64748B]"
+            tone === "dark" ? "text-white/60" : "ink-body"
           }`}
         >
           {section.description}
@@ -232,10 +245,12 @@ function Heading({
 }
 
 /**
- * Office bearer card — portrait photo with the name laid over a scrim.
+ * Office bearer card — a crew record on chart paper.
  *
- * A 4:5 crop is used rather than a square: it reads as a formal portrait and
- * gives the caption room to sit over the image without covering the face.
+ * The photo sits in a porthole rather than a full-bleed crop: it is the shape
+ * the rest of the site uses for a marker, it makes an uploaded snapshot of any
+ * aspect ratio look deliberate, and it leaves the caption on paper instead of
+ * over a scrim.
  */
 function LeaderCard({ leader, index }: { leader: Leader; index: number }) {
   return (
@@ -244,51 +259,56 @@ function LeaderCard({ leader, index }: { leader: Leader; index: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className="group overflow-hidden rounded-3xl border border-[#E7EDF4] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-[0_34px_80px_-32px_rgba(15,27,51,0.35)]"
+      className="chart-paper group relative overflow-hidden rounded-[5px] border border-[#DCE7F1] p-7 text-center transition-all duration-300 hover:-translate-y-1 hover:border-[#C3D2E0] hover:shadow-[0_34px_80px_-32px_rgba(7,19,33,0.42)]"
     >
-      <div className="relative overflow-hidden" style={{ aspectRatio: "4/5" }}>
-        <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.04]">
-          <Avatar person={leader} color={FALLBACK_COLOR} textClassName="text-6xl" />
-        </div>
+      {/* Corner fold, so the record reads as a filed sheet. */}
+      <span
+        aria-hidden="true"
+        className="absolute right-0 top-0 h-9 w-9"
+        style={{
+          background: `linear-gradient(225deg, #EDF5FB 0 50%, ${FALLBACK_COLOR}22 50%)`,
+          clipPath: "polygon(100% 0, 0 0, 100% 100%)",
+        }}
+      />
 
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-[#0B1220] via-[#0B1220]/25 to-transparent"
-        />
-
-        <div className="absolute inset-x-0 bottom-0 p-6">
-          {leader.role && (
-            <span className="mb-2.5 inline-block rounded-full bg-[#E8231A] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
-              {leader.role}
-            </span>
-          )}
-          <h3
-            className="text-2xl font-black leading-tight tracking-[-0.02em] text-white"
-            style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
-          >
-            {leader.name}
-          </h3>
-          {leader.major && (
-            <p className="mt-1.5 text-sm leading-snug text-white/65">{leader.major}</p>
-          )}
+      <div
+        className="relative mx-auto h-36 w-36 overflow-hidden rounded-full bg-[#EDF5FB] sm:h-40 sm:w-40"
+        style={{ boxShadow: portholeRing(FALLBACK_COLOR, 2) }}
+      >
+        <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.05]">
+          <Avatar person={leader} color={FALLBACK_COLOR} textClassName="text-5xl" />
         </div>
       </div>
 
+      {leader.role && (
+        <p className="data-type mt-6 text-[12px] font-bold uppercase accent-label">{leader.role}</p>
+      )}
+      <h3
+        className="mt-2 text-2xl font-black leading-tight tracking-[-0.02em] text-[#0F1B33]"
+        style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
+      >
+        {leader.name}
+      </h3>
+      {leader.major && <p className="mt-1.5 text-sm leading-snug ink-body">{leader.major}</p>}
+
       {(leader.quote || leader.email) && (
-        <div className="space-y-4 p-6">
-          {leader.quote && (
-            <p className="text-sm leading-relaxed text-[#64748B]">&ldquo;{leader.quote}&rdquo;</p>
-          )}
-          {leader.email && (
-            <a
-              href={`mailto:${leader.email}`}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-[#E8231A] transition-colors hover:text-[#C41E16]"
-            >
-              <Mail size={14} />
-              {leader.email}
-            </a>
-          )}
-        </div>
+        <>
+          <span aria-hidden="true" className="rope-rule mx-auto mt-6 block w-24 opacity-70" />
+          <div className="mt-5 space-y-4">
+            {leader.quote && (
+              <p className="text-sm leading-relaxed ink-body">&ldquo;{leader.quote}&rdquo;</p>
+            )}
+            {leader.email && (
+              <a
+                href={`mailto:${leader.email}`}
+                className="data-type inline-flex items-center gap-2 text-[12px] font-semibold accent-label transition-colors hover:text-[#C41E16]"
+              >
+                <Mail size={13} />
+                {leader.email}
+              </a>
+            )}
+          </div>
+        </>
       )}
     </motion.article>
   );
@@ -308,17 +328,20 @@ function OfficerCard({ officer, index }: { officer: Leader; index: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 0.45, delay: Math.min(index, 6) * 0.06 }}
-      className="group overflow-hidden rounded-2xl border border-[#E7EDF4] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-[0_24px_60px_-26px_rgba(15,27,51,0.3)]"
+      className="chart-paper group overflow-hidden rounded-[5px] border border-[#DCE7F1] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#C3D2E0] hover:shadow-[0_24px_60px_-26px_rgba(7,19,33,0.36)]"
     >
-      <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
-        <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.05]">
+      <div
+        className="relative mx-auto aspect-square w-full max-w-[9rem] overflow-hidden rounded-full bg-[#EDF5FB]"
+        style={{ boxShadow: portholeRing(FALLBACK_COLOR, 2) }}
+      >
+        <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.06]">
           <Avatar person={officer} color={FALLBACK_COLOR} textClassName="text-3xl" />
         </div>
       </div>
-      <div className="p-4 text-center">
+      <div className="pt-4 text-center">
         <p className="text-sm font-bold leading-snug text-[#0F1B33]">{officer.name}</p>
         {officer.role && (
-          <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#E8231A]">
+          <p className="data-type mt-1.5 text-[12px] font-semibold uppercase accent-label">
             {officer.role}
           </p>
         )}
@@ -347,22 +370,14 @@ function MemberCard({
       transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.05 }}
       className="group text-center"
     >
+      {/* Porthole: a double ring drawn with box-shadow, heavier for the leads. */}
       <div
-        className={`relative mx-auto mb-3.5 aspect-square w-full overflow-hidden bg-slate-100 ${
-          lead ? "rounded-2xl" : "rounded-xl"
-        }`}
-        style={lead ? { boxShadow: `0 0 0 2px ${color}` } : undefined}
+        className="relative mx-auto mb-3.5 aspect-square w-full overflow-hidden rounded-full bg-[#EDF5FB]"
+        style={{ boxShadow: portholeRing(color, lead ? 2 : 1) }}
       >
         <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.06]">
           <Avatar person={member} color={color} textClassName={lead ? "text-2xl" : "text-xl"} />
         </div>
-        {/* A hairline inset ring keeps light photos from bleeding into the page. */}
-        <div
-          aria-hidden="true"
-          className={`pointer-events-none absolute inset-0 ring-1 ring-inset ring-black/[0.06] ${
-            lead ? "rounded-2xl" : "rounded-xl"
-          }`}
-        />
       </div>
       <p
         className={`font-bold leading-snug text-[#0F1B33] ${lead ? "text-sm" : "text-[13px]"}`}
@@ -371,12 +386,8 @@ function MemberCard({
       </p>
       {member.role && (
         <p
-          className={`mt-0.5 leading-snug ${
-            lead
-              ? "text-[11px] font-semibold uppercase tracking-[0.08em]"
-              : "text-[11px] text-[#94A3B8]"
-          }`}
-          style={lead ? { color } : undefined}
+          className="data-type mt-1 text-[12px] uppercase leading-snug"
+          style={{ color: lead ? color : "#8A9AAC" }}
         >
           {member.role}
         </p>
@@ -403,7 +414,7 @@ function DivisionBlock({ division, index }: { division: Division; index: number 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.1 }}
       transition={{ duration: 0.5, delay: index * 0.04 }}
-      className="scroll-mt-24 overflow-hidden rounded-3xl border border-[#E7EDF4] bg-white"
+      className="chart-paper scroll-mt-24 overflow-hidden rounded-[5px] border border-[#DCE7F1]"
     >
       {/* Full-width colour rule identifies the division without a heavy header */}
       <div aria-hidden="true" className="h-1" style={{ background: color }} />
@@ -411,12 +422,13 @@ function DivisionBlock({ division, index }: { division: Division; index: number 
       <div className="p-6 sm:p-8">
         <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: `${color}16`, boxShadow: `inset 0 0 0 1px ${color}2E` }}
+            <span
+              aria-hidden="true"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+              style={{ background: `${color}16`, boxShadow: `inset 0 0 0 1px ${color}2E, 0 0 0 4px ${color}12` }}
             >
               <Users size={19} strokeWidth={2.1} style={{ color }} />
-            </div>
+            </span>
             <div className="min-w-0">
               <h3
                 className="text-xl font-black leading-tight tracking-[-0.02em] text-[#0F1B33]"
@@ -425,7 +437,7 @@ function DivisionBlock({ division, index }: { division: Division; index: number 
                 {division.name}
               </h3>
               {division.desc && (
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#64748B]">
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed ink-body">
                   {division.desc}
                 </p>
               )}
@@ -433,16 +445,16 @@ function DivisionBlock({ division, index }: { division: Division; index: number 
           </div>
           {total > 0 && (
             <span
-              className="shrink-0 self-start rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide"
+              className="data-type shrink-0 self-start rounded-[3px] px-3 py-1 text-[12px] font-semibold uppercase"
               style={{ background: `${color}14`, color }}
             >
-              {total} {total === 1 ? "person" : "people"}
+              {String(total).padStart(2, "0")} {total === 1 ? "person" : "people"}
             </span>
           )}
         </header>
 
         {total === 0 ? (
-          <p className="rounded-2xl border-2 border-dashed border-[#E7EDF4] py-8 text-center text-sm text-[#94A3B8]">
+          <p className="rounded-[5px] border border-dashed border-[#DCE7F1] py-8 text-center text-sm ink-muted">
             Nobody listed for this division yet.
           </p>
         ) : (
@@ -466,7 +478,7 @@ function DivisionBlock({ division, index }: { division: Division; index: number 
             {members.length > 0 && (
               <>
                 {leads.length > 0 && (
-                  <div className="border-t border-[#F1F5F9]" aria-hidden="true" />
+                  <span className="rope-rule block opacity-70" aria-hidden="true" />
                 )}
                 <div className="grid grid-cols-3 gap-x-5 gap-y-7 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
                   {members.map((member, i) => (
@@ -560,9 +572,12 @@ export default function CabinetPage() {
     <>
       <PageHeader {...content.header} />
 
-      {/* Summary numbers */}
-      <section className="border-b border-[#F1F5F9] bg-white py-14">
-        <div className="mx-auto max-w-6xl px-6">
+      <WaveTransition from={DEEP} to={SHORE} mirror />
+
+      {/* Summary numbers — the crew manifest, read as instrument figures. */}
+      <section className="sea-shore relative overflow-hidden py-14">
+        <span aria-hidden="true" className="rope-rule absolute inset-x-0 bottom-0 opacity-70" />
+        <div className="relative mx-auto max-w-6xl px-6">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             <Stat value={String(totalPeople)} label="Cabinet members" />
             {stats.slice(0, 3).map((s, i) => (
@@ -574,12 +589,20 @@ export default function CabinetPage() {
 
       {/* Leadership */}
       {allLeaders.length > 0 && (
-        <section className="relative overflow-hidden bg-white py-24">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-20 left-1/2 h-[420px] w-[820px] -translate-x-1/2 opacity-[0.05]"
-            style={{ background: "radial-gradient(ellipse at center, #E8231A 0%, transparent 70%)" }}
-          />
+        <section className="sea-shore relative overflow-hidden py-24">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+            <div
+              className="sea-chart absolute inset-0 opacity-[0.05]"
+              style={{
+                maskImage: "radial-gradient(ellipse 72% 62% at 50% 42%, transparent 20%, black 85%)",
+                WebkitMaskImage: "radial-gradient(ellipse 72% 62% at 50% 42%, transparent 20%, black 85%)",
+              }}
+            />
+            <div
+              className="absolute -top-20 left-1/2 h-[420px] w-[820px] -translate-x-1/2 opacity-[0.05]"
+              style={{ background: "radial-gradient(ellipse at center, #E8231A 0%, transparent 70%)" }}
+            />
+          </div>
           <div className="relative mx-auto max-w-6xl px-6">
             <Heading
               section={
@@ -614,8 +637,8 @@ export default function CabinetPage() {
                 {/* A short centred rule reads as the branch coming down from the
                     chair, without committing to a full tree diagram. */}
                 <div className="mx-auto mb-10 flex flex-col items-center" aria-hidden="true">
-                  <span className="h-8 w-px bg-[#DDE5EF]" />
-                  <span className="h-px w-24 bg-[#DDE5EF]" />
+                  <span className="rope-line-v h-9 w-[3px] rounded-full" />
+                  <span className="rope-rule w-24" />
                 </div>
                 {/*
                   Width is capped by the number of officers. A fixed
@@ -644,8 +667,18 @@ export default function CabinetPage() {
       )}
 
       {/* Divisions */}
-      <section className="border-y border-[#E7EDF4] bg-[#F8FAFC] py-24">
-        <div className="mx-auto max-w-7xl px-6">
+      <section className="sea-shore relative overflow-hidden py-24">
+        <span aria-hidden="true" className="rope-rule absolute inset-x-0 top-0 opacity-70" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div
+            className="sea-chart absolute inset-0 opacity-[0.04]"
+            style={{
+              maskImage: "radial-gradient(ellipse 78% 68% at 50% 45%, transparent 22%, black 85%)",
+              WebkitMaskImage: "radial-gradient(ellipse 78% 68% at 50% 45%, transparent 22%, black 85%)",
+            }}
+          />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-6">
           <Heading
             section={
               content.divisionsSection ?? {
@@ -656,7 +689,7 @@ export default function CabinetPage() {
             }
           />
           {divisions.length === 0 ? (
-            <p className="rounded-3xl border-2 border-dashed border-[#DDE5EF] py-16 text-center text-sm text-[#94A3B8]">
+            <p className="rounded-[5px] border border-dashed border-[#DCE7F1] py-16 text-center text-sm ink-muted">
               No divisions have been added yet.
             </p>
           ) : (
@@ -665,14 +698,11 @@ export default function CabinetPage() {
                 <div key={group.key}>
                   {group.label && (
                     <div className="mb-6 flex flex-col gap-1.5 border-l-2 border-[#E8231A] pl-4">
-                      <h3
-                        className="text-sm font-bold uppercase tracking-[0.14em] text-[#0F1B33]"
-                        style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
-                      >
+                      <h3 className="data-type text-[12px] font-bold uppercase text-[#0F1B33]">
                         {group.label}
                       </h3>
                       {group.description && (
-                        <p className="max-w-2xl text-sm leading-relaxed text-[#64748B]">
+                        <p className="max-w-2xl text-sm leading-relaxed ink-body">
                           {group.description}
                         </p>
                       )}
@@ -690,16 +720,26 @@ export default function CabinetPage() {
         </div>
       </section>
 
-      {/* Closing call to action */}
-      <section className="relative overflow-hidden bg-[#0D1B33] py-24">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.16]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 50%, #E8231A, transparent 50%), radial-gradient(circle at 80% 50%, #1A2B4A, transparent 50%)",
-          }}
-        />
+      <WaveTransition from={SHORE_DEEP} to={DEEP} />
+
+      {/* Closing call to action, back below the waterline */}
+      <section className="sea-deep relative overflow-hidden py-24">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div
+            className="sea-chart-light absolute inset-0 opacity-[0.05]"
+            style={{
+              maskImage: "radial-gradient(ellipse 70% 68% at 50% 50%, transparent 22%, black 85%)",
+              WebkitMaskImage: "radial-gradient(ellipse 70% 68% at 50% 50%, transparent 22%, black 85%)",
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.16]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 20% 50%, #E8231A, transparent 50%), radial-gradient(circle at 80% 50%, #1A2B4A, transparent 50%)",
+            }}
+          />
+        </div>
         <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
           <h2
             className="text-[clamp(1.75rem,4vw,2.5rem)] font-black leading-tight tracking-[-0.02em] text-white"

@@ -40,6 +40,15 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 type RegistrationStatus = 'REGISTERED' | 'CANCELLED' | 'WAITLISTED' | 'ATTENDED' | 'NO_SHOW';
 type SortDirection = 'asc' | 'desc';
 type GroupMode = 'flat' | 'grouped';
@@ -485,35 +494,35 @@ export default function GlobalRegistrationsPage() {
                 <Td>
                   <Link
                     href={`/dashboard/admin/events/${row.event.id}/registrations`}
-                    className="font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                    className="font-semibold ink-strong hover:underline"
                   >
                     {row.event.title}
                   </Link>
                   {row.event.location && (
-                    <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                    <p className="mt-0.5 flex items-center gap-1 text-[12px] ink-muted">
                       <MapPin className="h-3 w-3 shrink-0" />
                       <span className="truncate">{row.event.location}</span>
                     </p>
                   )}
                 </Td>
                 <Td>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                  <p className="font-medium ink-strong">
                     {attendee?.name || '—'}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-[12px] ink-muted">
                     {attendee?.email || '—'}
                   </p>
                   {attendee?.university && (
-                    <p className="text-xs text-slate-400">{attendee.university}</p>
+                    <p className="text-[12px] ink-muted">{attendee.university}</p>
                   )}
                 </Td>
                 <Td>
-                  <Badge variant={STATUS_VARIANT[row.status]}>{STATUS_LABEL[row.status]}</Badge>
+                  <Badge variant={STATUS_VARIANT[row.status]} className="data-type uppercase">{STATUS_LABEL[row.status]}</Badge>
                 </Td>
                 <Td>
-                  <span className="flex items-center gap-1.5 whitespace-nowrap">
-                    <CalendarClock className="h-3.5 w-3.5 text-slate-400" />
-                    {formatDate(row.registeredAt)}
+                  <span className="data-type flex items-center gap-1.5 whitespace-nowrap text-[12px]">
+                    <CalendarClock className="h-3.5 w-3.5 ink-muted" />
+                    {formatDate(row.registeredAt, DATE_OPTS)}
                   </span>
                 </Td>
               </Tr>
@@ -530,22 +539,22 @@ export default function GlobalRegistrationsPage() {
                   type="button"
                   onClick={() => toggleEventCollapse(event.id)}
                   aria-expanded={!collapsed}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-[#F5FAFD] dark:hover:bg-slate-800/50"
                 >
                   <span className="flex min-w-0 items-center gap-3">
                     {collapsed ? (
-                      <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                      <ChevronRight className="h-4 w-4 shrink-0 ink-muted" />
                     ) : (
-                      <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+                      <ChevronDown className="h-4 w-4 shrink-0 ink-muted" />
                     )}
                     <span className="min-w-0">
-                      <span className="block truncate font-display text-base font-bold text-slate-900 dark:text-slate-50">
+                      <span className="block truncate font-display text-base font-bold ink-strong">
                         {event.title}
                       </span>
-                      <span className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-slate-500 dark:text-slate-400">
+                      <span className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[12px] ink-muted">
                         <span className="inline-flex items-center gap-1">
                           <CalendarClock className="h-3 w-3" />
-                          {formatDate(event.startDate)}
+                          {formatDate(event.startDate, DATE_OPTS)}
                         </span>
                         {event.location && (
                           <span className="inline-flex items-center gap-1">
@@ -557,11 +566,11 @@ export default function GlobalRegistrationsPage() {
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <Badge variant="default">{registrations.length} registrations</Badge>
+                    <Badge variant="default" className="data-type uppercase">{registrations.length} registrations</Badge>
                     <Link
                       href={`/dashboard/admin/events/${event.id}/registrations`}
                       aria-label={`Open attendee details for ${event.title}`}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                      className="flex h-8 w-8 items-center justify-center rounded-[3px] ink-muted transition-colors hover:bg-[#EDF5FB] hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Link>
@@ -569,9 +578,9 @@ export default function GlobalRegistrationsPage() {
                 </button>
 
                 {!collapsed && (
-                  <div className="overflow-x-auto border-t border-slate-100 dark:border-slate-800">
+                  <div className="overflow-x-auto border-t border-[#E7EFF7] dark:border-slate-800">
                     <table className="min-w-full">
-                      <thead className="bg-slate-50 dark:bg-slate-800/50">
+                      <thead className="bg-[#F5FAFD] dark:bg-slate-800/50">
                         <tr>
                           <Th>Attendee</Th>
                           <Th>Email</Th>
@@ -579,7 +588,7 @@ export default function GlobalRegistrationsPage() {
                           <Th>Registered at</Th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      <tbody className="divide-y divide-[#E7EFF7] dark:divide-slate-800">
                         {registrations.map((row) => {
                           const attendee = attendeeOf(row);
                           return (
@@ -587,11 +596,11 @@ export default function GlobalRegistrationsPage() {
                               <Td>{attendee?.name || '—'}</Td>
                               <Td>{attendee?.email || '—'}</Td>
                               <Td>
-                                <Badge variant={STATUS_VARIANT[row.status]}>
+                                <Badge variant={STATUS_VARIANT[row.status]} className="data-type uppercase">
                                   {STATUS_LABEL[row.status]}
                                 </Badge>
                               </Td>
-                              <Td>{formatDate(row.registeredAt)}</Td>
+                              <Td>{formatDate(row.registeredAt, DATE_OPTS)}</Td>
                             </Tr>
                           );
                         })}

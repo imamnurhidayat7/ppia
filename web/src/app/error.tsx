@@ -65,7 +65,7 @@ export default function Error({
 
         {error.digest && (
           <div className="mt-10 pt-8 border-t border-white/10">
-            <p className="text-[#64748B] text-xs">
+            <p className="text-[#94A3B8] text-xs">
               Reference ID for support:{" "}
               <span className="font-mono text-[#94A3B8]">{error.digest}</span>
             </p>

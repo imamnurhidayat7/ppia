@@ -35,6 +35,15 @@ import {
   Video,
 } from 'lucide-react';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 type DocType = 'PHOTO' | 'VIDEO' | 'LINK';
 
 interface EventDocumentation {
@@ -97,13 +106,13 @@ function DocPhoto({ url, alt }: { url: string; alt: string }) {
 
   if (failed) {
     return (
-      <div className="flex h-44 items-center justify-center bg-slate-100 dark:bg-slate-800">
-        <ImageIcon className="h-8 w-8 text-slate-400" />
+      <div className="flex h-44 items-center justify-center bg-[#EDF5FB] dark:bg-slate-800">
+        <ImageIcon className="h-8 w-8 ink-muted" />
       </div>
     );
   }
   return (
-    <div className="relative h-44 bg-slate-100 dark:bg-slate-800">
+    <div className="relative h-44 bg-[#EDF5FB] dark:bg-slate-800">
       <Image
         src={src}
         alt={alt}
@@ -269,7 +278,7 @@ export default function EventDocumentationPage() {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {[0, 1, 2].map((tile) => (
-            <div key={tile} className="h-24 rounded-2xl skeleton" />
+            <div key={tile} className="h-24 rounded-[5px] skeleton" />
           ))}
         </div>
         <LoadingCards count={6} columns={3} />
@@ -310,16 +319,16 @@ export default function EventDocumentationPage() {
       />
 
       {event && (event.startDate || event.location || event.slug) && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm ink-muted">
           {event.startDate && (
             <span className="inline-flex items-center gap-1.5">
               <CalendarClock className="h-4 w-4 text-[#E8231A]" />
-              {formatDate(event.startDate)}
+              {formatDate(event.startDate, DATE_OPTS)}
             </span>
           )}
           {event.location && (
             <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-slate-400" />
+              <MapPin className="h-4 w-4 ink-muted" />
               {event.location}
             </span>
           )}
@@ -358,7 +367,7 @@ export default function EventDocumentationPage() {
           {docs.map((doc) => (
             <article
               key={doc.id}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+              className="chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] dark:border-slate-800"
             >
               {doc.type === 'PHOTO' && <DocPhoto url={doc.url} alt={doc.title || 'Documentation photo'} />}
               {doc.type === 'VIDEO' && (
@@ -377,11 +386,11 @@ export default function EventDocumentationPage() {
                   href={doc.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-32 items-center justify-center bg-slate-50 transition-colors hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                  className="flex h-32 items-center justify-center bg-[#F5FAFD] transition-colors hover:bg-[#EDF5FB] dark:bg-slate-800/60 dark:hover:bg-slate-800"
                 >
                   <span className="px-4 text-center">
-                    <LinkIcon className="mx-auto mb-2 h-8 w-8 text-slate-400" />
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#E8231A]">
+                    <LinkIcon className="mx-auto mb-2 h-8 w-8 ink-muted" />
+                    <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#E8231A]">
                       <ExternalLink className="h-3 w-3" />
                       Open link
                     </span>
@@ -392,13 +401,13 @@ export default function EventDocumentationPage() {
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <p className="truncate text-sm font-semibold ink-strong">
                       {doc.title || 'Untitled'}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <Badge variant="default">{TYPE_LABEL[doc.type]}</Badge>
-                      <span className="text-xs text-slate-400">
-                        Added {formatDate(doc.createdAt)}
+                      <Badge variant="default" className="data-type uppercase">{TYPE_LABEL[doc.type]}</Badge>
+                      <span className="text-[12px] ink-muted">
+                        Added {formatDate(doc.createdAt, DATE_OPTS)}
                       </span>
                     </div>
                   </div>
@@ -417,7 +426,7 @@ export default function EventDocumentationPage() {
                   </RowActions>
                 </div>
                 {doc.description && (
-                  <p className="mt-2 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
+                  <p className="mt-2 line-clamp-2 text-sm ink-muted">
                     {doc.description}
                   </p>
                 )}

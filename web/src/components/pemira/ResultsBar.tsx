@@ -84,7 +84,7 @@ export default function ResultsBar({ results, totalVotes }: { results: Result[];
                   <p className="font-bold text-slate-900 text-sm truncate">{r.name}</p>
                   {isLeader && <Crown className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
                 </div>
-                {r.slogan && <p className="text-[11px] italic text-slate-400 truncate">"{r.slogan}"</p>}
+                {r.slogan && <p className="text-[12px] italic text-slate-600 truncate">"{r.slogan}"</p>}
               </div>
 
               <div className="text-right flex-shrink-0">

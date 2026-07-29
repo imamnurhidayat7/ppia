@@ -293,7 +293,7 @@ export default function AdminDivisionsPage() {
             </>
           }
           footer={
-            <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div className="data-type border-t border-[#E7EFF7] px-5 py-3 text-[12px] ink-muted dark:border-slate-800">
               Showing {filteredDivisions.length} of {divisions.length} divisions
             </div>
           }
@@ -303,7 +303,7 @@ export default function AdminDivisionsPage() {
               <Td>
                 <div className="flex items-center gap-3">
                   <span
-                    className="h-8 w-8 shrink-0 rounded-lg"
+                    className="h-8 w-8 shrink-0 rounded-[4px]"
                     style={{ backgroundColor: `${division.color || '#6366F1'}25` }}
                   >
                     <span className="flex h-full w-full items-center justify-center">
@@ -313,25 +313,25 @@ export default function AdminDivisionsPage() {
                       />
                     </span>
                   </span>
-                  <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="truncate font-semibold ink-strong">
                     {division.name}
                   </span>
                 </div>
               </Td>
               <Td>
-                <span className="text-xs text-slate-400">/{division.slug}</span>
+                <span className="data-type text-[12px] ink-muted">/{division.slug}</span>
               </Td>
               <Td>
                 {division.description ? (
-                  <span className="line-clamp-2 max-w-md text-slate-600 dark:text-slate-300">
+                  <span className="line-clamp-2 max-w-md ink-body">
                     {division.description}
                   </span>
                 ) : (
-                  <span className="text-slate-400">—</span>
+                  <span className="ink-muted">—</span>
                 )}
               </Td>
               <Td>
-                <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                <span className="data-type text-[12px] ink-muted">
                   {division.color || '—'}
                 </span>
               </Td>
@@ -382,7 +382,7 @@ export default function AdminDivisionsPage() {
                   })
                 }
                 placeholder="For example: Public Relations"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field
@@ -398,7 +398,7 @@ export default function AdminDivisionsPage() {
                 value={formData.slug}
                 onChange={(event) => setFormData({ ...formData, slug: event.target.value })}
                 placeholder="public-relations"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
           </FormGrid>
@@ -410,7 +410,7 @@ export default function AdminDivisionsPage() {
               value={formData.description}
               onChange={(event) => setFormData({ ...formData, description: event.target.value })}
               placeholder="A summary of the division's responsibilities and scope…"
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
             />
           </Field>
 
@@ -431,7 +431,7 @@ export default function AdminDivisionsPage() {
                   style={{ backgroundColor: color.value }}
                 />
               ))}
-              <span className="ml-1 inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <span className="ml-1 inline-flex items-center gap-1.5 text-[12px] ink-muted">
                 <Palette className="h-3.5 w-3.5" />
                 <span className="font-mono">{formData.color}</span>
               </span>

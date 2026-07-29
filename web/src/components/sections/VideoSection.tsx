@@ -75,15 +75,13 @@ export default function VideoSection() {
   }, [content.embedUrl]);
 
   return (
-    <section className="relative overflow-hidden bg-[#0D1B33] py-28">
-      {/* Depth: dot grid, masked so it fades behind the player, plus one warm
-          glow so the frame appears lit rather than pasted onto flat navy. */}
+    <section className="sea-deep relative overflow-hidden py-28">
+      {/* Depth: the hero's chart grid, masked so it fades behind the player,
+          plus one warm glow so the frame appears lit rather than pasted on. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div
-          className="absolute inset-0 opacity-[0.06]"
+          className="sea-chart-light absolute inset-0 opacity-[0.05]"
           style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
-            backgroundSize: '38px 38px',
             maskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, transparent 20%, black 80%)',
             WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, transparent 20%, black 80%)',
           }}
@@ -109,19 +107,30 @@ export default function VideoSection() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="relative"
         >
-          {/* Gradient hairline ring — a 1px lit edge reads as glass rather than
-              a hard rectangle sitting on the background. */}
-          <div
-            aria-hidden="true"
-            className="absolute -inset-px rounded-[1.5rem] opacity-60"
-            style={{
-              background:
-                'linear-gradient(140deg, rgba(255,255,255,0.35), rgba(255,255,255,0.04) 40%, rgba(232,35,26,0.35))',
-            }}
-          />
+          {/*
+            The player sits in a bulkhead frame with riveted corners rather than
+            floating as a rounded rectangle with a gradient hairline. A glass
+            card is the default treatment for embedded media; a fitted panel is
+            something this page can own, and it also gives the caption strip
+            below a place to live.
+          */}
+          <div className="relative rounded-[10px] bg-gradient-to-b from-white/[0.13] to-white/[0.03] p-3 shadow-[0_40px_90px_-30px_rgba(0,0,0,0.85)] ring-1 ring-white/12 sm:p-4">
+            {/* Rivets, one per corner of the panel. */}
+            {[
+              'left-2 top-2',
+              'right-2 top-2',
+              'left-2 bottom-2',
+              'right-2 bottom-2',
+            ].map((position) => (
+              <span
+                key={position}
+                aria-hidden="true"
+                className={`absolute ${position} h-1.5 w-1.5 rounded-full bg-white/25 ring-1 ring-black/30`}
+              />
+            ))}
 
           <div
-            className="relative overflow-hidden rounded-[1.5rem] shadow-[0_40px_90px_-30px_rgba(0,0,0,0.85)]"
+            className="relative overflow-hidden rounded-[5px] ring-1 ring-black/40"
             style={{ aspectRatio: '16/9' }}
           >
             {playing ? (
@@ -181,7 +190,7 @@ export default function VideoSection() {
 
                 <span className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
                   <span
-                    className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55"
+                    className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.2em] text-white/75"
                   >
                     {content.featuredLabel}
                   </span>
@@ -194,6 +203,17 @@ export default function VideoSection() {
                 </span>
               </button>
             )}
+          </div>
+
+            {/* Panel plate: the frame's own label, set as data. */}
+            <div className="mt-3 flex items-center gap-3 px-1">
+              <span aria-hidden="true" className="h-px w-6 bg-white/20" />
+              <p className="data-type text-[12px] font-bold uppercase text-white/40">
+                {content.featuredLabel}
+              </p>
+              <span aria-hidden="true" className="h-px flex-1 bg-white/10" />
+              <p className="data-type text-[12px] uppercase text-white/30">16:9</p>
+            </div>
           </div>
         </motion.div>
       </div>

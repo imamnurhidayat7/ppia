@@ -1,3 +1,6 @@
+// Must come first: resolves DATABASE_URL / DIRECT_URL / STORAGE_DRIVER from the
+// DATA_SOURCE switch before any module reads them at import time.
+import { DATA_SOURCE, describeDatabase } from './lib/data-source'
 import express from 'express'
 import cors from 'cors'
 import path from 'path'
@@ -31,6 +34,8 @@ import blockDataRoutes from './routes/blockData'
 import faqRoutes from './routes/faqs'
 import bookmarkRoutes from './routes/bookmarks'
 import notificationRoutes from './routes/notifications'
+import privateFileRoutes from './routes/privateFiles'
+import { STORAGE_DRIVER, LOCAL_STORAGE_PATHS } from './lib/storage'
 import { securityHeaders } from './middleware/security-headers'
 import { publicReadCache } from './middleware/public-cache'
 
@@ -120,7 +125,8 @@ app.use(publicReadCache)
  */
 app.use(
   '/uploads',
-  express.static(path.join(__dirname, '../uploads'), {
+  // Same directory the local storage driver writes to, so the two cannot drift.
+  express.static(LOCAL_STORAGE_PATHS.public, {
     setHeaders: (res, filePath) => {
       res.setHeader('X-Content-Type-Options', 'nosniff')
       if (filePath.toLowerCase().endsWith('.pdf')) {
@@ -164,6 +170,9 @@ app.use('/api/blocks', blockDataRoutes)
 app.use('/api/faq', faqRoutes)
 app.use('/api/bookmarks', bookmarkRoutes)
 app.use('/api/notifications', notificationRoutes)
+// Signed reads of private documents. Active only under the local storage driver;
+// with Supabase the signed URL points at Supabase itself.
+app.use('/api/private-files', privateFileRoutes)
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -173,6 +182,12 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`)
+  console.log(`Data source: ${DATA_SOURCE} — database ${describeDatabase()}`)
+  console.log(
+    STORAGE_DRIVER === 'local'
+      ? `Storage: local disk — public ${LOCAL_STORAGE_PATHS.public}, private ${LOCAL_STORAGE_PATHS.private}`
+      : 'Storage: Supabase Storage'
+  )
 })
 
 export default app

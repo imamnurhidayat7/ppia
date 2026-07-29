@@ -17,6 +17,9 @@ dist
 uploads/*
 !uploads/.gitkeep
 
+# Private documents written by the local storage driver.
+storage/
+
 # Logs and OS noise
 *.log
 npm-debug.log*

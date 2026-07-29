@@ -120,16 +120,16 @@ export default function CandidateCard({ candidate, onSelect, selected }: Props) 
         {/* Vision & Mission */}
         <div className="space-y-3 text-sm">
           <div>
-            <p className="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-1">Vision</p>
+            <p className="font-black text-[12px] text-slate-600 uppercase tracking-widest mb-1">Vision</p>
             <p className="text-slate-700 line-clamp-3 leading-relaxed">{candidate.vision}</p>
           </div>
           <div>
-            <p className="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-1">Mission</p>
+            <p className="font-black text-[12px] text-slate-600 uppercase tracking-widest mb-1">Mission</p>
             <p className="text-slate-700 line-clamp-3 leading-relaxed">{candidate.mission}</p>
           </div>
           {candidate.experience && (
             <div>
-              <p className="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-1">Experience</p>
+              <p className="font-black text-[12px] text-slate-600 uppercase tracking-widest mb-1">Experience</p>
               <p className="text-slate-700 line-clamp-2 leading-relaxed">{candidate.experience}</p>
             </div>
           )}

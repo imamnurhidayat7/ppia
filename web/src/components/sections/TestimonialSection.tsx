@@ -18,6 +18,9 @@ import { useLandingColors } from '@/lib/hooks/use-landing-colors';
 import { getImageUrl } from '@/lib/utils';
 import SectionHeading from './SectionHeading';
 
+/** Fixed tilts, so the pile is deliberate and hydration-stable. */
+const TILTS = [-1.6, 1.1, -0.7];
+
 interface Testimonial {
   id: string;
   quote: string;
@@ -68,8 +71,16 @@ export default function TestimonialSection() {
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="bg-white py-28">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className="sea-shore relative overflow-hidden py-28">
+      <div
+        aria-hidden="true"
+        className="sea-chart pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          maskImage: 'radial-gradient(ellipse 80% 70% at 50% 40%, transparent 25%, black 90%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 40%, transparent 25%, black 90%)',
+        }}
+      />
+      <div className="relative mx-auto max-w-7xl px-6">
         <SectionHeading
           eyebrow={header.eyebrow}
           title={header.title}
@@ -77,31 +88,48 @@ export default function TestimonialSection() {
           className="mb-14"
         />
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        {/*
+          Postcards from the crew.
+
+          Each quote is a card sent home: stamped, postmarked, tilted as if
+          dropped on a desk. Three identical upright cards in a row is the
+          testimonial block every template ships, and it makes real quotes look
+          like filler. The tilt alternates by index so the group stays a pile
+          rather than a pattern, and hover straightens the card being read.
+        */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-5">
           {testimonials.map((t, i) => (
             <motion.blockquote
               key={t.id}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 26 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.12 }}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#E7EDF4] bg-[#FBFCFE] p-7 transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:bg-white hover:shadow-[0_28px_70px_-28px_rgba(15,27,51,0.28)]"
+              style={{ rotate: `${TILTS[i % TILTS.length]}deg` }}
+              className="chart-paper group relative flex flex-col rounded-[5px] p-6 shadow-[0_18px_44px_-26px_rgba(7,19,33,0.45)] transition-all duration-500 hover:rotate-0 hover:shadow-[0_30px_66px_-28px_rgba(7,19,33,0.5)] sm:p-7"
             >
-              {/* Oversized quote mark as a watermark, cropped by the card. It
-                  gives each card a focal point without adding chrome. */}
-              <Quote
-                aria-hidden="true"
-                size={112}
-                strokeWidth={1}
-                className="pointer-events-none absolute -right-5 -top-7 opacity-[0.06] transition-opacity duration-500 group-hover:opacity-[0.11]"
-                style={{ color: colors.textAccent }}
-              />
+              {/* Stamp and postmark, top-right of the card like real franking. */}
+              <div aria-hidden="true" className="absolute right-5 top-5 flex items-start gap-2">
+                <span
+                  className="stamp-edge flex h-11 w-9 items-center justify-center rounded-[2px]"
+                  style={{ color: `${colors.textAccent}4D` }}
+                >
+                  <Quote size={14} strokeWidth={2.6} style={{ color: colors.textAccent }} />
+                </span>
+                <span className="mt-1 flex h-9 w-9 rotate-[-14deg] items-center justify-center rounded-full border border-dashed border-[#0F1B33]/25">
+                  <span className="data-type text-[12px] font-bold uppercase leading-tight text-[#0F1B33]/45">
+                    AKL
+                  </span>
+                </span>
+              </div>
 
-              <p className="relative flex-1 text-[15px] leading-relaxed text-[#334155]">
+              <p className="relative mt-16 flex-1 text-[15px] leading-relaxed text-[#33465E]">
                 &ldquo;{t.quote}&rdquo;
               </p>
 
-              <footer className="relative mt-6 flex items-center gap-3 border-t border-slate-200/80 pt-5">
+              <footer className="relative mt-6 flex items-center gap-3 pt-5">
+                {/* Address rules, as on the back of a postcard. */}
+                <span aria-hidden="true" className="rope-rule absolute inset-x-0 top-0 opacity-70" />
                 {t.avatarUrl ? (
                   // A 44px avatar: exact dimensions are known, so no `fill` and
                   // no positioned wrapper are needed.
@@ -110,7 +138,7 @@ export default function TestimonialSection() {
                     alt={t.name}
                     width={44}
                     height={44}
-                    className="h-11 w-11 rounded-full object-cover ring-2 ring-white shadow-sm"
+                    className="h-11 w-11 rounded-full object-cover shadow-sm ring-2 ring-[#FCFBF7]"
                   />
                 ) : (
                   <div

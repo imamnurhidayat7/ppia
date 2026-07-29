@@ -40,6 +40,15 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 type MembershipStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 interface UploadedFile {
@@ -68,7 +77,7 @@ function isPdfUrl(url: string): boolean {
 function safeDate(value?: string | null): string {
   if (!value) return '—';
   try {
-    return formatDate(value);
+    return formatDate(value, DATE_OPTS);
   } catch {
     return value;
   }
@@ -78,10 +87,10 @@ function MemberDetailSkeleton() {
   return (
     <div className="space-y-6">
       <div className="h-4 w-32 rounded skeleton" />
-      <div className="h-40 rounded-3xl skeleton" />
+      <div className="h-40 rounded-[5px] skeleton" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="h-96 rounded-2xl skeleton lg:col-span-2" />
-        <div className="h-96 rounded-2xl skeleton" />
+        <div className="h-96 rounded-[5px] skeleton lg:col-span-2" />
+        <div className="h-96 rounded-[5px] skeleton" />
       </div>
     </div>
   );
@@ -111,35 +120,35 @@ function FileCard({ file, memberId }: { file: UploadedFile; memberId?: string })
   // the page source.
   if (file.isPrivate) {
     return (
-      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
-          <FileText className="h-4 w-4 text-slate-400" />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{file.label}</span>
+      <div className="overflow-hidden rounded-[4px] border border-[#DCE7F1] dark:border-slate-800">
+        <div className="flex items-center gap-2 border-b border-[#E7EFF7] bg-[#F5FAFD] px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
+          <FileText className="h-4 w-4 ink-muted" />
+          <span className="text-sm font-medium ink-body">{file.label}</span>
         </div>
         <div className="p-4">
           {!file.url ? (
-            <p className="text-sm text-slate-400">{file.emptyHint}</p>
+            <p className="text-sm ink-muted">{file.emptyHint}</p>
           ) : (
             <>
               <button
                 type="button"
                 onClick={openPrivateDocument}
                 disabled={preparingDoc}
-                className="flex w-full items-center gap-3 rounded-lg bg-slate-50 p-3 text-left transition-colors hover:bg-slate-100 disabled:opacity-60 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                className="flex w-full items-center gap-3 rounded-[4px] bg-[#F5FAFD] p-3 text-left transition-colors hover:bg-[#EDF5FB] disabled:opacity-60 dark:bg-slate-800/60 dark:hover:bg-slate-800"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E8231A] text-white">
+                <span aria-hidden="true" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 4px rgba(232,35,26,0.12)' }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8231A] text-white">
                   <FileText className="h-5 w-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  <span className="block text-sm font-semibold ink-strong">
                     {preparingDoc ? 'Preparing secure link…' : 'View PDF'}
                   </span>
-                  <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                  <span className="block truncate text-[12px] ink-muted">
                     {file.label}
                   </span>
                 </span>
               </button>
-              {docError && <p className="mt-2 text-xs text-[#E8231A]">{docError}</p>}
+              {docError && <p className="mt-2 text-[12px] text-[#E8231A]">{docError}</p>}
             </>
           )}
         </div>
@@ -152,19 +161,19 @@ function FileCard({ file, memberId }: { file: UploadedFile; memberId?: string })
   const isPdf = Boolean(fullUrl && isPdfUrl(fullUrl));
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-      <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
-        <FileText className="h-4 w-4 text-slate-400" />
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{file.label}</span>
+    <div className="overflow-hidden rounded-[4px] border border-[#DCE7F1] dark:border-slate-800">
+      <div className="flex items-center gap-2 border-b border-[#E7EFF7] bg-[#F5FAFD] px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
+        <FileText className="h-4 w-4 ink-muted" />
+        <span className="text-sm font-medium ink-body">{file.label}</span>
       </div>
       <div className="p-4">
         {!fullUrl ? (
-          <p className="text-sm text-slate-400">{file.emptyHint}</p>
+          <p className="text-sm ink-muted">{file.emptyHint}</p>
         ) : showImage ? (
           <div className="space-y-2">
             {/* `object-contain`: these are scans of documents, so the whole page
                 has to stay visible rather than being cropped to fill. */}
-            <div className="relative h-44 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
+            <div className="relative h-44 w-full overflow-hidden rounded-[3px] bg-[#EDF5FB] dark:bg-slate-800">
               <Image
                 src={fullUrl}
                 alt={file.label}
@@ -177,7 +186,7 @@ function FileCard({ file, memberId }: { file: UploadedFile; memberId?: string })
               href={fullUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8231A] hover:underline"
+              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#E8231A] hover:underline"
             >
               <ExternalLink className="h-3 w-3" />
               Open original file
@@ -188,21 +197,21 @@ function FileCard({ file, memberId }: { file: UploadedFile; memberId?: string })
             href={fullUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-lg bg-slate-50 p-3 transition-colors hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+            className="flex items-center gap-3 rounded-[4px] bg-[#F5FAFD] p-3 transition-colors hover:bg-[#EDF5FB] dark:bg-slate-800/60 dark:hover:bg-slate-800"
           >
             <span
               className={cn(
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white',
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] text-white',
                 isPdf ? 'bg-[#E8231A]' : 'bg-slate-500'
               )}
             >
               {isPdf ? <FileText className="h-5 w-5" /> : <Download className="h-5 w-5" />}
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-semibold text-slate-800 dark:text-slate-100">
+              <span className="block text-sm font-semibold ink-strong">
                 {isPdf ? 'View PDF' : 'Download file'}
               </span>
-              <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+              <span className="block truncate text-[12px] ink-muted">
                 {file.label}
               </span>
             </span>
@@ -448,35 +457,35 @@ export default function MemberDetailPage() {
         }
       >
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge variant={statusBadgeVariant} size="md">
+          <Badge variant={statusBadgeVariant} size="md" className="data-type uppercase">
             {STATUS_LABEL[status]}
           </Badge>
           {member.division?.name && (
-            <Badge variant="outline" size="md" className="border-white/30 text-white/80">
+            <Badge variant="outline" size="md" className="data-type uppercase border-white/30 text-white/80">
               {member.division.name}
             </Badge>
           )}
           {member.position && (
-            <Badge variant="outline" size="md" className="border-white/30 text-white/80">
+            <Badge variant="outline" size="md" className="data-type uppercase border-white/30 text-white/80">
               {member.position}
             </Badge>
           )}
           {member.username && member.username !== member.name && (
-            <span className="text-xs text-white/60">@{member.username}</span>
+            <span className="text-[12px] text-white/60">@{member.username}</span>
           )}
         </div>
       </PageHero>
 
       {status === 'PENDING' && (
-        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/50">
+        <div className="flex items-start gap-3 rounded-[5px] border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20">
+          <span aria-hidden="true" style={{ boxShadow: 'inset 0 0 0 1px rgba(146,64,14,0.25), 0 0 0 4px rgba(146,64,14,0.08)' }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-amber-700 dark:text-amber-300">
             <Clock className="h-4 w-4 text-amber-700 dark:text-amber-300" />
           </span>
           <div className="min-w-0">
             <p className="text-sm font-bold text-amber-900 dark:text-amber-100">
               Registration awaiting a decision
             </p>
-            <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-200">
+            <p className="mt-0.5 text-[12px] text-amber-800 dark:text-amber-200">
               Check the registration details and uploaded files below before approving.
             </p>
           </div>
@@ -484,8 +493,8 @@ export default function MemberDetailPage() {
       )}
 
       {status === 'REJECTED' && (
-        <div className="flex items-start gap-3 rounded-2xl border border-danger-200 bg-danger-50 p-4 dark:border-danger-900/50 dark:bg-danger-900/20">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-danger-100 dark:bg-danger-900/50">
+        <div className="flex items-start gap-3 rounded-[5px] border border-danger-200 bg-danger-50 p-4 dark:border-danger-900/50 dark:bg-danger-900/20">
+          <span aria-hidden="true" style={{ boxShadow: 'inset 0 0 0 1px #F3C9C6, 0 0 0 4px rgba(176,24,18,0.10)' }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-danger-700 dark:text-danger-300">
             <AlertCircle className="h-4 w-4 text-danger-700 dark:text-danger-300" />
           </span>
           <div className="min-w-0">
@@ -493,11 +502,11 @@ export default function MemberDetailPage() {
               Registration rejected
             </p>
             {member.rejectionReason ? (
-              <p className="mt-0.5 text-xs text-danger-800 dark:text-danger-200">
+              <p className="mt-0.5 text-[12px] text-danger-800 dark:text-danger-200">
                 Reason: {member.rejectionReason}
               </p>
             ) : (
-              <p className="mt-0.5 text-xs text-danger-800 dark:text-danger-200">
+              <p className="mt-0.5 text-[12px] text-danger-800 dark:text-danger-200">
                 No reason was recorded. You can still approve this member again.
               </p>
             )}
@@ -589,7 +598,7 @@ export default function MemberDetailPage() {
               value={rejectReason}
               onChange={(event) => setRejectReason(event.target.value)}
               placeholder="For example: the student details could not be verified."
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
             />
           </Field>
           <ModalFooter>

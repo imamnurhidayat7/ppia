@@ -491,7 +491,7 @@ export default function PublicProfilePage() {
                                 </div>
                               )}
                               <div className="p-4">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#E8231A]">
+                                <span className="text-[12px] font-bold uppercase tracking-wider text-[#C41E16]">
                                   {a.category}
                                 </span>
                                 <h3 className="font-bold text-slate-900 mt-1 line-clamp-2 group-hover:text-[#E8231A] transition-colors">
@@ -500,7 +500,7 @@ export default function PublicProfilePage() {
                                 {a.excerpt && (
                                   <p className="text-xs text-slate-500 mt-2 line-clamp-2">{a.excerpt}</p>
                                 )}
-                                <p className="text-[11px] text-slate-400 mt-3">{formatShortDate(a.createdAt)}</p>
+                                <p className="text-[12px] text-slate-600 mt-3">{formatShortDate(a.createdAt)}</p>
                               </div>
                             </Link>
                           ))}
@@ -530,7 +530,7 @@ export default function PublicProfilePage() {
                                 <div className="flex-1 min-w-0">
                                   <h3 className="font-semibold text-slate-900">{r.title}</h3>
                                   <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.abstract}</p>
-                                  <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-400">
+                                  <div className="flex items-center gap-3 mt-2 text-[12px] text-slate-600">
                                     <span className="font-bold uppercase tracking-wider text-purple-600">
                                       {r.researchType.replace(/_/g, ' ')}
                                     </span>

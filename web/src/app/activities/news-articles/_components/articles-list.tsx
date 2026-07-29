@@ -6,10 +6,18 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
+import WaveTransition from "@/components/sections/WaveTransition";
 import { Calendar, User, ArrowRight, BookOpen, Newspaper } from "lucide-react";
 import api from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
 import { ArticlesListSkeleton } from "@/components/skeletons/public-skeletons";
+
+/**
+ * Seam colours for the waterline transitions — they match the ends of the
+ * `.sea-deep` / `.sea-shore` gradients in globals.css.
+ */
+const DEEP_SEA = "#0B1C2E";
+const SHORE = "#FFFFFF";
 
 type Tab = "All" | "News" | "Articles";
 
@@ -88,7 +96,8 @@ function mapApiArticleToPost(apiArticle: ApiArticle): Post {
     excerpt: apiArticle.excerpt || "",
     author: authorName,
     authorName,
-    date: createdAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+    // Printed as chart data, so the same en-NZ format as the homepage log lines.
+    date: createdAt.toLocaleDateString("en-NZ", { day: "2-digit", month: "short", year: "numeric" }),
     readTime,
     color: typeColors[type],
     featured: apiArticle.isFeatured || false,
@@ -184,25 +193,50 @@ export default function NewsArticlesPage() {
         breadcrumbs={headerData.breadcrumbs}
       />
 
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Tabs */}
-          <div className="flex gap-2 mb-10 bg-[#F1F5F9] rounded-xl p-1 w-fit">
-            {(["All", "News", "Articles"] as Tab[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-                style={
-                  activeTab === tab
-                    ? { background: "#1A2B4A", color: "white" }
-                    : { color: "#64748B" }
-                }
-              >
-                {tab === "News" ? <Newspaper size={14} /> : tab === "Articles" ? <BookOpen size={14} /> : null}
-                {tab}
-              </button>
-            ))}
+      {/* Waterline between the deep-sea masthead and the shore below it. */}
+      <WaveTransition from={DEEP_SEA} to={SHORE} />
+
+      <section className="sea-shore relative overflow-hidden py-16">
+        <div
+          aria-hidden="true"
+          className="sea-chart pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            maskImage: "radial-gradient(ellipse 80% 70% at 50% 30%, transparent 25%, black 90%)",
+            WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 30%, transparent 25%, black 90%)",
+          }}
+        />
+        <div className="relative max-w-7xl mx-auto px-6">
+          {/*
+            Tabs as a labelled board strip on chart paper: the filing axis is
+            named, and the options are squared-off labels rather than pills
+            floating in a grey trough.
+          */}
+          <div className="chart-paper mb-10 rounded-[5px] border border-[#DCE7F1]">
+            <p className="data-type px-5 pb-3 pt-4 text-[12px] font-bold uppercase ink-muted">
+              Collection
+            </p>
+            <div aria-hidden="true" className="rope-rule mx-5" />
+            <div className="flex flex-wrap items-center gap-2 px-5 py-4">
+              {(["All", "News", "Articles"] as Tab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  aria-pressed={activeTab === tab}
+                  className={`data-type flex items-center gap-2 rounded-[3px] border px-3 py-1.5 text-[12px] font-bold uppercase transition-colors ${
+                    activeTab === tab
+                      ? "border-[#0F2438] bg-[#0F2438] text-white"
+                      : "border-[#DCE7F1] text-[#5B6B7C] hover:border-[#9FB3C6] hover:text-[#0F1B33]"
+                  }`}
+                >
+                  {tab === "News" ? (
+                    <Newspaper size={11} aria-hidden="true" />
+                  ) : tab === "Articles" ? (
+                    <BookOpen size={11} aria-hidden="true" />
+                  ) : null}
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Featured article */}
@@ -213,25 +247,33 @@ export default function NewsArticlesPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
                 transition={{ duration: 0.6 }}
-                className="group relative rounded-3xl overflow-hidden mb-10 cursor-pointer"
-                style={{ background: `linear-gradient(135deg, #0D1B33 0%, #1A2B4A 100%)` }}
+                className="sea-deep group relative mb-10 cursor-pointer overflow-hidden rounded-[5px] border border-white/10"
               >
-                <div
-                  className="absolute inset-0 opacity-20 pointer-events-none"
-                  style={{
-                    backgroundImage: `radial-gradient(circle at 20% 50%, ${featured.color}, transparent 50%)`,
-                  }}
-                />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+                  <div
+                    className="sea-chart-light absolute inset-0 opacity-[0.05]"
+                    style={{
+                      maskImage: "radial-gradient(ellipse 75% 70% at 40% 50%, transparent 20%, black 85%)",
+                      WebkitMaskImage: "radial-gradient(ellipse 75% 70% at 40% 50%, transparent 20%, black 85%)",
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      backgroundImage: `radial-gradient(circle at 20% 50%, ${featured.color}, transparent 50%)`,
+                    }}
+                  />
+                </div>
                 <div className="relative z-10 p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                   <div>
                     <div className="flex items-center gap-3 mb-5">
                       <span
-                        className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                        className="data-type rounded-[3px] px-2.5 py-1 text-[12px] font-bold uppercase"
                         style={{ background: `${featured.color}30`, color: featured.color }}
                       >
                         Featured
                       </span>
-                      <span className="text-[#64748B] text-xs uppercase tracking-wider">{featured.type}</span>
+                      <span className="data-type text-[12px] uppercase text-white/70">{featured.type}</span>
                     </div>
                     <h2
                       className="font-black text-white text-2xl md:text-3xl leading-tight mb-4"
@@ -240,22 +282,25 @@ export default function NewsArticlesPage() {
                       {featured.title}
                     </h2>
                     <p className="text-[#94A3B8] text-sm leading-relaxed mb-6">{featured.excerpt}</p>
-                    <div className="flex items-center gap-4 text-xs text-[#64748B]">
+                    <div className="data-type flex flex-wrap items-center gap-3 text-[12px] uppercase text-white/70">
                       <span className="flex items-center gap-1.5">
-                        <User size={12} />
+                        <User size={10} aria-hidden="true" />
                         {featured.author}
                       </span>
+                      <span aria-hidden="true" className="h-1 w-1 rounded-full bg-white/25" />
                       <span className="flex items-center gap-1.5">
-                        <Calendar size={12} />
+                        <Calendar size={10} aria-hidden="true" />
                         {featured.date}
                       </span>
+                      <span aria-hidden="true" className="h-1 w-1 rounded-full bg-white/25" />
                       <span>{featured.readTime}</span>
                     </div>
                   </div>
                   <div className="hidden md:flex items-center justify-center">
                     <div
-                      className="w-48 h-48 rounded-3xl flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity"
+                      className="flex h-48 w-48 items-center justify-center rounded-[5px] opacity-20 transition-opacity group-hover:opacity-30"
                       style={{ background: featured.color }}
+                      aria-hidden="true"
                     >
                       <BookOpen size={64} className="text-white" />
                     </div>
@@ -274,7 +319,7 @@ export default function NewsArticlesPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.1 }}
                   transition={{ duration: 0.4, delay: i * 0.06 }}
-                  className="group bg-white rounded-2xl border border-[#E2E8F0] hover:shadow-2xl hover:border-transparent transition-all duration-300 overflow-hidden cursor-pointer flex flex-col h-full"
+                  className="chart-paper group flex h-full cursor-pointer flex-col overflow-hidden rounded-[5px] border border-[#DCE7F1] transition-all duration-300 hover:-translate-y-1 hover:border-[#C3D2E0] hover:shadow-[0_28px_70px_-30px_rgba(7,19,33,0.42)]"
                 >
                   <div className="h-40 flex items-center justify-center relative overflow-hidden">
                     {post.imageUrl ? (
@@ -293,8 +338,9 @@ export default function NewsArticlesPage() {
                         }}
                       >
                         <div
-                          className="w-16 h-16 rounded-2xl flex items-center justify-center opacity-30"
+                          className="flex h-16 w-16 items-center justify-center rounded-[4px] opacity-30"
                           style={{ background: post.color }}
+                          aria-hidden="true"
                         >
                           {post.type === "News" ? (
                             <Newspaper size={28} className="text-white" />
@@ -305,37 +351,44 @@ export default function NewsArticlesPage() {
                       </div>
                     )}
                     <span
-                      className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm"
-                      style={{ background: post.color, color: "white" }}
+                      className="data-type absolute bottom-0 left-0 px-3 py-1.5 text-[12px] font-bold uppercase text-white"
+                      style={{ background: `${post.color}E6` }}
                     >
                       {post.type}
                     </span>
                   </div>
 
                   <div className="p-5 flex flex-col flex-1">
+                    {/* Log-entry meta line: date and reading time as data, split
+                        by a rope hairline running to the card edge. */}
+                    <div className="data-type mb-3 flex items-center gap-3 text-[12px] uppercase ink-muted">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar size={10} aria-hidden="true" />
+                        {post.date}
+                      </span>
+                      <span aria-hidden="true" className="rope-rule h-px flex-1 opacity-70" />
+                      <span>{post.readTime}</span>
+                    </div>
                     <h3
-                      className="font-bold text-[#1A2B4A] text-base leading-snug mb-2 group-hover:text-[#E8231A] transition-colors line-clamp-2"
+                      className="font-bold text-[#0F1B33] text-base leading-snug mb-2 group-hover:text-[#C41E16] transition-colors line-clamp-2"
                       style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
                     >
                       {post.title}
                     </h3>
-                    <p className="text-[#64748B] text-sm leading-relaxed mb-4 flex-1 line-clamp-3">
+                    <p className="ink-body text-sm leading-relaxed mb-4 flex-1 line-clamp-3">
                       {toPlainText(post.excerpt)}
                     </p>
-                    <div className="flex items-center justify-between text-xs text-[#94A3B8] border-t border-[#F1F5F9] pt-4 mt-auto">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1">
-                          <User size={11} />
+                    <div className="mt-auto pt-4">
+                      <div aria-hidden="true" className="rope-rule mb-3" />
+                      <div className="flex items-center justify-between">
+                        <span className="data-type flex items-center gap-1.5 text-[12px] uppercase ink-muted">
+                          <User size={10} aria-hidden="true" />
                           {post.author}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar size={11} />
-                          {post.date}
+                        <span className="flex items-center gap-1 text-sm font-semibold accent-label transition-all group-hover:gap-2">
+                          Read <ArrowRight size={12} aria-hidden="true" />
                         </span>
                       </div>
-                      <span className="flex items-center gap-1 text-[#E8231A] font-medium group-hover:gap-2 transition-all">
-                        Read <ArrowRight size={12} />
-                      </span>
                     </div>
                   </div>
                 </motion.div>
@@ -344,9 +397,10 @@ export default function NewsArticlesPage() {
           </div>
 
           {filtered.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-[#64748B] text-lg">No articles found</p>
-              <p className="text-[#94A3B8] text-sm mt-1">Try changing the filter</p>
+            <div className="chart-paper rounded-[5px] border border-[#DCE7F1] py-16 text-center">
+              <Newspaper className="mx-auto mb-4 h-12 w-12 text-[#C3D2E0]" aria-hidden="true" />
+              <p className="text-[#0F1B33] text-lg font-bold">No articles found</p>
+              <p className="data-type mt-2 text-[12px] uppercase ink-muted">Try changing the filter</p>
             </div>
           )}
         </div>

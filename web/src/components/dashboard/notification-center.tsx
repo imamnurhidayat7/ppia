@@ -60,15 +60,12 @@ export function NotificationCenter() {
         onClick={() => setOpen((value) => !value)}
         aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
         aria-expanded={open}
-        className={cn(
-          'relative flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors',
-          'hover:bg-slate-50 hover:text-slate-900',
-          'dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
-        )}
+        /* Bare icon on the masthead, same as the other bar controls. */
+        className="relative flex h-9 w-9 items-center justify-center text-[#94A3B8] transition-colors hover:text-white"
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#E8231A] px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-1.5 -top-1.5 flex h-[20px] min-w-[20px] items-center justify-center rounded-full bg-[#C41E16] px-1 text-[12px] font-bold leading-none text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -98,7 +95,7 @@ export function NotificationCenter() {
                 type="button"
                 onClick={refresh}
                 aria-label="Refresh notifications"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -113,7 +110,7 @@ export function NotificationCenter() {
             {count === 0 ? (
               <div className="px-4 py-10 text-center">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                  <Bell className="h-5 w-5 text-slate-400" />
+                  <Bell className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">You are all caught up.</p>
               </div>
@@ -164,7 +161,7 @@ export function NotificationCenter() {
                             </span>
                           )}
                           {item.at && (
-                            <span className="mt-1 block text-[11px] text-slate-400">
+                            <span className="mt-1 block text-[12px] text-slate-500 dark:text-slate-400">
                               {formatRelativeTime(item.at)}
                             </span>
                           )}

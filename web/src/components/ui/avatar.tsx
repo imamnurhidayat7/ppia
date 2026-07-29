@@ -82,8 +82,11 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
             alt={alt}
             width={image}
             height={image}
+            // Fill the container: with only width/height the intrinsic image
+            // size won on non-square sources, so the photo sat inside the frame
+            // with gaps instead of filling it.
             className={cn(
-              'object-cover',
+              'h-full w-full object-cover',
               shape === 'circle' ? 'rounded-full' : 'rounded-lg'
             )}
           />

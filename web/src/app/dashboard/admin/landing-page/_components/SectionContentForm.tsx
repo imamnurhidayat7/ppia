@@ -472,13 +472,13 @@ export default function SectionContentForm({
   return (
     <div className="space-y-4">
       {/* Edit history and save status */}
-      <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-3 dark:border-slate-800">
+      <div className="flex items-center justify-between gap-2 border-b border-[#DCE7F1] pb-3 dark:border-slate-800">
         <div className="flex items-center gap-1">
           <IconAction icon={Undo2} label="Undo (Ctrl+Z)" onClick={undo} disabled={!canUndo} />
           <IconAction icon={Redo2} label="Redo (Ctrl+Y)" onClick={redo} disabled={!canRedo} />
         </div>
         {hideSaveButton ? (
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="text-[12px] ink-muted">
             {dirty ? 'Unsaved — use the Save button above' : 'All changes saved'}
           </span>
         ) : (
@@ -564,7 +564,7 @@ export default function SectionContentForm({
                     block.title || block.titleId || `${group.itemLabel} ${index + 1}`;
                   return (
                     <SortableItem key={block.tempId} id={block.tempId}>
-                      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                      <div className="chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] dark:border-slate-800">
                         {/*
                           `min-w-0` on the label button and `shrink-0` on the
                           action buttons hold the layout: a flex item defaults to
@@ -572,7 +572,7 @@ export default function SectionContentForm({
                           pushes the delete button past the card's
                           `overflow-hidden` boundary.
                         */}
-                        <div className="flex items-center gap-1 bg-slate-50 px-2 py-1.5 dark:bg-slate-800/60">
+                        <div className="flex items-center gap-1 bg-[#F5FAFD] px-2 py-1.5 dark:bg-slate-800/60">
                           <button
                             type="button"
                             onClick={() => toggleExpand(block.tempId)}
@@ -580,11 +580,11 @@ export default function SectionContentForm({
                             aria-expanded={isExpanded}
                           >
                             {isExpanded ? (
-                              <ChevronUp className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                              <ChevronUp className="h-3.5 w-3.5 shrink-0 ink-muted" />
                             ) : (
-                              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                              <ChevronDown className="h-3.5 w-3.5 shrink-0 ink-muted" />
                             )}
-                            <span className="truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            <span className="truncate text-[12px] font-semibold ink-body">
                               {itemName}
                             </span>
                           </button>
@@ -808,12 +808,12 @@ function ColorField({
           value={isSet ? value : '#E8231A'}
           onChange={(event) => onChange(event.target.value)}
           aria-label={`Pick ${label.toLowerCase()}`}
-          className="h-9 w-9 cursor-pointer rounded-lg border border-slate-200 bg-transparent p-0.5 dark:border-slate-700"
+          className="h-9 w-9 cursor-pointer rounded-[4px] border border-[#DCE7F1] bg-transparent p-0.5 dark:border-slate-700"
         />
         {!isSet && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0.5 rounded-md border border-dashed border-slate-300 bg-slate-100 dark:border-slate-600 dark:bg-slate-800"
+            className="pointer-events-none absolute inset-0.5 rounded-[3px] border border-dashed border-[#C3D2E0] bg-[#EDF5FB] dark:border-slate-600 dark:bg-slate-800"
           />
         )}
       </div>
@@ -850,11 +850,11 @@ function HeadingPreview({ title, highlight }: { title: string; highlight: string
   const matched = at !== -1;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/60">
-      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+    <div className="rounded-[4px] border border-[#DCE7F1] bg-[#F5FAFD] p-3 dark:border-slate-800 dark:bg-slate-800/60">
+      <p className="mb-1.5 data-type text-[12px] font-bold uppercase ink-muted">
         How the heading will look
       </p>
-      <p className="font-display break-words text-base font-black leading-snug text-slate-900 dark:text-slate-100">
+      <p className="font-display break-words text-base font-black leading-snug ink-strong">
         {matched ? (
           <>
             {title.slice(0, at)}
@@ -866,7 +866,7 @@ function HeadingPreview({ title, highlight }: { title: string; highlight: string
         )}
       </p>
       {highlight.trim() && !matched && (
-        <p className="mt-2 text-[11px] leading-relaxed text-amber-600 dark:text-amber-400">
+        <p className="mt-2 text-[12px] leading-relaxed text-amber-600 dark:text-amber-400">
           &ldquo;{highlight}&rdquo; is not in the title, so nothing is highlighted. Check the
           spelling and punctuation.
         </p>

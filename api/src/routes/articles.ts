@@ -6,7 +6,8 @@ import {
   createArticle,
   updateArticle,
   deleteArticle,
-  getAllArticlesAdmin
+  getAllArticlesAdmin,
+  getArticleByIdAdmin
 } from '../controllers/articleController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -18,6 +19,9 @@ router.get('/slug/:slug', getArticleBySlug);
 
 // Admin - get all articles (including unpublished) — MUST be before :id param route
 router.get('/admin/all', authenticate, authorize('SUPER_ADMIN', 'BOARD'), getAllArticlesAdmin);
+
+// Admin - get a single article (including unpublished drafts) for the editor.
+router.get('/admin/:id', authenticate, authorize('SUPER_ADMIN', 'BOARD'), getArticleByIdAdmin);
 
 // Protected routes (admin only)
 router.post('/', authenticate, authorize('SUPER_ADMIN', 'BOARD'), createArticle);

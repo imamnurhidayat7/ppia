@@ -4,11 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import api from '@/lib/api';
-import { Badge, Button } from '@/components/ui';
+import { Badge, Button, Modal, ModalFooter } from '@/components/ui';
 import { useToast } from '@/components/Toast';
+import { useConfirm, ConfirmHost } from '@/hooks/useConfirm';
 import {
   BarChart,
   DonutChart,
+  Field,
   KpiCard,
   KpiGrid,
   useDashboardData,
@@ -90,7 +92,7 @@ const SITE_SHORTCUTS = [
     description: 'Visual editor for the homepage hero, sections, and images',
     href: '/dashboard/admin/canvas',
     icon: Layout,
-    tint: 'bg-[#FFF0EF] text-[#E8231A] dark:bg-[#E8231A]/20 dark:text-[#FF8A84]',
+    tint: 'text-[#C41E16] dark:text-[#FF8A84]',
     superAdminOnly: false,
   },
   {
@@ -98,7 +100,7 @@ const SITE_SHORTCUTS = [
     description: 'About, Contact, Scholarships, and other pages',
     href: '/dashboard/admin/pages',
     icon: FileEdit,
-    tint: 'bg-teal-50 text-teal-600 dark:bg-teal-900/40 dark:text-teal-300',
+    tint: 'text-teal-700 dark:text-teal-300',
     superAdminOnly: false,
   },
   {
@@ -108,7 +110,7 @@ const SITE_SHORTCUTS = [
     description: 'Navigation, footer, social links, and site colours',
     href: '/dashboard/admin/landing-page',
     icon: Settings,
-    tint: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+    tint: 'ink-body',
     superAdminOnly: true,
   },
 ];
@@ -132,9 +134,9 @@ function SectionHeading({
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div className="min-w-0">
-        <h2 className="font-display text-lg font-bold text-slate-900 dark:text-slate-50">{title}</h2>
+        <h2 className="font-display text-lg font-bold ink-strong">{title}</h2>
         {description && (
-          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+          <p className="mt-0.5 text-sm ink-muted">{description}</p>
         )}
       </div>
       {action}
@@ -152,7 +154,7 @@ function Panel({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900',
+        'chart-paper rounded-[5px] border border-[#DCE7F1] p-5 dark:border-slate-800',
         className
       )}
     >
@@ -175,6 +177,9 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activityTab, setActivityTab] = useState<ActivityTab>('articles');
   const [busyMember, setBusyMember] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<PendingMember | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const confirmCtx = useConfirm();
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const canView = user?.role === 'SUPER_ADMIN' || user?.role === 'BOARD';
@@ -249,6 +254,13 @@ export default function AdminDashboardPage() {
   const showSkeleton = loading && canView;
 
   const handleApprove = async (member: PendingMember) => {
+    const ok = await confirmCtx.confirm({
+      title: 'Approve member?',
+      message: `${member.name} will be able to log in and access member features right away.`,
+      confirmLabel: 'Yes, approve',
+      variant: 'warning',
+    });
+    if (!ok) return;
     setBusyMember(member.id);
     try {
       await api.approveMember(member.id);
@@ -264,16 +276,18 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleReject = async (member: PendingMember) => {
-    const reason = window.prompt(`Reason for rejecting ${member.name} (optional):`);
-    if (reason === null) return;
+  const submitReject = async () => {
+    if (!rejectTarget) return;
+    const member = rejectTarget;
     setBusyMember(member.id);
     try {
-      await api.rejectMember(member.id, reason || undefined);
+      await api.rejectMember(member.id, rejectReason.trim() || undefined);
       showSuccess(`Registration for ${member.name} rejected`);
       setPending((list) => list.filter((item) => item.id !== member.id));
       setPendingTotal((total) => Math.max(0, total - 1));
       refreshShellData();
+      setRejectTarget(null);
+      setRejectReason('');
     } catch (error) {
       const err = error as { message?: string };
       showError(err.message || 'Could not reject member');
@@ -352,7 +366,7 @@ export default function AdminDashboardPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#E8231A]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#DCE7F1] border-t-[#E8231A]" />
       </div>
     );
   }
@@ -360,11 +374,15 @@ export default function AdminDashboardPage() {
   if (!canView) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-danger-50 dark:bg-danger-900/40">
-          <Shield className="h-8 w-8 text-danger-600 dark:text-danger-300" />
-        </div>
-        <h2 className="mb-2 text-xl font-bold text-slate-900 dark:text-slate-100">Access denied</h2>
-        <p className="mb-5 text-sm text-slate-500 dark:text-slate-400">
+        <span
+          aria-hidden="true"
+          className="mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+          style={{ boxShadow: 'inset 0 0 0 1px #F3C9C6, 0 0 0 5px rgba(176,24,18,0.10)' }}
+        >
+          <Shield className="h-7 w-7" style={{ color: '#B01812' }} />
+        </span>
+        <h2 className="mb-2 font-display text-xl font-bold ink-strong">Access denied</h2>
+        <p className="mb-5 text-sm ink-body">
           You do not have permission to open the admin panel.
         </p>
         <Link href="/dashboard">
@@ -382,20 +400,27 @@ export default function AdminDashboardPage() {
   return (
     <div className="animate-fade-in space-y-8">
       {/* Greeting */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0D1B33] via-[#1A2B4A] to-[#24406f] p-6 sm:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.06] dashboard-grid-texture" />
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#E8231A]/25 blur-3xl" />
+      <section className="sea-deep relative overflow-hidden rounded-[6px] p-6 sm:p-8">
+        {/* Navigation-chart grid, faded from the middle so the copy stays clean. */}
+        <div
+          aria-hidden="true"
+          className="sea-chart-light pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            maskImage: 'radial-gradient(ellipse 80% 75% at 35% 45%, transparent 15%, black 85%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 80% 75% at 35% 45%, transparent 15%, black 85%)',
+          }}
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#E8231A]/25 blur-3xl" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="danger" size="md">
+              <Badge variant="danger" size="md" className="data-type uppercase">
                 {user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Board'}
               </Badge>
-              <span className="text-xs text-white/60">
+              <span className="data-type text-[12px] uppercase text-white/70">
                 {new Date().toLocaleDateString('en-NZ', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
+                  day: '2-digit',
+                  month: 'short',
                   year: 'numeric',
                 })}
               </span>
@@ -415,14 +440,14 @@ export default function AdminDashboardPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/dashboard/admin/analytics"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-[4px] border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
             >
               <Sparkles className="h-4 w-4" />
               View analytics
             </Link>
             <Link
               href="/dashboard/admin/canvas"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#E8231A] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#C41E16]"
+              className="inline-flex items-center gap-2 rounded-[4px] bg-[#E8231A] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#C41E16]"
             >
               <Layout className="h-4 w-4" />
               Edit homepage
@@ -505,18 +530,23 @@ export default function AdminDashboardPage() {
               {showSkeleton ? (
                 <div className="space-y-3">
                   {[0, 1, 2].map((row) => (
-                    <div key={row} className="h-16 rounded-xl skeleton" />
+                    <div key={row} className="h-16 rounded-[4px] skeleton" />
                   ))}
                 </div>
               ) : pending.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-8 text-center">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-success-50 dark:bg-success-900/40">
-                    <UserCheck className="h-5 w-5 text-success-700 dark:text-success-300" />
+                  {/* Porthole frame, the same marker the public pages use. */}
+                  <span
+                    aria-hidden="true"
+                    className="flex h-11 w-11 items-center justify-center rounded-full text-success-700 dark:text-success-300"
+                    style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)' }}
+                  >
+                    <UserCheck className="h-5 w-5" />
                   </span>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  <p className="text-sm font-medium ink-body">
                     The approval queue is empty
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-[12px] ink-muted">
                     Every registration has been processed.
                   </p>
                 </div>
@@ -525,19 +555,19 @@ export default function AdminDashboardPage() {
                   {pending.map((member) => (
                     <li
                       key={member.id}
-                      className="flex flex-col gap-3 rounded-xl border border-slate-200 p-3 sm:flex-row sm:items-center dark:border-slate-800"
+                      className="flex flex-col gap-3 rounded-[4px] border border-[#DCE7F1] p-3 sm:flex-row sm:items-center dark:border-slate-800"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/dashboard/admin/members/${member.id}`}
-                            className="truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                            className="truncate text-sm font-semibold ink-strong hover:underline"
                           >
                             {member.name}
                           </Link>
-                          <Badge variant="warning">Pending</Badge>
+                          <Badge variant="warning" className="data-type uppercase">Pending</Badge>
                         </div>
-                        <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                        <p className="data-type mt-0.5 truncate text-[12px] ink-muted">
                           {member.email}
                           {member.university ? ` • ${member.university}` : ''} •{' '}
                           {formatRelativeTime(member.createdAt)}
@@ -558,7 +588,7 @@ export default function AdminDashboardPage() {
                           variant="secondary"
                           leftIcon={<X className="h-3.5 w-3.5" />}
                           disabled={busyMember === member.id}
-                          onClick={() => handleReject(member)}
+                          onClick={() => setRejectTarget(member)}
                         >
                           Reject
                         </Button>
@@ -581,7 +611,7 @@ export default function AdminDashboardPage() {
               }
             />
             {showSkeleton ? (
-              <div className="h-40 rounded-xl skeleton" />
+              <div className="h-40 rounded-[4px] skeleton" />
             ) : (
               <BarChart data={articleTrend.map(({ label, value }) => ({ label, value }))} />
             )}
@@ -590,7 +620,7 @@ export default function AdminDashboardPage() {
           {/* Recent activity */}
           <Panel>
             <SectionHeading title="Recent activity" />
-            <div className="mb-4 flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            <div className="mb-4 flex gap-1 rounded-[4px] bg-[#EDF5FB] p-1 dark:bg-slate-800">
               {(
                 [
                   ['articles', 'Articles'],
@@ -603,10 +633,10 @@ export default function AdminDashboardPage() {
                   type="button"
                   onClick={() => setActivityTab(key)}
                   className={cn(
-                    'flex-1 rounded-lg py-1.5 text-sm font-semibold transition-colors',
+                    'data-type flex-1 rounded-[3px] py-1.5 text-[12px] font-bold uppercase transition-colors',
                     activityTab === key
-                      ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
-                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                      ? 'chart-paper ink-strong shadow-sm'
+                      : 'ink-muted hover:text-slate-800 dark:hover:text-slate-200'
                   )}
                 >
                   {label}
@@ -617,30 +647,30 @@ export default function AdminDashboardPage() {
             {showSkeleton ? (
               <div className="space-y-2">
                 {[0, 1, 2, 3].map((row) => (
-                  <div key={row} className="h-12 rounded-lg skeleton" />
+                  <div key={row} className="h-12 rounded-[4px] skeleton" />
                 ))}
               </div>
             ) : activityItems.length === 0 ? (
-              <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              <p className="py-8 text-center text-sm ink-muted">
                 No activity yet.
               </p>
             ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+              <ul className="divide-y divide-[#E7EFF7] dark:divide-slate-800">
                 {activityItems.map((item) => (
                   <li key={item.id}>
                     <Link
                       href={item.href}
-                      className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                      className="-mx-2 flex items-center gap-3 rounded-[4px] px-2 py-2.5 transition-colors hover:bg-[#F5FAFD] dark:hover:bg-slate-800/60"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                        <span className="block truncate text-sm font-medium ink-strong">
                           {item.title}
                         </span>
-                        <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                        <span className="block truncate text-[12px] ink-muted">
                           {item.meta}
                         </span>
                       </span>
-                      <span className="shrink-0 text-xs text-slate-400">
+                      <span className="data-type shrink-0 text-[12px] ink-muted">
                         {formatRelativeTime(item.at)}
                       </span>
                     </Link>
@@ -656,7 +686,7 @@ export default function AdminDashboardPage() {
           <Panel>
             <SectionHeading title="Engagement" description="Accumulated since launch" />
             {showSkeleton ? (
-              <div className="h-36 rounded-xl skeleton" />
+              <div className="h-36 rounded-[4px] skeleton" />
             ) : (
               <DonutChart
                 slices={engagementSlices}
@@ -667,19 +697,19 @@ export default function AdminDashboardPage() {
               />
             )}
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
-                <Eye className="mb-1.5 h-4 w-4 text-slate-400" />
-                <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              <div className="rounded-[4px] border border-[#DCE7F1] bg-[#F5FAFD] p-3 dark:border-slate-800 dark:bg-slate-800/60">
+                <Eye aria-hidden="true" className="mb-1.5 h-4 w-4 ink-muted" />
+                <p className="data-type text-lg font-bold ink-strong">
                   {analytics.engagement.totalArticleViews.toLocaleString('en-NZ')}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Article views</p>
+                <p className="data-type text-[12px] uppercase ink-muted">Article views</p>
               </div>
-              <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
-                <Download className="mb-1.5 h-4 w-4 text-slate-400" />
-                <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              <div className="rounded-[4px] border border-[#DCE7F1] bg-[#F5FAFD] p-3 dark:border-slate-800 dark:bg-slate-800/60">
+                <Download aria-hidden="true" className="mb-1.5 h-4 w-4 ink-muted" />
+                <p className="data-type text-lg font-bold ink-strong">
                   {analytics.engagement.totalDownloads.toLocaleString('en-NZ')}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Research downloads</p>
+                <p className="data-type text-[12px] uppercase ink-muted">Research downloads</p>
               </div>
             </div>
           </Panel>
@@ -700,25 +730,25 @@ export default function AdminDashboardPage() {
             {showSkeleton ? (
               <div className="space-y-2">
                 {[0, 1, 2].map((row) => (
-                  <div key={row} className="h-10 rounded-lg skeleton" />
+                  <div key={row} className="h-10 rounded-[4px] skeleton" />
                 ))}
               </div>
             ) : (articleStats?.topArticles?.length ?? 0) === 0 ? (
-              <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+              <p className="py-6 text-center text-sm ink-muted">
                 No visit data yet.
               </p>
             ) : (
               <ol className="space-y-2.5">
                 {articleStats?.topArticles.slice(0, 5).map((article, index) => (
                   <li key={article.id} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-xs font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                    <span className="data-type mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[3px] bg-[#EDF5FB] text-[12px] font-bold ink-body dark:bg-slate-800">
                       {index + 1}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                      <span className="block truncate text-sm font-medium ink-strong">
                         {article.title}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                      <span className="data-type text-[12px] ink-muted">
                         {article.views.toLocaleString('en-NZ')} views • {article.likes} likes
                       </span>
                     </span>
@@ -755,13 +785,13 @@ export default function AdminDashboardPage() {
                 <li key={row.label}>
                   <Link
                     href={row.href}
-                    className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    className="-mx-2 flex items-center gap-3 rounded-[3px] px-2 py-2 transition-colors hover:bg-[#F5FAFD] dark:hover:bg-slate-800/60"
                   >
-                    <row.icon className="h-4 w-4 shrink-0 text-slate-400" />
-                    <span className="min-w-0 flex-1 truncate text-sm text-slate-600 dark:text-slate-300">
+                    <row.icon aria-hidden="true" className="h-4 w-4 shrink-0 ink-muted" />
+                    <span className="min-w-0 flex-1 truncate text-sm ink-body">
                       {row.label}
                     </span>
-                    <span className="shrink-0 text-sm font-bold text-slate-900 dark:text-slate-100">
+                    <span className="data-type shrink-0 text-sm font-bold ink-strong">
                       {row.value}
                     </span>
                   </Link>
@@ -783,22 +813,26 @@ export default function AdminDashboardPage() {
             <Link
               key={item.href}
               href={item.href}
-              className="group flex h-full items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+              className="chart-paper group flex h-full items-start gap-4 rounded-[5px] border border-[#DCE7F1] p-5 transition-all hover:-translate-y-0.5 hover:border-[#C3D2E0] hover:shadow-lg dark:border-slate-800 dark:hover:border-slate-700"
             >
+              {/* Porthole marker rather than a tinted square, matching the
+                  heading icons on the public pages. */}
               <span
+                aria-hidden="true"
                 className={cn(
-                  'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                  'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
                   item.tint
                 )}
+                style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)' }}
               >
                 <item.icon className="h-5 w-5" />
               </span>
               <span className="min-w-0">
-                <span className="flex items-center gap-1.5 text-sm font-bold text-slate-900 dark:text-slate-100">
+                <span className="flex items-center gap-1.5 text-sm font-bold ink-strong">
                   {item.label}
                   <ArrowRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                 </span>
-                <span className="mt-1 block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                <span className="mt-1 block text-[12px] leading-relaxed ink-muted">
                   {item.description}
                 </span>
               </span>
@@ -806,6 +840,56 @@ export default function AdminDashboardPage() {
           ))}
         </div>
       </section>
+
+      <Modal
+        isOpen={!!rejectTarget}
+        onClose={() => {
+          setRejectTarget(null);
+          setRejectReason('');
+        }}
+        title="Reject registration"
+        description={rejectTarget?.name}
+        size="lg"
+      >
+        <div className="space-y-4">
+          <Field
+            label="Rejection reason"
+            htmlFor="dashboard-reject-reason"
+            hint="Optional. This reason is saved on the member's record and can be reviewed later."
+          >
+            <textarea
+              id="dashboard-reject-reason"
+              rows={4}
+              value={rejectReason}
+              onChange={(event) => setRejectReason(event.target.value)}
+              placeholder="For example: the student details could not be verified."
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
+            />
+          </Field>
+          <ModalFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setRejectTarget(null);
+                setRejectReason('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              isLoading={!!rejectTarget && busyMember === rejectTarget.id}
+              onClick={submitReject}
+            >
+              Reject registration
+            </Button>
+          </ModalFooter>
+        </div>
+      </Modal>
+
+      <ConfirmHost ctx={confirmCtx} />
     </div>
   );
 }

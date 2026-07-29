@@ -231,7 +231,7 @@ export function ImageUploader({
                 <p className="text-xs font-medium text-gray-700 dark:text-slate-300 mb-0.5">
                   {placeholder}
                 </p>
-                <p className="text-[11px] text-gray-400 dark:text-slate-500 mb-3.5">
+                <p className="text-[12px] text-gray-600 dark:text-slate-400 mb-3.5">
                   Drag a file here, or choose an option below
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2">

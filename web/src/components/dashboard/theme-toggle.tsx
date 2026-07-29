@@ -60,10 +60,14 @@ export function ThemeToggleButton({ className }: { className?: string }) {
       onClick={toggleTheme}
       aria-label={isDark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'}
       title={isDark ? 'Mode terang' : 'Mode gelap'}
+      /*
+        This button only ever sits on the dark masthead, so it is a bare icon in
+        the masthead's own link colours. It used to carry the light card styling
+        (white fill, slate border), which put a white tile on a navy bar in
+        light mode.
+      */
       className={cn(
-        'flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500',
-        'transition-colors hover:bg-slate-50 hover:text-slate-900',
-        'dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
+        'flex h-9 w-9 items-center justify-center text-[#94A3B8] transition-colors hover:text-white',
         className
       )}
     >

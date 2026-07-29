@@ -47,7 +47,7 @@ function formatDateTime(value?: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
   return date.toLocaleString('en-NZ', {
-    day: 'numeric',
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
@@ -266,8 +266,8 @@ export default function AdminVotersPage() {
             </>
           }
           footer={
-            <div className="border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-              <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="border-t border-[#E7EFF7] px-5 py-3 dark:border-slate-800">
+              <p className="data-type mb-2 text-[12px] ink-muted">
                 Showing {visibleVotes.length} of {filteredVotes.length} votes
               </p>
               <Pagination
@@ -284,22 +284,22 @@ export default function AdminVotersPage() {
             <Tr key={vote.id}>
               <Td>
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#0D1B33] text-xs font-bold text-white">
+                  <span aria-hidden="true" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 4px rgba(11,28,46,0.10)' }} className="data-type flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0B1C2E] text-[12px] font-bold text-white">
                     {vote.voter.name.charAt(0).toUpperCase()}
                   </span>
-                  <span className="truncate font-medium text-slate-900 dark:text-slate-100">
+                  <span className="truncate font-medium ink-strong">
                     {vote.voter.name}
                   </span>
                 </div>
               </Td>
               <Td>
-                <span className="text-slate-500 dark:text-slate-400">{vote.voter.email || '—'}</span>
+                <span className="ink-muted">{vote.voter.email || '—'}</span>
               </Td>
               <Td>
                 <span className="font-semibold text-[#E8231A]">{vote.candidate.user.name}</span>
               </Td>
               <Td>
-                <span className="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
+                <span className="data-type whitespace-nowrap text-[12px] ink-muted">
                   {formatDateTime(vote.votedAt)}
                 </span>
               </Td>

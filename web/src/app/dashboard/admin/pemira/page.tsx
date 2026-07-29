@@ -80,7 +80,7 @@ function formatDateShort(value?: string): string {
   const time = new Date(value).getTime();
   if (!Number.isFinite(time)) return '—';
   return new Date(value).toLocaleDateString('en-NZ', {
-    day: 'numeric',
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
   });
@@ -336,8 +336,8 @@ export default function AdminPemiraPage() {
             </>
           }
           footer={
-            <div className="border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-              <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="border-t border-[#E7EFF7] px-5 py-3 dark:border-slate-800">
+              <p className="data-type mb-2 text-[12px] ink-muted">
                 Showing {visibleElections.length} of {filteredElections.length} elections
               </p>
               <Pagination
@@ -366,27 +366,35 @@ export default function AdminPemiraPage() {
                   <div className="flex items-start gap-3">
                     <span
                       className={cn(
-                        'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
+                        // Porthole marker: a running election gets the filled
+                        // brand disc, everything else only the ring.
+                        'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
                         RUNNING_STATUSES.includes(election.status)
                           ? 'bg-[#E8231A] text-white'
-                          : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                          : 'ink-muted'
                       )}
+                      style={{
+                        boxShadow: RUNNING_STATUSES.includes(election.status)
+                          ? 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 4px rgba(232,35,26,0.12)'
+                          : 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)',
+                      }}
+                      aria-hidden="true"
                     >
                       <Vote className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
                       <Link
                         href={`/dashboard/admin/pemira/${election.id}`}
-                        className="block truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                        className="block truncate text-sm font-semibold ink-strong hover:underline"
                       >
                         {election.title}
                       </Link>
                       {election.description && (
-                        <p className="mt-0.5 line-clamp-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 line-clamp-1 max-w-sm text-[12px] ink-muted">
                           {election.description}
                         </p>
                       )}
-                      <p className="mt-0.5 text-xs text-slate-400">
+                      <p className="data-type mt-0.5 text-[12px] ink-muted">
                         Registration {formatDateShort(election.registrationStart)} –{' '}
                         {formatDateShort(election.registrationEnd)}
                       </p>
@@ -394,20 +402,20 @@ export default function AdminPemiraPage() {
                   </div>
                 </Td>
                 <Td align="center">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="data-type font-semibold ink-strong">
                     {election._count?.candidates ?? 0}
                   </span>
                 </Td>
                 <Td align="center">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="data-type font-semibold ink-strong">
                     {election._count?.votes ?? 0}
                   </span>
                 </Td>
                 <Td>
-                  <span className="whitespace-nowrap">
+                  <span className="data-type whitespace-nowrap text-[12px]">
                     {formatDateShort(election.votingStart)} – {formatDateShort(election.votingEnd)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-400">
+                  <span className="mt-0.5 block text-[12px] ink-muted">
                     {votingLive
                       ? 'Voting is open'
                       : votingOver
@@ -416,7 +424,7 @@ export default function AdminPemiraPage() {
                   </span>
                 </Td>
                 <Td>
-                  <Badge variant={meta.variant}>{meta.label}</Badge>
+                  <Badge variant={meta.variant} className="data-type uppercase">{meta.label}</Badge>
                 </Td>
                 <Td align="right">
                   <RowActions>

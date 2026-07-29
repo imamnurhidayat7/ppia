@@ -252,9 +252,9 @@ export default function MenuEditor() {
     return (
       <li
         key={pathKey}
-        className={cn(depth > 0 && 'ml-4 border-l border-slate-200 pl-3 dark:border-slate-800')}
+        className={cn(depth > 0 && 'ml-4 border-l border-[#DCE7F1] pl-3 dark:border-slate-800')}
       >
-        <div className="flex items-center gap-2 rounded-xl px-2 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60">
+        <div className="flex items-center gap-2 rounded-[4px] px-2 py-2 transition-colors hover:bg-[#F5FAFD] dark:hover:bg-slate-800/60">
           {hasChildren ? (
             <button
               type="button"
@@ -263,7 +263,7 @@ export default function MenuEditor() {
               aria-label={
                 isExpanded ? `Collapse subitems of ${item.label}` : `Expand subitems of ${item.label}`
               }
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] ink-muted transition-colors hover:bg-[#EDF5FB] hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             >
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
@@ -277,14 +277,14 @@ export default function MenuEditor() {
 
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <span className="truncate text-sm font-semibold ink-strong">
                 {item.label}
               </span>
               {hasChildren && (
-                <Badge variant="outline">{children.length} subitems</Badge>
+                <Badge variant="outline" className="data-type uppercase">{children.length} subitems</Badge>
               )}
             </div>
-            <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+            <p className="truncate text-[12px] ink-muted">
               {item.href || 'No link'}
             </p>
           </div>
@@ -364,8 +364,8 @@ export default function MenuEditor() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Globe className="h-4 w-4 text-slate-400" />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Language</span>
+          <Globe className="h-4 w-4 ink-muted" />
+          <span className="text-sm font-medium ink-body">Language</span>
           <div className="flex gap-1.5" role="group" aria-label="Select menu language">
             {LANG_OPTIONS.map((option) => (
               <Button
@@ -381,7 +381,7 @@ export default function MenuEditor() {
           </div>
         </div>
         {saving && (
-          <span className="text-xs text-slate-500 dark:text-slate-400">Saving…</span>
+          <span className="text-[12px] ink-muted">Saving…</span>
         )}
       </div>
 

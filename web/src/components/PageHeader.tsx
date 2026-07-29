@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
-import { ChevronRight } from "lucide-react";
+import { Anchor } from "lucide-react";
 
 interface Crumb {
   label: string;
@@ -15,49 +14,98 @@ interface PageHeaderProps {
   breadcrumbs?: Crumb[];
 }
 
+/**
+ * Masthead for every public page.
+ *
+ * This is the single most repeated element on the site, so it carries the
+ * maritime language the homepage establishes: the deep-sea surface, the
+ * navigation-chart grid, a rope rule, and breadcrumbs set as chart data with
+ * `/` separators rather than chevrons.
+ *
+ * Kept as a server component — it is static markup, so nothing here needs to
+ * ship JavaScript.
+ */
 export default function PageHeader({ label, title, titleAccent, description, breadcrumbs }: PageHeaderProps) {
   return (
-    <div className="relative pt-32 pb-20 mesh-gradient overflow-hidden">
-      {/* Decorative orb */}
-      <div
-        className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-15 pointer-events-none"
-        style={{ background: "radial-gradient(circle, #E8231A, transparent 70%)", transform: "translate3d(0,0,0)" }}
-      />
+    <header className="sea-deep relative overflow-hidden pb-20 pt-32">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div
+          className="sea-chart-light absolute inset-0 opacity-[0.05]"
+          style={{
+            maskImage: "radial-gradient(ellipse 80% 75% at 30% 45%, transparent 15%, black 85%)",
+            WebkitMaskImage: "radial-gradient(ellipse 80% 75% at 30% 45%, transparent 15%, black 85%)",
+          }}
+        />
+        <div
+          className="absolute -right-24 -top-24 h-[420px] w-[420px] rounded-full opacity-[0.16]"
+          style={{ background: "radial-gradient(circle, #E8231A, transparent 70%)" }}
+        />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
-        {/* Breadcrumb */}
+        {/* Bearing rings, echoing the compass on the About route. */}
+        <svg viewBox="0 0 200 200" className="absolute -bottom-20 right-8 hidden h-72 w-72 lg:block">
+          <circle cx="100" cy="100" r="88" fill="none" stroke="white" strokeOpacity="0.07" />
+          <circle cx="100" cy="100" r="62" fill="none" stroke="white" strokeOpacity="0.06" strokeDasharray="4 9" />
+          <circle cx="100" cy="100" r="34" fill="none" stroke="white" strokeOpacity="0.05" />
+          <path d="M100 12 L106 96 L100 188 L94 96 Z" fill="#E8231A" fillOpacity="0.22" />
+        </svg>
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl px-6">
         {breadcrumbs && (
-          <div className="flex items-center gap-2 text-[#64748B] text-sm mb-6">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <nav aria-label="Breadcrumb" className="data-type mb-7 flex flex-wrap items-center gap-2 text-[12px] uppercase">
+            <Link href="/" className="text-white/70 transition-colors hover:text-white">
+              Home
+            </Link>
             {breadcrumbs.map((crumb, i) => (
               <span key={i} className="flex items-center gap-2">
-                <ChevronRight size={14} />
+                <span aria-hidden="true" className="text-white/25">
+                  /
+                </span>
                 {crumb.href ? (
-                  <Link href={crumb.href} className="hover:text-white transition-colors">{crumb.label}</Link>
+                  <Link href={crumb.href} className="text-white/70 transition-colors hover:text-white">
+                    {crumb.label}
+                  </Link>
                 ) : (
-                  <span className="text-white">{crumb.label}</span>
+                  <span className="text-white/80">{crumb.label}</span>
                 )}
               </span>
             ))}
-          </div>
+          </nav>
         )}
 
-        <span className="text-[#E8231A] font-semibold text-sm tracking-widest uppercase">{label}</span>
+        <span className="flex items-center gap-2.5 accent-label">
+          <Anchor size={13} strokeWidth={2.6} aria-hidden="true" />
+          <span className="data-type text-[12px] font-bold uppercase">{label}</span>
+          <span aria-hidden="true" className="h-px w-10 bg-[#E8231A]/40" />
+        </span>
+
         <h1
-          className="font-black text-white text-4xl md:text-6xl mt-3 leading-tight max-w-3xl"
-          style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
+          className="mt-4 max-w-3xl text-balance font-black leading-[1.03] tracking-[-0.035em] text-white"
+          style={{
+            fontSize: "clamp(2.25rem, 5.4vw, 4rem)",
+            fontFamily: "var(--font-poppins), Poppins, sans-serif",
+          }}
         >
           {titleAccent ? (
             <>
-              {title}{" "}
-              <span className="gradient-text">{titleAccent}</span>
+              {title} <span className="gradient-text">{titleAccent}</span>
             </>
-          ) : title}
+          ) : (
+            title
+          )}
         </h1>
+
         {description && (
-          <p className="text-[#94A3B8] text-lg mt-5 max-w-2xl leading-relaxed">{description}</p>
+          <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-white/75">{description}</p>
         )}
       </div>
-    </div>
+
+      {/* Waterline at the foot of the masthead, so the page below reads as
+          shore rather than as a separate white slab. */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"
+      />
+    </header>
   );
 }

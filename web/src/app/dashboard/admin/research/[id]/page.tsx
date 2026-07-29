@@ -45,6 +45,15 @@ import {
 import type { ResearchDetail } from '../_components/shared';
 import { errorMessage, statusLabel, statusMeta, typeLabel, typeMeta } from '../_components/shared';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 export default function AdminResearchDetailPage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -187,7 +196,7 @@ export default function AdminResearchDetailPage() {
       <PageHeading
         eyebrow={typeLabel(research.researchType)}
         title={research.title}
-        description={`Created ${formatDate(research.createdAt)} • Updated ${formatDate(research.updatedAt)}`}
+        description={`Created ${formatDate(research.createdAt, DATE_OPTS)} • Updated ${formatDate(research.updatedAt, DATE_OPTS)}`}
         icon={FlaskConical}
         backHref="/dashboard/admin/research"
         backLabel="Back to research"
@@ -251,15 +260,15 @@ export default function AdminResearchDetailPage() {
         <div className="space-y-6 lg:col-span-2">
           <SectionCard title="Title" icon={FileText}>
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <p className="text-sm font-semibold ink-strong">
                 {research.title}
               </p>
               {research.titleIndonesian && (
-                <p className="text-sm italic text-slate-500 dark:text-slate-400">
+                <p className="text-sm italic ink-muted">
                   {research.titleIndonesian}
                 </p>
               )}
-              <p className="text-xs text-slate-400">/{research.slug}</p>
+              <p className="data-type text-[12px] ink-muted">/{research.slug}</p>
             </div>
           </SectionCard>
 
@@ -270,18 +279,18 @@ export default function AdminResearchDetailPage() {
           >
             {research.abstract ? (
               <div
-                className="prose prose-sm max-w-none text-slate-600 dark:prose-invert dark:text-slate-300"
+                className="prose prose-sm max-w-none ink-body dark:prose-invert"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(research.abstract) }}
               />
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No abstract yet.</p>
+              <p className="text-sm ink-muted">No abstract yet.</p>
             )}
           </SectionCard>
 
           {research.abstractIndonesian && (
             <SectionCard title="Indonesian abstract" icon={BookMarked}>
               <div
-                className="prose prose-sm max-w-none text-slate-600 dark:prose-invert dark:text-slate-300"
+                className="prose prose-sm max-w-none ink-body dark:prose-invert"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(research.abstractIndonesian) }}
               />
             </SectionCard>
@@ -315,7 +324,7 @@ export default function AdminResearchDetailPage() {
                 label="Stage"
                 icon={Layers}
                 value={
-                  <Badge variant={status?.badge || 'default'}>
+                  <Badge variant={status?.badge || 'default'} className="data-type uppercase">
                     {statusLabel(research.researchStatus)}
                   </Badge>
                 }
@@ -343,7 +352,7 @@ export default function AdminResearchDetailPage() {
               <DetailItem
                 label="Publication date"
                 icon={Calendar}
-                value={research.publicationDate ? formatDate(research.publicationDate) : ''}
+                value={research.publicationDate ? formatDate(research.publicationDate, DATE_OPTS) : ''}
               />
               <DetailItem label="Division" icon={Tags} value={research.division?.name || ''} />
               <DetailItem
@@ -376,7 +385,7 @@ export default function AdminResearchDetailPage() {
                       {keywords.map((keyword) => (
                         <span
                           key={keyword}
-                          className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                          className="data-type rounded-[3px] bg-[#EDF5FB] px-2.5 py-1 text-[12px] font-bold uppercase ink-body dark:bg-slate-800"
                         >
                           {keyword}
                         </span>
@@ -408,7 +417,7 @@ export default function AdminResearchDetailPage() {
                 </Button>
               }
             >
-              <p className="rounded-xl bg-slate-50 p-4 text-sm italic text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+              <p className="rounded-[4px] bg-[#F5FAFD] p-4 text-sm italic ink-body dark:bg-slate-800/60">
                 {research.citationFormat}
               </p>
             </SectionCard>
@@ -420,7 +429,7 @@ export default function AdminResearchDetailPage() {
                 {research.tags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="rounded-full px-3 py-1.5 text-xs font-medium"
+                    className="rounded-full px-3 py-1.5 text-[12px] font-medium"
                     style={{
                       backgroundColor: `${tag.color || '#6366F1'}20`,
                       color: tag.color || '#6366F1',
@@ -444,7 +453,7 @@ export default function AdminResearchDetailPage() {
                   <>
                     {research.mainAuthor.name}
                     {research.division?.name && (
-                      <span className="mt-0.5 block text-xs font-normal text-slate-500 dark:text-slate-400">
+                      <span className="mt-0.5 block text-[12px] font-normal ink-muted">
                         {research.division.name}
                       </span>
                     )}
@@ -454,7 +463,7 @@ export default function AdminResearchDetailPage() {
             ) : research.authors ? (
               <DetailItem label="Author list" icon={User} value={research.authors} />
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm ink-muted">
                 No authors recorded yet.
               </p>
             )}
@@ -465,7 +474,7 @@ export default function AdminResearchDetailPage() {
               <DetailItem
                 label="Scheduled"
                 icon={Calendar}
-                value={formatDate(research.scheduledPublishAt)}
+                value={formatDate(research.scheduledPublishAt, DATE_OPTS)}
               />
             </SectionCard>
           )}

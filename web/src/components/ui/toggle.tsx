@@ -26,7 +26,20 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
 
     return (
       <div className="flex items-start gap-3">
-        <div className="relative flex items-center">
+        {/*
+          The whole switch is a <label>, so clicking the track (not just the
+          text) toggles the input. The knob is the track's ::after pseudo, which
+          keeps it a descendant that still reacts to `peer-checked` — a plain
+          nested <div> would not, since Tailwind's peer variant only matches
+          siblings of the checkbox.
+        */}
+        <label
+          htmlFor={toggleId}
+          className={cn(
+            'relative inline-flex shrink-0 items-center',
+            disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+          )}
+        >
           <input
             ref={ref}
             id={toggleId}
@@ -38,24 +51,18 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
             className="peer sr-only"
             {...props}
           />
-          <div
+          <span
             className={cn(
-              'w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer',
+              'relative h-6 w-11 rounded-full bg-slate-200 transition-colors duration-200',
               'peer-checked:bg-primary-600',
               'peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500 peer-focus-visible:ring-offset-2',
-              'peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
-              'bg-slate-200',
+              'peer-disabled:opacity-50',
+              "after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform after:duration-200 after:content-['']",
+              'peer-checked:after:translate-x-5',
               className
             )}
-          >
-            <div
-              className={cn(
-                'absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white dark:bg-slate-800 shadow-sm transition-transform duration-200',
-                'peer-checked:translate-x-5'
-              )}
-            />
-          </div>
-        </div>
+          />
+        </label>
         {(label || description) && (
           <div className="flex-1">
             {label && (

@@ -1,3 +1,5 @@
+import type { RegField } from './event-registration';
+
 // ===========================================
 // Shared API Response Types
 // ===========================================
@@ -159,6 +161,8 @@ export interface EventInput {
   startDate: string;
   endDate?: string;
   location?: string;
+  /** Google Maps embed URL, from Maps' "Share > Embed a map" panel. */
+  locationMapUrl?: string;
   divisionId?: string;
   published?: boolean;
   capacity?: number;
@@ -166,6 +170,8 @@ export interface EventInput {
   registrationDeadline?: string;
   scheduledPublishAt?: string;
   scheduledUnpublishAt?: string;
+  /** Registration form field definitions. */
+  registrationFields?: RegField[];
 }
 
 export interface EventRegistration {
@@ -183,6 +189,8 @@ export interface EventRegistration {
   status: 'REGISTERED' | 'CANCELLED' | 'WAITLISTED' | 'ATTENDED' | 'NO_SHOW';
   registeredAt: string;
   checkedInAt?: string;
+  /** Answers to the event's registration form, keyed by field id. */
+  responses?: Record<string, string | string[]>;
   /**
    * Six-character code the attendee shows at the door. Derived from the
    * registration id server-side, so it is present on every registration.

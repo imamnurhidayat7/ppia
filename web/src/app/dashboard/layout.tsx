@@ -30,10 +30,18 @@ export default function DashboardRootLayout({ children }: DashboardLayoutProps) 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="dash-shore min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#E8231A] mx-auto" />
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Loading…</p>
+          {/* Porthole frame around the spinner, the same marker the rest of the
+              dashboard uses for a standalone icon. */}
+          <span
+            aria-hidden="true"
+            className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
+            style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)' }}
+          >
+            <Loader2 className="w-6 h-6 animate-spin text-[#E8231A]" />
+          </span>
+          <p className="mt-3 text-sm ink-body">Loading…</p>
         </div>
       </div>
     );

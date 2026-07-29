@@ -3,6 +3,7 @@ import { NotificationType } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { createAuditLog } from './auditLogController';
 import { checkInCodeFor, normaliseCheckInCode } from '../lib/checkin-code';
+import { fieldsForEvent, validateResponses } from '../lib/event-registration';
 import { notify } from '../lib/notify';
 import {
   sendEmail,
@@ -16,6 +17,10 @@ import {
 interface EventRegistrationRequest extends Request {
   body: {
     eventId: string;
+    responses?: unknown;
+    /** Supplied instead of an account when registering as a guest. */
+    guestName?: unknown;
+    guestEmail?: unknown;
   };
 }
 
@@ -42,7 +47,8 @@ const withCheckInCode = <T extends { id: string }>(registration: T): T & { check
  * mail or notification failure must not change the response the member sees.
  */
 const confirmRegistration = async (params: {
-  userId: string;
+  /** Absent for a guest registration: there is no account to notify. */
+  userId?: string | null;
   email?: string | null;
   memberName?: string | null;
   eventTitle: string;
@@ -61,17 +67,20 @@ const confirmRegistration = async (params: {
 
   const link = `/dashboard/events/${params.eventSlug}`;
 
-  await notify({
-    userId: params.userId,
-    type: NotificationType.EVENT_REGISTRATION,
-    title: params.waitlisted
-      ? `You are on the waitlist for ${params.eventTitle}`
-      : `You are registered for ${params.eventTitle}`,
-    body: params.waitlisted
-      ? 'We will let you know if a place opens up.'
-      : `${when}. Check-in code ${code}.`,
-    link,
-  });
+  // In-app notifications need an account; guests only get the e-mail.
+  if (params.userId) {
+    await notify({
+      userId: params.userId,
+      type: NotificationType.EVENT_REGISTRATION,
+      title: params.waitlisted
+        ? `You are on the waitlist for ${params.eventTitle}`
+        : `You are registered for ${params.eventTitle}`,
+      body: params.waitlisted
+        ? 'We will let you know if a place opens up.'
+        : `${when}. Check-in code ${code}.`,
+      link,
+    });
+  }
 
   if (!params.email) return;
 
@@ -120,13 +129,11 @@ const confirmRegistration = async (params: {
 // Register for an event
 export const registerForEvent = async (req: EventRegistrationRequest, res: Response): Promise<void> => {
   try {
-    // @ts-ignore
-    const userId = req.user?.userId;
-
-    if (!userId) {
-      res.status(401).json({ error: 'Not authenticated' });
-      return;
-    }
+    // Signing in is optional. A member is linked to their account; a guest
+    // identifies themselves with a name and e-mail so they can be contacted and
+    // recognised at the door.
+    // @ts-ignore - populated by optionalAuthenticate
+    const userId: string | undefined = req.user?.userId;
 
     const { eventId } = req.body;
 
@@ -134,6 +141,25 @@ export const registerForEvent = async (req: EventRegistrationRequest, res: Respo
       res.status(400).json({ error: 'Event ID is required' });
       return;
     }
+
+    const guestName = typeof req.body.guestName === 'string' ? req.body.guestName.trim() : '';
+    const guestEmailRaw =
+      typeof req.body.guestEmail === 'string' ? req.body.guestEmail.trim().toLowerCase() : '';
+
+    if (!userId) {
+      if (!guestName || !guestEmailRaw) {
+        res.status(400).json({ error: 'Your name and e-mail are required to register' });
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmailRaw)) {
+        res.status(400).json({ error: 'Please provide a valid e-mail address' });
+        return;
+      }
+    }
+
+    const guestFields = userId
+      ? {}
+      : { guestName: guestName.slice(0, 200), guestEmail: guestEmailRaw.slice(0, 320) };
 
     // Check if event exists and is published
     const event = await prisma.event.findUnique({
@@ -173,14 +199,43 @@ export const registerForEvent = async (req: EventRegistrationRequest, res: Respo
       return;
     }
 
+    // Validate the submitted registration-form answers against this event's fields.
+    const validated = validateResponses(fieldsForEvent(event.registrationFields), req.body.responses);
+    if (!validated.ok) {
+      res.status(400).json({ error: validated.error });
+      return;
+    }
+    const responses = validated.responses;
+
+    /** Who to address the confirmation to: the account, or the guest's details. */
+    const contactOf = (registration: {
+      User?: { name: string | null; email: string | null } | null;
+    }) => ({
+      email: registration.User?.email ?? (guestEmailRaw || null),
+      memberName: registration.User?.name ?? (guestName || null),
+    });
+
+    /** Audit entries are attributed to a user, so guests write none. */
+    const auditIfMember = async (
+      action: 'CREATE' | 'UPDATE',
+      registrationId: string,
+      meta: Record<string, unknown>
+    ) => {
+      if (userId) {
+        await createAuditLog(userId, action, 'EventRegistration', registrationId, meta);
+      }
+    };
+
     // Check capacity
     if (event.capacity && event._count.EventRegistration >= event.capacity) {
       // Add to waitlist
       const registration = await prisma.eventRegistration.create({
         data: {
           eventId,
-          userId,
-          status: 'WAITLISTED'
+          userId: userId ?? null,
+          ...guestFields,
+          status: 'WAITLISTED',
+          responses
         },
         include: {
           Event: true,
@@ -194,15 +249,11 @@ export const registerForEvent = async (req: EventRegistrationRequest, res: Respo
         }
       });
 
-      await createAuditLog(userId, 'CREATE', 'EventRegistration', registration.id, {
-        status: 'WAITLISTED',
-        eventId
-      });
+      await auditIfMember('CREATE', registration.id, { status: 'WAITLISTED', eventId });
 
       await confirmRegistration({
         userId,
-        email: registration.User.email,
-        memberName: registration.User.name,
+        ...contactOf(registration),
         eventTitle: registration.Event.title,
         eventSlug: registration.Event.slug,
         startDate: registration.Event.startDate,
@@ -218,12 +269,10 @@ export const registerForEvent = async (req: EventRegistrationRequest, res: Respo
       return;
     }
 
-    // Check if already registered
+    // Already registered? Members are matched on their account, guests on the
+    // e-mail they gave, so neither can take two places on the same event.
     const existingRegistration = await prisma.eventRegistration.findFirst({
-      where: {
-        eventId,
-        userId
-      }
+      where: userId ? { eventId, userId } : { eventId, guestEmail: guestEmailRaw }
     });
 
     if (existingRegistration) {
@@ -231,7 +280,7 @@ export const registerForEvent = async (req: EventRegistrationRequest, res: Respo
         // Reactivate registration
         const registration = await prisma.eventRegistration.update({
           where: { id: existingRegistration.id },
-          data: { status: 'REGISTERED' },
+          data: { status: 'REGISTERED', responses, ...guestFields },
           include: {
             Event: true,
             User: {
@@ -244,15 +293,14 @@ export const registerForEvent = async (req: EventRegistrationRequest, res: Respo
           }
         });
 
-        await createAuditLog(userId, 'UPDATE', 'EventRegistration', registration.id, {
+        await auditIfMember('UPDATE', registration.id, {
           oldStatus: 'CANCELLED',
           newStatus: 'REGISTERED'
         });
 
         await confirmRegistration({
           userId,
-          email: registration.User.email,
-          memberName: registration.User.name,
+          ...contactOf(registration),
           eventTitle: registration.Event.title,
           eventSlug: registration.Event.slug,
           startDate: registration.Event.startDate,
@@ -272,8 +320,10 @@ export const registerForEvent = async (req: EventRegistrationRequest, res: Respo
     const registration = await prisma.eventRegistration.create({
       data: {
         eventId,
-        userId,
-        status: 'REGISTERED'
+        userId: userId ?? null,
+        ...guestFields,
+        status: 'REGISTERED',
+        responses
       },
       include: {
         Event: true,
@@ -287,15 +337,11 @@ export const registerForEvent = async (req: EventRegistrationRequest, res: Respo
       }
     });
 
-    await createAuditLog(userId, 'CREATE', 'EventRegistration', registration.id, {
-      status: 'REGISTERED',
-      eventId
-    });
+    await auditIfMember('CREATE', registration.id, { status: 'REGISTERED', eventId });
 
     await confirmRegistration({
       userId,
-      email: registration.User.email,
-      memberName: registration.User.name,
+      ...contactOf(registration),
       eventTitle: registration.Event.title,
       eventSlug: registration.Event.slug,
       startDate: registration.Event.startDate,
@@ -541,9 +587,13 @@ export const checkInByCode = async (req: Request, res: Response): Promise<void> 
 
     const match = matches[0];
 
+    // A guest registration has no linked account, so fall back to the name they
+    // gave when registering.
+    const matchName = match.User?.name || match.guestName || 'This attendee';
+
     if (match.status === 'CANCELLED') {
       res.status(409).json({
-        error: `${match.User.name} cancelled their registration for this event.`,
+        error: `${matchName} cancelled their registration for this event.`,
         registration: withCheckInCode(match),
       });
       return;
@@ -551,7 +601,7 @@ export const checkInByCode = async (req: Request, res: Response): Promise<void> 
 
     if (match.checkedInAt) {
       res.json({
-        message: `${match.User.name} was already checked in`,
+        message: `${matchName} was already checked in`,
         alreadyCheckedIn: true,
         registration: withCheckInCode(match),
       });
@@ -573,7 +623,7 @@ export const checkInByCode = async (req: Request, res: Response): Promise<void> 
     });
 
     res.json({
-      message: `${updated.User.name} checked in`,
+      message: `${updated.User?.name || updated.guestName || 'Attendee'} checked in`,
       alreadyCheckedIn: false,
       registration: withCheckInCode(updated),
     });

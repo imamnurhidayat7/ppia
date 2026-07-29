@@ -10,7 +10,6 @@ import type { UserProfile } from '@/lib/api-types';
 import { useToast } from '@/components/Toast';
 import { Avatar, Badge, Button } from '@/components/ui';
 import {
-  DetailItem,
   EmptyBlock,
   Field,
   FormActions,
@@ -24,21 +23,15 @@ import {
 } from '@/components/dashboard';
 import MemberCardModal from '@/components/MemberCardModal';
 import {
-  AtSign,
-  BookOpen,
-  Building2,
   Calendar,
   Camera,
   CheckCircle2,
   Clock,
   CreditCard,
   Globe,
-  GraduationCap,
   IdCard,
   Link2,
   Loader2,
-  Mail,
-  Phone,
   Save,
   SquarePen,
   Ticket,
@@ -167,13 +160,39 @@ const ROLE_LABEL: Record<string, string> = {
   MEMBER: 'Member',
 };
 
+/** Double-ring porthole used for the avatar and the record markers. */
+const PORTHOLE_RING = {
+  boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)',
+} as const;
+
+/**
+ * Dates on this page are log entries on a membership record, so they are set as
+ * data: 05 Mar 2025 rather than 5 March 2025.
+ */
 function formatLongDate(date?: string | Date): string {
   if (!date) return '—';
   return new Date(date).toLocaleDateString('en-NZ', {
-    day: 'numeric',
-    month: 'long',
+    day: '2-digit',
+    month: 'short',
     year: 'numeric',
   });
+}
+
+/**
+ * One line of the membership record: a data-face label over its value, with a
+ * rope hairline above it so the block reads as a ruled document rather than a
+ * grid of loose pairs.
+ */
+function RecordRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <span aria-hidden="true" className="rope-rule block opacity-60" />
+      <div className="py-3">
+        <p className="data-type text-[12px] font-bold uppercase ink-muted">{label}</p>
+        <p className="mt-1 break-words text-sm font-medium ink-strong">{value || '—'}</p>
+      </div>
+    </div>
+  );
 }
 
 function formToState(user: UserProfile): ProfileForm {
@@ -312,7 +331,7 @@ export default function ProfilePage() {
               <Link
                 href={`/profile/${profile.username}`}
                 target="_blank"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                className="inline-flex items-center gap-2 rounded-[5px] border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
               >
                 <Globe className="h-4 w-4" />
                 Public profile
@@ -335,12 +354,12 @@ export default function ProfilePage() {
             {ROLE_LABEL[profile.role] ?? profile.role}
           </Badge>
           {profile.position && (
-            <span className="rounded-md bg-white/10 px-2 py-0.5 text-xs font-medium text-white/80">
+            <span className="data-type rounded-[3px] bg-white/10 px-2 py-0.5 text-[12px] font-bold uppercase text-white/80">
               {profile.position.replace(/_/g, ' ')}
             </span>
           )}
           {profile.division?.name && (
-            <span className="rounded-md bg-white/10 px-2 py-0.5 text-xs font-medium text-white/80">
+            <span className="data-type rounded-[3px] bg-white/10 px-2 py-0.5 text-[12px] font-bold uppercase text-white/80">
               {profile.division.name}
             </span>
           )}
@@ -352,8 +371,10 @@ export default function ProfilePage() {
         <div className="space-y-6">
           <SectionCard title="Profile photo" description="Shown on your member card and in the directory">
             <div className="flex flex-col items-center text-center">
-              <div className="relative">
-                <Avatar src={profile.avatar} name={profile.name} size="2xl" shape="square" />
+              {/* Porthole: the photo sits behind a double-ring frame rather than
+                  in a plain rounded square. */}
+              <div className="relative rounded-full p-1" style={PORTHOLE_RING}>
+                <Avatar src={profile.avatar} name={profile.name} size="2xl" />
                 <button
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
@@ -377,13 +398,14 @@ export default function ProfilePage() {
                   className="sr-only"
                 />
               </div>
-              <p className="mt-4 font-display text-base font-bold text-slate-900 dark:text-slate-50">
+              <p className="mt-5 font-display text-base font-bold ink-strong">
                 {profile.name}
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="data-type mt-0.5 text-[12px] font-bold uppercase ink-muted">
                 {profile.position?.replace(/_/g, ' ') || 'Member'}
               </p>
-              <p className="mt-3 text-xs text-slate-400">
+              <span aria-hidden="true" className="rope-rule my-3 block w-full opacity-60" />
+              <p className="text-[12px] ink-muted">
                 Images can be up to 5MB. Click the camera icon to replace it.
               </p>
             </div>
@@ -394,23 +416,43 @@ export default function ProfilePage() {
             icon={CreditCard}
             action={<Badge variant="success">Active</Badge>}
           >
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#0D1B33] via-[#1A2B4A] to-[#0D1B33] p-4 text-white">
-              <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[#E8231A]/20 blur-2xl" />
+            <div className="sea-deep relative overflow-hidden rounded-[5px] p-4 text-white">
+              {/* Chart grid, faded from the centre, as on the public deep bands. */}
+              <div
+                aria-hidden="true"
+                className="sea-chart-light pointer-events-none absolute inset-0 opacity-[0.06]"
+                style={{
+                  maskImage:
+                    'radial-gradient(ellipse 80% 75% at 35% 45%, transparent 15%, black 85%)',
+                  WebkitMaskImage:
+                    'radial-gradient(ellipse 80% 75% at 35% 45%, transparent 15%, black 85%)',
+                }}
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[#E8231A]/20 blur-2xl"
+              />
               <div className="relative flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs text-white/60">PPIA Auckland</p>
+                  <p className="data-type text-[12px] font-bold uppercase text-white/70">
+                    PPIA Auckland
+                  </p>
                   <p className="mt-1 truncate font-display text-lg font-black">{profile.name}</p>
-                  <p className="mt-0.5 truncate text-xs text-white/60">
+                  <p className="data-type mt-0.5 truncate text-[12px] uppercase text-white/70">
                     {profile.position?.replace(/_/g, ' ') || ROLE_LABEL[profile.role] || profile.role}
                   </p>
                 </div>
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10">
-                  <IdCard className="h-5 w-5 text-white/70" />
+                <span
+                  aria-hidden="true"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white/80"
+                  style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 4px rgba(255,255,255,0.08)' }}
+                >
+                  <IdCard className="h-5 w-5" />
                 </span>
               </div>
               <div className="relative mt-4 border-t border-white/10 pt-3">
-                <p className="text-[10px] uppercase tracking-wide text-white/40">Member ID</p>
-                <p className="font-mono text-sm font-bold">{memberId}</p>
+                <p className="data-type text-[12px] font-bold uppercase text-white/70">Member ID</p>
+                <p className="data-type mt-0.5 text-sm font-bold">{memberId}</p>
               </div>
             </div>
             <Button
@@ -476,12 +518,14 @@ export default function ProfilePage() {
                       href={profile.linkedIn}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+                      className="flex items-center gap-3 rounded-[5px] border border-[#DCE7F1] p-3 transition-colors hover:border-[#C3D2E0] hover:bg-[#F5FAFD] dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
+                      <span aria-hidden="true"
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-blue-600 dark:text-blue-300"
+                        style={PORTHOLE_RING}>
                         <LinkedinIcon size={18} />
                       </span>
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      <span className="text-sm font-medium ink-body">
                         LinkedIn
                       </span>
                     </a>
@@ -493,12 +537,14 @@ export default function ProfilePage() {
                       href={profile.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+                      className="flex items-center gap-3 rounded-[5px] border border-[#DCE7F1] p-3 transition-colors hover:border-[#C3D2E0] hover:bg-[#F5FAFD] dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-pink-50 text-pink-600 dark:bg-pink-900/40 dark:text-pink-300">
+                      <span aria-hidden="true"
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-pink-600 dark:text-pink-300"
+                        style={PORTHOLE_RING}>
                         <InstagramIcon size={18} />
                       </span>
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      <span className="text-sm font-medium ink-body">
                         Instagram
                       </span>
                     </a>
@@ -510,12 +556,14 @@ export default function ProfilePage() {
                       href={profile.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+                      className="flex items-center gap-3 rounded-[5px] border border-[#DCE7F1] p-3 transition-colors hover:border-[#C3D2E0] hover:bg-[#F5FAFD] dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      <span aria-hidden="true"
+                        className="flex h-9 w-9 items-center justify-center rounded-full ink-body"
+                        style={PORTHOLE_RING}>
                         <XIcon size={18} />
                       </span>
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      <span className="text-sm font-medium ink-body">
                         Twitter/X
                       </span>
                     </a>
@@ -523,7 +571,7 @@ export default function ProfilePage() {
                 )}
               </ul>
             ) : (
-              <p className="py-2 text-center text-sm text-slate-400">
+              <p className="py-2 text-center text-sm ink-muted">
                 No social links yet. Add them from edit mode.
               </p>
             )}
@@ -549,7 +597,7 @@ export default function ProfilePage() {
                 />
               </Field>
             ) : (
-              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              <p className="text-sm leading-relaxed ink-body">
                 {profile.bio || 'No bio yet.'}
               </p>
             )}
@@ -610,24 +658,28 @@ export default function ProfilePage() {
                 </Field>
               </FormGrid>
             ) : (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <DetailItem label="Name" value={profile.name} icon={User} />
-                <DetailItem label="Account email" value={profile.email} icon={AtSign} />
-                <DetailItem label="Phone number" value={profile.phone} icon={Phone} />
-                <DetailItem label="Personal email" value={profile.personalEmail} icon={Mail} />
-                <DetailItem label="Division" value={profile.division?.name} icon={Building2} />
-                <DetailItem
-                  label="Position"
-                  value={profile.position?.replace(/_/g, ' ')}
-                  icon={Globe}
+              /* Ruled record rather than icon/label pairs: every field is a
+                 line on the membership document. */
+              <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+                <RecordRow label="Name" value={profile.name} />
+                <RecordRow label="Account email" value={profile.email} />
+                <RecordRow label="Phone number" value={profile.phone} />
+                <RecordRow label="Personal email" value={profile.personalEmail} />
+                <RecordRow label="Division" value={profile.division?.name} />
+                <RecordRow label="Position" value={profile.position?.replace(/_/g, ' ')} />
+                <RecordRow label="University" value={profile.university} />
+                <RecordRow label="Programme" value={profile.major} />
+                <RecordRow
+                  label="Student ID"
+                  value={
+                    profile.studentId ? (
+                      <span className="data-type">{profile.studentId}</span>
+                    ) : undefined
+                  }
                 />
-                <DetailItem label="University" value={profile.university} icon={GraduationCap} />
-                <DetailItem label="Programme" value={profile.major} icon={BookOpen} />
-                <DetailItem label="Student ID" value={profile.studentId} icon={IdCard} />
-                <DetailItem
+                <RecordRow
                   label="Member since"
-                  value={formatLongDate(profile.createdAt)}
-                  icon={Calendar}
+                  value={<span className="data-type">{formatLongDate(profile.createdAt)}</span>}
                 />
               </div>
             )}
@@ -645,7 +697,7 @@ export default function ProfilePage() {
               registrations.length > 0 ? (
                 <Link
                   href="/dashboard/events"
-                  className="text-sm font-semibold text-[#E8231A] hover:underline"
+                  className="accent-label text-sm font-semibold hover:underline"
                 >
                   Find an event
                 </Link>
@@ -672,18 +724,22 @@ export default function ProfilePage() {
                   return (
                     <li
                       key={registration.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-[5px] border border-[#DCE7F1] p-4 transition-colors hover:border-[#C3D2E0] dark:border-slate-800 dark:hover:border-slate-700"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                        <span
+                          aria-hidden="true"
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full ink-muted"
+                          style={PORTHOLE_RING}
+                        >
                           <Ticket className="h-5 w-5" />
                         </span>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          <p className="truncate text-sm font-semibold ink-strong">
                             {event?.title || 'Event unavailable'}
                           </p>
-                          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                            <Clock className="h-3 w-3 shrink-0" />
+                          <p className="data-type mt-1 flex items-center gap-1.5 text-[12px] ink-muted">
+                            <Clock aria-hidden="true" className="h-3 w-3 shrink-0" />
                             {event?.startDate ? formatLongDate(event.startDate) : '—'}
                           </p>
                         </div>

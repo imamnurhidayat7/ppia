@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Calendar, MapPin, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
@@ -31,6 +31,12 @@ interface DisplayEvent {
   slug: string;
   title: string;
   date: string;
+  /** Day of month, for the departure-board date block. */
+  day: string;
+  /** Three-letter month, for the same block. */
+  month: string;
+  /** Departure time, or an em dash when the date carries no usable time. */
+  time: string;
   location: string;
   imageUrl?: string;
   accent: string;
@@ -49,14 +55,31 @@ const ACCENTS = [
 
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString("en-US", {
+    return new Date(iso).toLocaleDateString("en-NZ", {
+      day: "2-digit",
       month: "short",
-      day: "numeric",
       year: "numeric",
     });
   } catch {
     return iso;
   }
+}
+
+/**
+ * Split a date into the parts the departure board prints separately.
+ *
+ * A malformed date must not take the row down, so every field degrades to a
+ * placeholder rather than throwing.
+ */
+function departureParts(iso: string): { day: string; month: string; time: string } {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return { day: "--", month: "---", time: "—" };
+
+  return {
+    day: date.toLocaleDateString("en-NZ", { day: "2-digit" }),
+    month: date.toLocaleDateString("en-NZ", { month: "short" }).toUpperCase(),
+    time: date.toLocaleTimeString("en-NZ", { hour: "2-digit", minute: "2-digit", hour12: false }),
+  };
 }
 
 /** Map the raw API event list to the display shape used by the carousel. */
@@ -68,6 +91,7 @@ function mapEvents(list: ApiEvent[]): DisplayEvent[] {
       slug: e.slug,
       title: e.title,
       date: formatDate(e.startDate),
+      ...departureParts(e.startDate),
       location: e.location || "TBA",
       imageUrl: getImageUrl(e.imageUrl),
       accent: palette.accent,
@@ -94,9 +118,6 @@ export default function EventsSection({ initialEvents, initialSection }: EventsS
   // otherwise a transient API outage at render time would leave the section
   // permanently empty until the ISR cache expires.
   const hasInitial = Array.isArray(initialEvents) && initialEvents.length > 0;
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
   const [events, setEvents] = useState<DisplayEvent[]>(() =>
     hasInitial ? mapEvents(initialEvents!) : []
   );
@@ -148,28 +169,8 @@ export default function EventsSection({ initialEvents, initialSection }: EventsS
     fetchEvents();
   }, [hasInitial]);
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const scrollAmount = 320;
-      scrollRef.current.scrollBy({
-        left: direction === 'right' ? scrollAmount : -scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  const showNav = events.length > 0;
-
   return (
-    <section id="events" className="relative overflow-hidden bg-[#0D1B33] py-28">
+    <section id="events" className="sea-deep relative overflow-hidden py-28">
       {/* Cool glow on the opposite side to the video section's warm one, so the
           two dark sections read as separate moments rather than one long block. */}
       <div
@@ -204,121 +205,139 @@ export default function EventsSection({ initialEvents, initialSection }: EventsS
           }
         />
 
-        {/* Carousel Navigation */}
-        {showNav && (
-          <div className="flex items-center justify-end gap-2 mb-6">
-            <button onClick={() => scroll('left')} disabled={!canScrollLeft} className="p-2 rounded-full border border-white/10 hover:bg-white/10 disabled:opacity-30 transition-colors">
-              <ChevronLeft size={20} className="text-white" />
-            </button>
-            <button onClick={() => scroll('right')} disabled={!canScrollRight} className="p-2 rounded-full border border-white/10 hover:bg-white/10 disabled:opacity-30 transition-colors">
-              <ChevronRight size={20} className="text-white" />
-            </button>
-          </div>
-        )}
+        {/*
+          Structure: a departure board, not a card carousel.
 
-        {/* Events Carousel / States */}
-        {loading ? (
-          <div className="flex gap-5 overflow-hidden pb-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="min-w-[300px] w-[300px] h-72 rounded-2xl bg-white/5 border border-white/10 animate-pulse shrink-0"
+          A row of fixed-width cards in a horizontal scroller hid most of the
+          schedule behind an interaction and truncated every title to two lines.
+          A board shows the whole schedule at once, gives long event names room,
+          and matches how sailings are actually posted at a port — which is the
+          frame the hero sets. The date is the anchor of each row, printed as
+          data, so scanning for "when" does not mean reading prose.
+        */}
+        <div className="overflow-hidden rounded-[6px] border border-white/10 bg-white/[0.03] backdrop-blur-sm">
+          <div className="flex items-center gap-4 border-b border-white/10 bg-white/[0.04] px-5 py-3">
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span
+                className="absolute inline-flex h-full w-full rounded-full opacity-60 motion-safe:animate-ping"
+                style={{ background: colors.textAccent }}
               />
-            ))}
-          </div>
-        ) : events.length === 0 ? (
-          <div className="text-center py-16">
-            <Calendar className="w-16 h-16 text-white/15 mx-auto mb-4" />
-            <p className="text-white/60 text-lg">No events yet</p>
-            <p className="text-white/30 text-sm mt-1">
-              New events will appear here once they are published.
+              <span
+                className="relative inline-flex h-2 w-2 rounded-full"
+                style={{ background: colors.textAccent }}
+              />
+            </span>
+            <p className="data-type text-[12px] font-bold uppercase text-white/75">Departures</p>
+            <span aria-hidden="true" className="h-px flex-1 bg-white/10" />
+            <p className="data-type hidden text-[12px] uppercase text-white/40 sm:block">
+              Date · Destination · Time
             </p>
           </div>
-        ) : (
-          <>
-          <div ref={scrollRef} onScroll={handleScroll} className="flex gap-5 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide">
-            {events.map((event, i) => (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-              >
-                <Link
-                  href={`/activities/events/${event.slug}`}
-                  className={`group block min-w-[300px] w-[300px] h-72 relative rounded-2xl overflow-hidden bg-gradient-to-br ${event.bg} border border-white/10 hover:border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer p-6 flex flex-col snap-start`}
-                >
-                  {event.imageUrl && (
-                    // Decorative backdrop behind the card text, so the card is a
-                    // fixed 300px wide and the width hint can be exact.
-                    <Image
-                      src={event.imageUrl}
-                      alt={event.title}
-                      fill
-                      sizes="300px"
-                      className="object-cover opacity-30 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500"
-                    />
-                  )}
-                  <div className="relative flex-1 flex flex-col">
-                    <span
-                      className="self-start inline-block text-xs font-semibold px-3 py-1 rounded-full border"
-                      style={{
-                        background: `${event.accent}20`,
-                        color: event.accent,
-                        borderColor: `${event.accent}40`,
-                      }}
-                    >
-                      Event
-                    </span>
 
-                    <h3 className="font-bold text-white text-lg leading-tight group-hover:text-white/90 transition-colors line-clamp-2 mt-4">
-                      {event.title}
-                    </h3>
-
-                    <div className="flex flex-col gap-2.5 mt-auto">
-                      <div className="flex items-center gap-2 text-white/70 text-sm">
-                        <Calendar size={13} className="shrink-0" />
-                        {event.date}
-                      </div>
-                      <div className="flex items-center gap-2 text-white/70 text-sm">
-                        <MapPin size={13} className="shrink-0" />
-                        <span className="truncate">{event.location}</span>
-                      </div>
-                    </div>
+          {loading ? (
+            <div className="divide-y divide-white/[0.07]">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-5 px-5 py-5">
+                  <div className="h-12 w-12 shrink-0 animate-pulse rounded-[4px] bg-white/[0.07]" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="h-4 w-2/3 animate-pulse rounded bg-white/[0.07]" />
+                    <div className="h-3 w-1/3 animate-pulse rounded bg-white/[0.05]" />
                   </div>
-
-                  {/* Accent line bottom */}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 h-0.5 opacity-60"
-                    style={{ background: `linear-gradient(90deg, ${event.accent}, transparent)` }}
-                  />
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Scroll position indicator (dots) */}
-          {events.length > 3 && (
-            <div className="flex items-center justify-center gap-1.5 mt-6">
-              {events.map((event, i) => (
-                <button
-                  key={event.id}
-                  type="button"
-                  onClick={() => {
-                    const container = scrollRef.current;
-                    if (container) {
-                      container.scrollTo({ left: i * 320, behavior: 'smooth' });
-                    }
-                  }}
-                  aria-label={`Go to event ${i + 1}`}
-                  className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors"
-                />
+                </div>
               ))}
             </div>
+          ) : events.length === 0 ? (
+            <div className="px-5 py-16 text-center">
+              <Calendar className="mx-auto mb-4 h-14 w-14 text-white/15" aria-hidden="true" />
+              <p className="text-lg text-white/60">No sailings scheduled</p>
+              <p className="mt-1 text-sm text-white/30">
+                New events will appear on the board once they are published.
+              </p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-white/[0.07]">
+              {events.map((event, i) => (
+                <motion.li
+                  key={event.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.4 }}
+                  transition={{ duration: 0.45, delay: Math.min(i, 5) * 0.06 }}
+                >
+                  <Link
+                    href={`/activities/events/${event.slug}`}
+                    className="group relative flex items-center gap-4 px-5 py-4 transition-colors duration-300 hover:bg-white/[0.05] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white sm:gap-6 sm:py-5"
+                  >
+                    {/* Accent spine grows on hover, marking the active row. */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-y-0 left-0 w-[3px] origin-center scale-y-0 transition-transform duration-300 group-hover:scale-y-100"
+                      style={{ background: event.accent }}
+                    />
+
+                    {/* Date block: the board's anchor. */}
+                    <span
+                      className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[4px] border"
+                      style={{
+                        background: `${event.accent}14`,
+                        borderColor: `${event.accent}33`,
+                      }}
+                      aria-hidden="true"
+                    >
+                      <span
+                        className="data-type text-lg font-black leading-none text-white"
+                        style={{ fontFamily: 'var(--font-poppins), Poppins, sans-serif' }}
+                      >
+                        {event.day}
+                      </span>
+                      <span className="data-type mt-0.5 text-[12px] font-bold" style={{ color: event.accent }}>
+                        {event.month}
+                      </span>
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-bold text-white sm:text-base">
+                        {event.title}
+                      </span>
+                      <span className="mt-1 flex items-center gap-3 text-xs text-white/70">
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <MapPin size={11} className="shrink-0" aria-hidden="true" />
+                          <span className="truncate">{event.location}</span>
+                        </span>
+                        <span aria-hidden="true" className="hidden h-1 w-1 shrink-0 rounded-full bg-white/25 sm:block" />
+                        <span className="data-type hidden shrink-0 sm:block">{event.date}</span>
+                      </span>
+                    </span>
+
+                    {/* Thumbnail, when the event has artwork. Small on purpose:
+                        the row is a schedule line, not a hero image. */}
+                    {event.imageUrl && (
+                      <span className="relative hidden h-12 w-20 shrink-0 overflow-hidden rounded-[3px] md:block">
+                        <Image
+                          src={event.imageUrl}
+                          alt=""
+                          fill
+                          sizes="80px"
+                          className="object-cover opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+                        />
+                      </span>
+                    )}
+
+                    <span className="data-type hidden w-14 shrink-0 text-right text-sm font-bold text-white/80 sm:block">
+                      {event.time}
+                    </span>
+
+                    <ArrowRight
+                      size={16}
+                      aria-hidden="true"
+                      className="shrink-0 text-white/25 transition-all duration-300 group-hover:translate-x-1 group-hover:text-white/70"
+                    />
+                  </Link>
+                </motion.li>
+              ))}
+            </ul>
           )}
-          </>
-        )}
+        </div>
       </div>
     </section>
   );

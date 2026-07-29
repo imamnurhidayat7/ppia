@@ -68,7 +68,7 @@ function formatDateTime(value?: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
   return date.toLocaleString('en-NZ', {
-    day: 'numeric',
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
@@ -340,8 +340,8 @@ export default function AdminCandidatesPage() {
             </>
           }
           footer={
-            <div className="border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-              <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="border-t border-[#E7EFF7] px-5 py-3 dark:border-slate-800">
+              <p className="data-type mb-2 text-[12px] ink-muted">
                 Showing {visibleCandidates.length} of {filteredCandidates.length} candidates
               </p>
               <Pagination
@@ -364,19 +364,19 @@ export default function AdminCandidatesPage() {
               <Tr key={candidate.id}>
                 <Td>
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0D1B33] font-display text-sm font-black text-white">
+                    <span aria-hidden="true" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 4px rgba(11,28,46,0.10)' }} className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0B1C2E] font-display text-sm font-black text-white">
                       {candidate.user.name.charAt(0).toUpperCase()}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <p className="truncate text-sm font-semibold ink-strong">
                         {candidate.user.name}
                       </p>
-                      <p className="truncate text-xs text-slate-400">
+                      <p className="truncate text-[12px] ink-muted">
                         {candidate.user.username ? `@${candidate.user.username}` : '—'}
                         {candidate.user.email ? ` • ${candidate.user.email}` : ''}
                       </p>
                       {candidate.slogan && (
-                        <p className="mt-0.5 line-clamp-1 max-w-xs text-xs italic text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 line-clamp-1 max-w-xs text-[12px] italic ink-muted">
                           &ldquo;{candidate.slogan}&rdquo;
                         </p>
                       )}
@@ -384,24 +384,24 @@ export default function AdminCandidatesPage() {
                   </div>
                 </Td>
                 <Td>
-                  <Badge variant={meta.variant}>{meta.label}</Badge>
+                  <Badge variant={meta.variant} className="data-type uppercase">{meta.label}</Badge>
                 </Td>
                 <Td>
-                  <span className="whitespace-nowrap text-xs">
+                  <span className="data-type whitespace-nowrap text-[12px]">
                     {formatDateTime(candidate.createdAt)}
                   </span>
                 </Td>
                 <Td>
                   {candidate.status === 'REJECTED' && candidate.rejectionReason ? (
-                    <span className="line-clamp-2 max-w-xs text-xs text-danger-600 dark:text-rose-300">
+                    <span className="line-clamp-2 max-w-xs text-[12px] text-danger-600 dark:text-rose-300">
                       {candidate.rejectionReason}
                     </span>
                   ) : candidate.status === 'APPROVED' && candidate.approvedAt ? (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-[12px] ink-muted">
                       Approved {formatDateTime(candidate.approvedAt)}
                     </span>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="ink-muted">—</span>
                   )}
                 </Td>
                 <Td align="right">
@@ -465,8 +465,8 @@ export default function AdminCandidatesPage() {
               <DetailItem label="Programme" value={detailCandidate.program} />
             )}
             {detailCandidate.status === 'REJECTED' && detailCandidate.rejectionReason && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/30 dark:bg-rose-500/10">
-                <p className="text-xs font-bold uppercase tracking-wide text-rose-700 dark:text-rose-300">
+              <div className="rounded-[4px] border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/30 dark:bg-rose-500/10">
+                <p className="data-type text-[12px] font-bold uppercase text-rose-700 dark:text-rose-300">
                   Rejection reason
                 </p>
                 <p className="mt-1 text-sm text-rose-700 dark:text-rose-200">
@@ -507,14 +507,14 @@ export default function AdminCandidatesPage() {
                 setRejectReason(changeEvent.target.value);
                 setRejectError('');
               }}
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
               placeholder="For example: the vision and mission are not specific enough, active membership requirements are not met…"
             />
           </Field>
 
-          <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <div className="flex items-start gap-2 rounded-[4px] border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <MessageSquareWarning className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <p className="text-xs text-amber-700 dark:text-amber-200">
+            <p className="text-[12px] text-amber-700 dark:text-amber-200">
               This reason is shown to the candidate and they can register again.
             </p>
           </div>

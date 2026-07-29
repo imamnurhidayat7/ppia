@@ -205,14 +205,6 @@ export function isAdminRole(role?: string): boolean {
   return role === 'SUPER_ADMIN' || role === 'BOARD';
 }
 
-/** Quick-create shortcuts surfaced in the topbar and admin home. */
-export const ADMIN_QUICK_CREATE: NavItem[] = [
-  { label: 'New article', href: '/dashboard/admin/articles/new', icon: FileText, roles: CONTENT },
-  { label: 'New event', href: '/dashboard/admin/events/new', icon: Calendar, roles: CONTENT },
-  { label: 'New research', href: '/dashboard/admin/research/new', icon: BookOpen, roles: CONTENT },
-  { label: 'New page', href: '/dashboard/admin/pages', icon: FileEdit, roles: SUPER_ONLY },
-];
-
 /**
  * Human-readable labels for URL segments, used to build breadcrumbs without
  * hardcoding a trail in every page.

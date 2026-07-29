@@ -12,7 +12,7 @@ cd api
 npm ci
 npx prisma generate
 npm run build        # tsc → dist/
-npx prisma migrate deploy   # apply migrations to the production database
+npm run db:deploy    # apply migrations to the database DATA_SOURCE selects
 npm start            # runs node dist/index.js
 ```
 
@@ -32,8 +32,11 @@ Point the web app at the deployed API by setting `NEXT_PUBLIC_API_URL` at build 
 Set these before starting the API (see [Configuration](configuration.md) for the full
 list):
 
-- `DATABASE_URL` — production PostgreSQL runtime URL (pooled is supported)
-- `DIRECT_URL` — direct PostgreSQL URL for Prisma migrations
+- `DATA_SOURCE=supabase` — selects the hosted database and storage together
+- `SUPABASE_DATABASE_URL` — runtime PostgreSQL URL (pooled is supported)
+- `SUPABASE_DIRECT_URL` — direct PostgreSQL URL for Prisma migrations
+- or, on a host that injects it, `DATABASE_URL` (plus `DIRECT_URL`), which
+  overrides `DATA_SOURCE`
 - `JWT_SECRET` — a fresh, long random string (different from dev/staging)
 - `API_URL`, `FRONTEND_URL` — the real public URLs
 - `CORS_ORIGINS` — any additional browser origins that call the API
@@ -56,22 +59,28 @@ A typical layout puts both apps behind one domain via nginx:
 When proxying, set `TRUST_PROXY` to match the number of proxy hops so the rate limiter
 reads the correct client address.
 
-## Persistent storage
+## File storage
 
-Uploaded files are written to `api/uploads` on local disk and served from `/uploads`.
-On a platform with an ephemeral filesystem, mount a persistent volume there or move
-uploads to object storage; otherwise files are lost on redeploy.
+Set `STORAGE_DRIVER=supabase` in production, along with `SUPABASE_URL`,
+`SUPABASE_SERVICE_ROLE_KEY`, and the bucket names. The local driver writes to the
+API's own filesystem, which does not survive a redeploy on an ephemeral host and
+is not shared between instances.
+
+If you deliberately run the local driver in production, mount a persistent volume
+at `STORAGE_LOCAL_DIR` (or the API's working directory) covering both `uploads/`
+and `storage/private/`.
 
 ## Pre-launch checklist
 
 - [ ] `JWT_SECRET` is unique to production and kept secret
 - [ ] `DATABASE_URL` points at the runtime database, `DIRECT_URL` points at its
-      direct connection, and migrations are applied (`prisma migrate deploy`)
+      direct connection, and migrations are applied (`npm run db:deploy`)
 - [ ] `FRONTEND_URL` / `CORS_ORIGINS` list only the real origins
 - [ ] `TRUST_PROXY` matches the proxy topology; `RATE_LIMIT_DISABLED` is not set
 - [ ] Mail is configured (or intentionally left in log-only mode)
 - [ ] `NEXT_PUBLIC_API_URL` in the web build points at the production API
-- [ ] `api/uploads` is on persistent storage
+- [ ] `STORAGE_DRIVER=supabase` with its bucket credentials set — or, if running
+      the local driver on purpose, its directories are on persistent storage
 - [ ] A first `SUPER_ADMIN` account exists (see
       [Getting started](getting-started.md#6-create-your-first-admin))
 - [ ] `GET /health` returns `{ "status": "ok" }` from the deployed API

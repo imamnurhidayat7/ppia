@@ -44,6 +44,15 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = {
+  dateStyle: undefined,
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
+
 /**
  * Prisma returns the relations with capitalised keys (`User`, `Article`,
  * `Research`) while the shared `Comment` type uses the lowercase spelling, so
@@ -379,7 +388,7 @@ export default function AdminCommentsPage() {
                   setCurrentPage(1);
                 }}
                 placeholder="For example: clx1a2b3c…"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
             <Field label="Research ID" htmlFor="filter-research-id">
@@ -392,7 +401,7 @@ export default function AdminCommentsPage() {
                   setCurrentPage(1);
                 }}
                 placeholder="For example: clx4d5e6f…"
-                className="input-base"
+                className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
               />
             </Field>
           </div>
@@ -455,16 +464,21 @@ export default function AdminCommentsPage() {
               <Tr key={comment.id}>
                 <Td>
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFF0EF] dark:bg-[#E8231A]/15">
-                      <UserIcon className="h-4 w-4 text-[#E8231A]" />
+                    {/* Porthole frame instead of a tinted disc. */}
+                    <span
+                      aria-hidden="true"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#E8231A]"
+                      style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)' }}
+                    >
+                      <UserIcon className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <p className="max-w-[11rem] truncate font-semibold text-slate-900 dark:text-slate-100">
+                      <p className="max-w-[11rem] truncate font-semibold ink-strong">
                         {author.name}
                       </p>
                       {author.email && (
-                        <p className="flex max-w-[11rem] items-center gap-1 truncate text-xs text-slate-500 dark:text-slate-400">
-                          <Mail className="h-3 w-3 shrink-0" />
+                        <p className="data-type flex max-w-[11rem] items-center gap-1 truncate text-[12px] ink-muted">
+                          <Mail aria-hidden="true" className="h-3 w-3 shrink-0" />
                           {author.email}
                         </p>
                       )}
@@ -472,7 +486,7 @@ export default function AdminCommentsPage() {
                   </div>
                 </Td>
                 <Td>
-                  <p className="max-w-md text-slate-700 dark:text-slate-300" title={comment.content}>
+                  <p className="max-w-md ink-body" title={comment.content}>
                     {truncate(comment.content, 90)}
                   </p>
                 </Td>
@@ -495,17 +509,19 @@ export default function AdminCommentsPage() {
                       <span className="truncate">{target.title}</span>
                     </Link>
                   ) : (
-                    <span className="text-slate-400">—</span>
+                    <span className="ink-muted">—</span>
                   )}
                 </Td>
                 <Td>
-                  <span className="whitespace-nowrap">{formatDate(comment.createdAt)}</span>
+                  <span className="data-type whitespace-nowrap text-[12px]">
+                    {formatDate(comment.createdAt, DATE_OPTS)}
+                  </span>
                 </Td>
                 <Td>
                   {comment.isHidden ? (
-                    <Badge variant="warning">Hidden</Badge>
+                    <Badge variant="warning" className="data-type uppercase">Hidden</Badge>
                   ) : (
-                    <Badge variant="success">Visible</Badge>
+                    <Badge variant="success" className="data-type uppercase">Visible</Badge>
                   )}
                 </Td>
                 <Td align="right">

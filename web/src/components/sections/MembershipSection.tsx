@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { Anchor, ArrowRight, Check, Sailboat } from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
 import { useLandingColors } from "@/lib/hooks/use-landing-colors";
 import { useLandingSection, getBlocksByType } from "@/lib/hooks/use-landing-section";
@@ -12,6 +12,17 @@ import SectionHeading from "./SectionHeading";
 
 // Built-in copy is English only, matching the rest of the interface. CMS rows
 // can still carry an Indonesian variant, which `pickText` picks up.
+/**
+ * Barcode bar heights, as percentages.
+ *
+ * Fixed rather than random: `Math.random()` during render would produce
+ * different markup on the server and the client and trip a hydration mismatch.
+ */
+const BARCODE = [
+  86, 54, 96, 40, 72, 100, 48, 64, 92, 36, 80, 58, 100, 44, 76, 62, 90, 50, 84, 68,
+  96, 42, 74, 88, 56, 100, 46, 70,
+];
+
 const DEFAULT_PERKS = [
   "Access to all exclusive PPIA events",
   "Community network of 500+ Indonesian students",
@@ -109,15 +120,24 @@ export default function MembershipSection() {
   }, [section, language]);
 
   return (
-    <section id="membership" className="py-28 mesh-gradient relative overflow-hidden">
-      {/* Static decorative orb */}
-      <div
-        className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-15 pointer-events-none"
-        style={{
-          background: "radial-gradient(circle, #E8231A, transparent 70%)",
-          transform: "translate3d(0,0,0)",
-        }}
-      />
+    <section id="membership" className="sea-deep relative overflow-hidden py-28">
+      {/* Same depth treatment as the other below-waterline sections. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div
+          className="sea-chart-light absolute inset-0 opacity-[0.05]"
+          style={{
+            maskImage: "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 20%, black 85%)",
+            WebkitMaskImage: "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 20%, black 85%)",
+          }}
+        />
+        <div
+          className="absolute right-0 top-0 h-[500px] w-[500px] rounded-full opacity-15"
+          style={{
+            background: "radial-gradient(circle, #E8231A, transparent 70%)",
+            transform: "translate3d(0,0,0)",
+          }}
+        />
+      </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -143,16 +163,21 @@ export default function MembershipSection() {
               tone="dark"
             />
 
-            <ul className="mt-9 space-y-3.5">
+            {/* Perks read as what is included with the fare, numbered like
+                manifest lines rather than another tick-in-a-circle list. */}
+            <ul className="mt-9 divide-y divide-white/10 border-y border-white/10">
               {content.perks.map((perk, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span
-                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-                    style={{ background: `${colors.textAccent}1F` }}
-                    aria-hidden="true"
-                  >
-                    <CheckCircle size={13} style={{ color: colors.textAccent }} />
+                <li key={i} className="flex items-center gap-4 py-3.5">
+                  <span className="data-type w-6 shrink-0 text-[12px] text-white/35" aria-hidden="true">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
+                  <Check
+                    size={14}
+                    strokeWidth={3}
+                    className="shrink-0"
+                    style={{ color: colors.textAccent }}
+                    aria-hidden="true"
+                  />
                   <span className="text-sm leading-relaxed text-[#CBD5E1]">{perk}</span>
                 </li>
               ))}
@@ -191,66 +216,121 @@ export default function MembershipSection() {
             </div>
           </motion.div>
 
-          {/* Right - Decorative Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.6 }}
-            className="relative"
-          >
-            <div className="relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 overflow-hidden">
-              {/* Glow */}
-              <div
-                className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20"
-                style={{ background: "radial-gradient(circle, #E8231A, transparent)" }}
-              />
+          {/*
+            Right: a boarding pass, not a generic glass card.
 
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-red-900/50" style={{ background: colors.buttonPrimary }}>
-                  <span
-                    className="text-white font-black text-lg"
+            Joining is boarding, which the hero already set up, so the object
+            beside the call to action is a real ticket — printed on paper, torn
+            along a perforation, with a stub. The previous version was a
+            translucent rounded rectangle holding three grey bars standing in
+            for text, which is the placeholder look every template ships.
+            Every string here is still the same CMS field as before.
+          */}
+          <motion.div
+            initial={{ opacity: 0, y: 28, rotate: -2.5 }}
+            whileInView={{ opacity: 1, y: 0, rotate: -1.2 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mx-auto w-full max-w-lg"
+          >
+            <div className="chart-paper relative overflow-hidden rounded-[6px] shadow-[0_40px_80px_-32px_rgba(0,0,0,0.75)]">
+              {/* Airline-style header band */}
+              <div className="flex items-center justify-between gap-4 px-6 py-4" style={{ background: colors.buttonPrimary }}>
+                <div className="flex items-center gap-3">
+                  <Anchor size={18} className="text-white" strokeWidth={2.4} aria-hidden="true" />
+                  <p
+                    className="text-sm font-black uppercase tracking-[0.14em] text-white"
                     style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
                   >
-                    PP
+                    {content.cardTitle}
+                  </p>
+                </div>
+                <p className="data-type text-[12px] font-bold uppercase text-white/80">Member card</p>
+              </div>
+
+              <div className="flex">
+                {/* Main coupon */}
+                <div className="min-w-0 flex-1 p-6">
+                  <div className="flex items-end justify-between gap-4">
+                    <div>
+                      <p className="data-type text-[12px] uppercase ink-muted">From</p>
+                      <p
+                        className="text-2xl font-black leading-none text-[#0F1B33]"
+                        style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
+                      >
+                        IDN
+                      </p>
+                    </div>
+
+                    {/* Route line with a small vessel travelling it */}
+                    <div className="relative mb-1 h-4 flex-1" aria-hidden="true">
+                      <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 border-t border-dashed border-[#C3D2E0]" />
+                      <Sailboat
+                        size={16}
+                        strokeWidth={2.2}
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FCFBF7] px-0.5"
+                        style={{ color: colors.textAccent }}
+                      />
+                    </div>
+
+                    <div className="text-right">
+                      <p className="data-type text-[12px] uppercase ink-muted">To</p>
+                      <p
+                        className="text-2xl font-black leading-none text-[#0F1B33]"
+                        style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
+                      >
+                        AKL
+                      </p>
+                    </div>
+                  </div>
+
+                  <dl className="mt-7 grid grid-cols-3 gap-4">
+                    {[
+                      ["Holder", "Indonesian student"],
+                      ["Status", "Member"],
+                      ["Valid", "Anytime"],
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <dt className="data-type text-[12px] uppercase ink-muted">{label}</dt>
+                        <dd className="mt-1 truncate text-[13px] font-semibold text-[#28394F]">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  {/* Barcode: varied bar widths, drawn from a fixed pattern so
+                      it renders identically on server and client. */}
+                  <div className="mt-7 flex h-11 items-end gap-[3px]" aria-hidden="true">
+                    {BARCODE.map((height, i) => (
+                      <span
+                        key={i}
+                        className="flex-1 bg-[#0F1B33]"
+                        style={{ height: `${height}%`, opacity: i % 3 === 0 ? 0.85 : 0.55 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Perforated seam and stub */}
+                <div className="perforation-v w-[9px] shrink-0" aria-hidden="true" />
+
+                <div className="flex w-[124px] shrink-0 flex-col items-center justify-center gap-1 border-l border-dashed border-[#C3D2E0] px-3 py-6 text-center">
+                  <p className="data-type text-[12px] uppercase ink-muted">Fare</p>
+                  <p
+                    className="text-3xl font-black leading-none text-[#0F1B33]"
+                    style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
+                  >
+                    {content.cardBadge}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-snug ink-body">{content.cardBadgeSubtitle}</p>
+                  <span
+                    aria-hidden="true"
+                    className="stamp-edge mt-3 flex h-9 w-9 rotate-[-12deg] items-center justify-center rounded-sm"
+                    style={{ color: `${colors.textAccent}59` }}
+                  >
+                    <Anchor size={13} strokeWidth={2.5} style={{ color: colors.textAccent }} />
                   </span>
                 </div>
-                <div>
-                  <p className="text-white font-bold">{content.cardTitle}</p>
-                  <p className="text-[#94A3B8] text-sm">Membership Card</p>
-                </div>
               </div>
-
-              {/* Card number style decoration */}
-              <div className="space-y-3 mb-8">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-2 rounded-full bg-white/10" style={{ width: `${100 - i * 15}%` }} />
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[#94A3B8] text-xs uppercase tracking-wider mb-1">Member Since</p>
-                  <p className="text-white font-semibold">2024</p>
-                </div>
-                {/* Static dots decoration */}
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full opacity-60" style={{ background: colors.textAccent }} />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Static badge */}
-            <div className="absolute -top-4 -right-4 border border-white/10 bg-white/5 rounded-xl px-4 py-3 text-center">
-              <p
-                className="font-black text-white text-xl"
-                style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
-              >
-                {content.cardBadge}
-              </p>
-              <p className="text-[#94A3B8] text-xs">{content.cardBadgeSubtitle}</p>
             </div>
           </motion.div>
         </div>

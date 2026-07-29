@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import NewsletterForm from "./NewsletterForm";
+import { Anchor } from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
 import { useMenuItems } from "@/lib/hooks/use-menu-items";
 import type { MenuItem } from "@/lib/api-types";
@@ -95,12 +95,39 @@ export default function Footer() {
   }, [menu, language]);
 
   return (
-    <footer className="bg-[#0D1B33] text-white">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+    /*
+      The footer is the deepest water on the page: the same `.sea-deep` gradient
+      as the masthead and hero, with the faint navigation-chart grid behind it,
+      rope hairlines for edges, and the instrument row (coordinates + year) the
+      dashboard footer already uses. It reads as the floor the whole voyage
+      comes to rest on rather than a plain navy slab.
+    */
+    <footer className="sea-deep relative overflow-hidden text-white">
+      <div
+        aria-hidden="true"
+        className="sea-chart-light pointer-events-none absolute inset-0 opacity-[0.05]"
+        style={{
+          maskImage: "radial-gradient(ellipse 90% 80% at 50% 0%, black 30%, transparent 85%)",
+          WebkitMaskImage: "radial-gradient(ellipse 90% 80% at 50% 0%, black 30%, transparent 85%)",
+        }}
+      />
+      {/* Bearing rings, echoing the masthead and the About compass. */}
+      <svg
+        viewBox="0 0 200 200"
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-16 -top-24 hidden h-80 w-80 lg:block"
+      >
+        <circle cx="100" cy="100" r="88" fill="none" stroke="white" strokeOpacity="0.06" />
+        <circle cx="100" cy="100" r="62" fill="none" stroke="white" strokeOpacity="0.05" strokeDasharray="4 9" />
+        <circle cx="100" cy="100" r="34" fill="none" stroke="white" strokeOpacity="0.05" />
+        <path d="M100 12 L106 96 L100 188 L94 96 Z" fill="#E8231A" fillOpacity="0.18" />
+      </svg>
+
+      <div className="relative mx-auto max-w-7xl px-6 py-16">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-5">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="inline-block mb-5">
+            <Link href="/" className="mb-5 inline-block">
               <Image
                 src="/Logo-PPIA-2025-White.png"
                 alt="PPIA Auckland"
@@ -109,16 +136,23 @@ export default function Footer() {
                 style={{ height: 48, width: "auto" }}
               />
             </Link>
-            <p className="text-[#64748B] text-sm leading-relaxed max-w-xs">
+            <p className="max-w-xs text-sm leading-relaxed text-white/70">
               {t("footer.tagline")}
             </p>
-            <div className="flex items-center gap-3 mt-6">
+
+            {/* Home port line, set as chart data like the hero location tag. */}
+            <p className="data-type mt-5 flex items-center gap-2 text-[12px] uppercase text-white/60">
+              <Anchor size={12} aria-hidden="true" className="text-[#FF8A80]" />
+              Auckland · 36.85° S, 174.76° E
+            </p>
+
+            <div className="mt-6 flex items-center gap-3">
               {socials.map((s) => (
                 <Link
                   key={s.label}
                   href={s.href}
                   aria-label={s.label}
-                  className="w-9 h-9 rounded-lg bg-white/5 hover:bg-[#E8231A] flex items-center justify-center transition-colors duration-200"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition-colors duration-200 hover:border-[#E8231A] hover:bg-[#E8231A] hover:text-white"
                 >
                   {s.svg}
                 </Link>
@@ -126,22 +160,26 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Newsletter */}
-          <div className="lg:col-span-2">
-            <NewsletterForm />
-          </div>
-
-          {/* Links */}
+          {/* Links: each column is a leg of the chart, titled as a data label
+              with a red tick, and its entries threaded on a rope rule. */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
-              <p className="font-display font-semibold text-sm mb-4">{category}</p>
-              <ul className="space-y-3">
+              <p className="data-type flex items-center gap-2 text-[12px] font-bold uppercase text-white/80">
+                <span aria-hidden="true" className="h-px w-5 bg-[#E8231A]" />
+                {category}
+              </p>
+              <span aria-hidden="true" className="rope-rule mt-3 block opacity-60" />
+              <ul className="mt-4 space-y-3">
                 {links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href || "#"}
-                      className="text-[#64748B] hover:text-white text-sm transition-colors"
+                      className="group inline-flex items-center gap-2 text-sm text-white/65 transition-colors hover:text-white"
                     >
+                      <span
+                        aria-hidden="true"
+                        className="h-1 w-1 shrink-0 rounded-full bg-[#E8231A]/50 transition-colors group-hover:bg-[#E8231A]"
+                      />
                       {link.label}
                     </Link>
                   </li>
@@ -151,11 +189,20 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-[#64748B] text-xs">
-          <p>© {new Date().getFullYear()} PPIA Auckland. {t("footer.copyright")}</p>
-          <div className="flex gap-6">
-            <Link href="/legal/privacy-policy" className="hover:text-white transition-colors">{t("footer.privacy")}</Link>
-            <Link href="/legal/terms-of-service" className="hover:text-white transition-colors">{t("footer.terms")}</Link>
+        {/* Instrument row: a rope edge, then the year and legal links as chart
+            data, mirroring the dashboard footer. */}
+        <span aria-hidden="true" className="rope-rule mt-14 block opacity-60" />
+        <div className="mt-6 flex flex-col items-center justify-between gap-4 md:flex-row">
+          <p className="data-type text-[12px] uppercase text-white/55">
+            © {new Date().getFullYear()} PPIA Auckland · {t("footer.copyright")}
+          </p>
+          <div className="data-type flex gap-6 text-[12px] uppercase">
+            <Link href="/legal/privacy-policy" className="text-white/55 transition-colors hover:text-white">
+              {t("footer.privacy")}
+            </Link>
+            <Link href="/legal/terms-of-service" className="text-white/55 transition-colors hover:text-white">
+              {t("footer.terms")}
+            </Link>
           </div>
         </div>
       </div>

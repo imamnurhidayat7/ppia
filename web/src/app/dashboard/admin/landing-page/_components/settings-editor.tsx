@@ -38,6 +38,7 @@ import { useToast } from '@/components/Toast';
 import {
   Briefcase,
   Camera,
+  Megaphone,
   Music2,
   PanelBottom,
   PanelTop,
@@ -48,9 +49,21 @@ import {
   Video,
 } from 'lucide-react';
 
-type ConfigKey = 'header' | 'footer' | 'social' | 'colors';
+type ConfigKey = 'header' | 'footer' | 'social' | 'colors' | 'ANNOUNCEMENT';
 
-type AnyConfig = HeaderConfig | FooterConfig | SocialConfig | ColorConfig;
+/**
+ * The slim strip above the navbar. It has always read SiteConfig key
+ * `ANNOUNCEMENT`, but nothing in the dashboard could write it — so the banner
+ * was effectively unusable.
+ */
+interface AnnouncementConfig {
+  enabled?: boolean;
+  text?: string;
+  href?: string;
+  variant?: 'info' | 'urgent';
+}
+
+type AnyConfig = HeaderConfig | FooterConfig | SocialConfig | ColorConfig | AnnouncementConfig;
 
 /** Shape of the admin site-config endpoint response, so there is no `any` in the component. */
 interface SiteConfigListResponse {
@@ -66,6 +79,7 @@ interface SiteConfigMutationResponse {
 const CONFIG_TABS: { key: ConfigKey; label: string; icon: typeof PanelTop }[] = [
   { key: 'header', label: 'Header', icon: PanelTop },
   { key: 'footer', label: 'Footer', icon: PanelBottom },
+  { key: 'ANNOUNCEMENT', label: 'Announcement bar', icon: Megaphone },
   { key: 'social', label: 'Social media', icon: Share2 },
   { key: 'colors', label: 'Colours', icon: Palette },
 ];
@@ -75,6 +89,7 @@ const SAVE_LABEL: Record<ConfigKey, string> = {
   footer: 'Footer settings saved',
   social: 'Social media links saved',
   colors: 'Brand colours saved',
+  ANNOUNCEMENT: 'Announcement bar saved',
 };
 
 const SOCIAL_PREVIEW: {
@@ -141,6 +156,7 @@ export default function SettingsEditor() {
   const [footerConfig, setFooterConfig] = useState<FooterConfig>({});
   const [socialConfig, setSocialConfig] = useState<SocialConfig>({});
   const [colorConfig, setColorConfig] = useState<ColorConfig>({});
+  const [announcementConfig, setAnnouncementConfig] = useState<AnnouncementConfig>({});
 
   const loadConfigs = useCallback(async () => {
     try {
@@ -158,6 +174,7 @@ export default function SettingsEditor() {
         // showed the fallback values and saving would overwrite the stored
         // palette.
         setColorConfig((map.colors?.config as ColorConfig) || {});
+        setAnnouncementConfig((map.ANNOUNCEMENT?.config as AnnouncementConfig) || {});
       }
     } catch (err) {
       console.error(err);
@@ -200,7 +217,7 @@ export default function SettingsEditor() {
 
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ConfigKey)}>
-      <TabsList className="mb-4 flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+      <TabsList className="mb-4 flex flex-wrap gap-1 rounded-[4px] bg-[#EDF5FB] p-1 dark:bg-slate-800">
         {CONFIG_TABS.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -287,6 +304,85 @@ export default function SettingsEditor() {
             onClick={() => saveConfig('header', headerConfig)}
           >
             Save header
+          </Button>
+        </FormActions>
+      </TabsContent>
+
+      <TabsContent value="ANNOUNCEMENT" className="space-y-5">
+        <SectionCard
+          title="Announcement bar"
+          description="A slim strip above the navigation for time-sensitive notices. Hidden while it is switched off or the message is empty."
+          icon={Megaphone}
+        >
+          <div className="space-y-5">
+            <Field
+              label="Message"
+              htmlFor="announcement-text"
+              hint="Keep it to one line — longer text is truncated on small screens."
+            >
+              <Input
+                id="announcement-text"
+                value={announcementConfig.text || ''}
+                onChange={(event) =>
+                  setAnnouncementConfig({ ...announcementConfig, text: event.target.value })
+                }
+                placeholder="Registration for the 2026 cabinet is open"
+              />
+            </Field>
+
+            <FormGrid columns={2}>
+              <Field
+                label="Link target"
+                htmlFor="announcement-href"
+                hint="Optional. Leave empty for a message with no link."
+              >
+                <Input
+                  id="announcement-href"
+                  value={announcementConfig.href || ''}
+                  onChange={(event) =>
+                    setAnnouncementConfig({ ...announcementConfig, href: event.target.value })
+                  }
+                  placeholder="/register"
+                />
+              </Field>
+              <Field label="Style" htmlFor="announcement-variant" hint="Urgent shows the strip in red.">
+                <select
+                  id="announcement-variant"
+                  value={announcementConfig.variant || 'info'}
+                  onChange={(event) =>
+                    setAnnouncementConfig({
+                      ...announcementConfig,
+                      variant: event.target.value as 'info' | 'urgent',
+                    })
+                  }
+                  className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
+                >
+                  <option value="info">Info (navy)</option>
+                  <option value="urgent">Urgent (red)</option>
+                </select>
+              </Field>
+            </FormGrid>
+
+            <Toggle
+              id="announcement-enabled"
+              label="Show the announcement bar"
+              description="When off, the strip is hidden from every page."
+              checked={Boolean(announcementConfig.enabled)}
+              onChange={(event) =>
+                setAnnouncementConfig({ ...announcementConfig, enabled: event.target.checked })
+              }
+            />
+          </div>
+        </SectionCard>
+
+        <FormActions>
+          <Button
+            variant="primary"
+            leftIcon={<Save className="h-4 w-4" />}
+            isLoading={saving}
+            onClick={() => saveConfig('ANNOUNCEMENT', announcementConfig)}
+          >
+            Save announcement
           </Button>
         </FormActions>
       </TabsContent>
@@ -489,14 +585,14 @@ export default function SettingsEditor() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Open ${entry.label} in a new tab`}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-[#E8231A] hover:text-[#E8231A] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DCE7F1] bg-[#F5FAFD] ink-body transition-colors hover:border-[#E8231A] hover:text-[#E8231A] dark:border-slate-700 dark:bg-slate-800"
                 >
                   <Icon className="h-5 w-5" />
                 </a>
               );
             })}
             {SOCIAL_PREVIEW.every((entry) => !socialConfig[entry.key]) && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm ink-muted">
                 No links filled in yet.
               </p>
             )}
@@ -538,7 +634,7 @@ export default function SettingsEditor() {
                       setColorConfig({ ...colorConfig, [entry.key]: event.target.value })
                     }
                     aria-label={`Pick ${entry.label.toLowerCase()}`}
-                    className="h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-slate-200 dark:border-slate-700"
+                    className="h-11 w-14 shrink-0 cursor-pointer rounded-[4px] border border-[#DCE7F1] dark:border-slate-700"
                   />
                   <Input
                     id={`color-${entry.key}`}
@@ -561,7 +657,7 @@ export default function SettingsEditor() {
           icon={Palette}
         >
           <div
-            className="rounded-2xl border border-slate-200 p-6 dark:border-slate-700"
+            className="rounded-[5px] border border-[#DCE7F1] p-6 dark:border-slate-700"
             style={{ backgroundColor: swatchValue(colorConfig.primary, '#1A2B4A') }}
           >
             <p className="font-display text-lg font-bold text-white">Example heading</p>
@@ -574,13 +670,13 @@ export default function SettingsEditor() {
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <span
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                className="rounded-[4px] px-4 py-2 text-sm font-semibold text-white"
                 style={{ backgroundColor: swatchValue(colorConfig.buttonPrimary, '#E8231A') }}
               >
                 Primary button
               </span>
               <span
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                className="rounded-[4px] px-4 py-2 text-sm font-semibold text-white"
                 style={{
                   backgroundColor: swatchValue(colorConfig.accent, '#E8231A'),
                   opacity: 0.8,

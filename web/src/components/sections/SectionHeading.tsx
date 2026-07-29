@@ -74,7 +74,7 @@ export default function SectionHeading({
 
   const isCentered = align === 'center';
   const titleColor = tone === 'dark' ? 'text-white' : 'text-[#0F1B33]';
-  const introColor = tone === 'dark' ? 'text-white/55' : 'text-[#64748B]';
+  const introColor = tone === 'dark' ? 'text-white/75' : 'ink-body';
 
   const heading = (
     <>

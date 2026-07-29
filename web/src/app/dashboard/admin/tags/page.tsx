@@ -310,7 +310,7 @@ export default function AdminTagsPage() {
             </>
           }
           footer={
-            <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div className="data-type border-t border-[#E7EFF7] px-5 py-3 text-[12px] ink-muted dark:border-slate-800">
               Showing {filteredTags.length} of {stats.total} tags
             </div>
           }
@@ -320,35 +320,35 @@ export default function AdminTagsPage() {
               <Td>
                 <div className="flex items-center gap-3">
                   <span
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                    aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
                     style={{ backgroundColor: `${tag.color || '#6B7280'}20` }}
                   >
                     <TagIcon className="h-4 w-4" style={{ color: tag.color || '#6B7280' }} />
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                    <p className="truncate font-semibold ink-strong">
                       {tag.name}
                     </p>
-                    <p className="truncate text-xs text-slate-400">/{tag.slug}</p>
+                    <p className="data-type truncate text-[12px] ink-muted">/{tag.slug}</p>
                   </div>
                 </div>
               </Td>
               <Td>
                 {tag.description ? (
-                  <span className="line-clamp-2 max-w-sm text-slate-600 dark:text-slate-300">
+                  <span className="line-clamp-2 max-w-sm ink-body">
                     {tag.description}
                   </span>
                 ) : (
-                  <span className="text-slate-400">—</span>
+                  <span className="ink-muted">—</span>
                 )}
               </Td>
               <Td align="center">
-                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                <span className="data-type font-semibold ink-strong">
                   {tag._count?.articles ?? 0}
                 </span>
               </Td>
               <Td align="center">
-                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                <span className="data-type font-semibold ink-strong">
                   {tag._count?.researches ?? 0}
                 </span>
               </Td>
@@ -358,7 +358,7 @@ export default function AdminTagsPage() {
                     className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: tag.color || '#6B7280' }}
                   />
-                  <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                  <span className="data-type text-[12px] ink-muted">
                     {tag.color || '—'}
                   </span>
                 </span>
@@ -397,7 +397,7 @@ export default function AdminTagsPage() {
               value={formData.name}
               onChange={(event) => setFormData({ ...formData, name: event.target.value })}
               placeholder="For example: Scholarships"
-              className="input-base"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>
 
@@ -408,7 +408,7 @@ export default function AdminTagsPage() {
               value={formData.description}
               onChange={(event) => setFormData({ ...formData, description: event.target.value })}
               placeholder="A short note on when this tag is used…"
-              className="input-base resize-none"
+              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
             />
           </Field>
 
@@ -420,7 +420,7 @@ export default function AdminTagsPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <span
-                  className="h-11 w-11 shrink-0 rounded-xl border border-slate-200 dark:border-slate-700"
+                  className="h-11 w-11 shrink-0 rounded-[4px] border border-[#DCE7F1] dark:border-slate-700"
                   style={{ backgroundColor: formData.color }}
                 />
                 <input
@@ -429,7 +429,7 @@ export default function AdminTagsPage() {
                   value={formData.color}
                   onChange={(event) => setFormData({ ...formData, color: event.target.value })}
                   placeholder="#E8231A"
-                  className="input-base font-mono"
+                  className="input-base data-type rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
                 />
               </div>
               <div className="grid grid-cols-7 gap-2">
@@ -441,7 +441,7 @@ export default function AdminTagsPage() {
                     aria-label={`Select ${color} colour`}
                     aria-pressed={formData.color === color}
                     className={cn(
-                      'h-8 w-8 rounded-lg transition-transform hover:scale-110',
+                      'h-8 w-8 rounded-[4px] transition-transform hover:scale-110',
                       formData.color === color &&
                         'ring-2 ring-[#E8231A] ring-offset-2 dark:ring-offset-slate-900'
                     )}
@@ -452,8 +452,8 @@ export default function AdminTagsPage() {
             </div>
           </Field>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <div className="rounded-[4px] border border-[#DCE7F1] bg-[#F5FAFD] p-4 dark:border-slate-800 dark:bg-slate-800/50">
+            <p className="mb-2 data-type text-[12px] font-bold uppercase ink-muted">
               Preview
             </p>
             <span

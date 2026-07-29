@@ -8,7 +8,14 @@ import { Menu, X, ChevronDown, User, LogOut } from "lucide-react";
 import GlobalSearch from "./GlobalSearch";
 import { useLanguage } from "@/lib/language-context";
 import { useMenuItems } from "@/lib/hooks/use-menu-items";
+import { useHasElections } from "@/lib/hooks/use-has-elections";
 import type { MenuItem } from "@/lib/api-types";
+
+/** A nav entry points at PEMIRA if it, or any of its children, links to /pemira. */
+function isPemiraItem(item: MenuItem): boolean {
+  if (item.href === "/pemira") return true;
+  return (item.children ?? []).some((child) => child.href === "/pemira");
+}
 
 const getNavItems = (lang: string) => lang === "id" ? navItemsId : navItemsEn;
 
@@ -91,15 +98,20 @@ export default function Navbar() {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const { language } = useLanguage();
   const { menu } = useMenuItems("header_main");
+  const hasElections = useHasElections();
 
-  // Use CMS menu items if available, otherwise fall back to hardcoded items
+  // Use CMS menu items if available, otherwise fall back to hardcoded items.
+  // PEMIRA is dropped once we have confirmed there are no elections, so deleting
+  // the last election also removes it from the header (whichever source the
+  // menu comes from).
   const navItems = useMemo<MenuItem[]>(() => {
-    if (menu?.items && menu.enabled !== false) {
-      const items = language === "id" ? menu.items.id : menu.items.en;
-      if (items && items.length > 0) return items;
-    }
-    return getNavItems(language);
-  }, [menu, language]);
+    const source =
+      menu?.items && menu.enabled !== false
+        ? (language === "id" ? menu.items.id : menu.items.en) || getNavItems(language)
+        : getNavItems(language);
+    const items = source.length > 0 ? source : getNavItems(language);
+    return hasElections === false ? items.filter((item) => !isPemiraItem(item)) : items;
+  }, [menu, language, hasElections]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -122,13 +134,22 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-[#0D1B33] shadow-lg shadow-black/20 border-b border-white/10'
-          : 'bg-[#0D1B33]/95 backdrop-blur-md'
+          ? 'border-b border-white/10 bg-[#071321] shadow-lg shadow-black/20'
+          : 'bg-[#071321]/95 backdrop-blur-md'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" ref={dropdownRef}>
+      {/*
+        Faint navigation-chart grid behind the bar, the same texture the
+        masthead and footer carry, so the header reads as part of the maritime
+        surface rather than a flat strip. It fades out below the bar.
+      */}
+      <div
+        aria-hidden="true"
+        className="sea-chart-light pointer-events-none absolute inset-0 opacity-[0.04]"
+      />
+      <div className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-4" ref={dropdownRef}>
         {/* Logo */}
         <Link href="/" className="flex items-center group">
           <Image
@@ -159,15 +180,15 @@ export default function Navbar() {
                 </button>
 
                 {dropdown === item.label && (
-                  <div className="absolute top-full left-0 mt-3 w-52 bg-[#0D1B33] border border-white/10 rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
+                  <div className="animate-fade-in absolute left-0 top-full mt-3 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#071321] shadow-2xl shadow-black/40">
                     {item.children.map((child) => (
                       <Link
                         key={child.href || child.label}
                         href={child.href || "#"}
                         onClick={() => setDropdown(null)}
-                        className="flex items-center px-4 py-3 text-[#94A3B8] hover:text-white hover:bg-white/5 text-sm transition-colors border-b border-white/5 last:border-0"
+                        className="group flex items-center gap-3 border-b border-white/5 px-4 py-3 text-sm text-[#94A3B8] transition-colors last:border-0 hover:bg-white/5 hover:text-white"
                       >
-                        <span className="w-1 h-1 rounded-full bg-[#E8231A] mr-3 shrink-0" />
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-[#E8231A]/60 transition-colors group-hover:bg-[#E8231A]" />
                         {child.label}
                       </Link>
                     ))}
@@ -214,12 +235,12 @@ export default function Navbar() {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute top-full right-0 mt-3 w-56 bg-[#0D1B33] border border-white/10 rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
+                <div className="absolute top-full right-0 mt-3 w-56 bg-[#071321] border border-white/10 rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
                   <div className="px-4 py-3 border-b border-white/10">
                     <p className="text-white font-medium truncate">{user.name}</p>
-                    <p className="text-[#64748B] text-xs truncate">{user.email}</p>
+                    <p className="text-[#94A3B8] text-xs truncate">{user.email}</p>
                     {user.role && (
-                      <span className="inline-block mt-1 text-xs bg-[#E8231A]/20 text-[#E8231A] px-2 py-0.5 rounded">
+                      <span className="data-type mt-1.5 inline-block rounded-md bg-[#E8231A]/20 px-2 py-0.5 text-[12px] font-bold uppercase text-[#FF8A80]">
                         {user.role}
                       </span>
                     )}
@@ -236,10 +257,10 @@ export default function Navbar() {
                     {(user.role === "SUPER_ADMIN" ) && (
                       <Link
                         href="/dashboard/admin"
-                        className="flex items-center px-4 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-sm transition-colors"
+                        className="group flex items-center gap-3 px-4 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-sm transition-colors"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        <span className="w-1 h-1 rounded-full bg-[#E8231A] mr-3 shrink-0" />
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-[#E8231A]/60 transition-colors group-hover:bg-[#E8231A]" />
                         Admin Panel
                       </Link>
                     )}
@@ -264,9 +285,14 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/register"
-                className="bg-[#E8231A] hover:bg-[#C41E16] text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors duration-200 shadow-lg shadow-red-900/30"
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-[#E8231A] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(232,35,26,0.8)] transition-transform duration-300 hover:-translate-y-0.5"
               >
-                {language === "id" ? "Bergabung" : "Join Us"}
+                {/* The same sheen wipe the hero's primary CTA carries. */}
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+                />
+                <span className="relative">{language === "id" ? "Bergabung" : "Join Us"}</span>
               </Link>
             </>
           )}
@@ -284,7 +310,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden bg-[#0D1B33]/98 backdrop-blur-md border-t border-white/5">
+        <div className="md:hidden bg-[#071321]/98 backdrop-blur-md border-t border-white/5">
           <div className="px-6 py-4 flex flex-col gap-1">
             {navItems.map((item) =>
               item.children ? (
@@ -303,9 +329,9 @@ export default function Navbar() {
                           key={child.href || child.label}
                           href={child.href || "#"}
                           onClick={() => setMenuOpen(false)}
-                          className="text-[#64748B] hover:text-white text-sm py-2 flex items-center gap-2 transition-colors"
+                          className="group flex items-center gap-2 py-2 text-sm text-[#94A3B8] transition-colors hover:text-white"
                         >
-                          <span className="w-1 h-1 rounded-full bg-[#E8231A] shrink-0" />
+                          <span className="h-1 w-1 shrink-0 rounded-full bg-[#E8231A]/60 transition-colors group-hover:bg-[#E8231A]" />
                           {child.label}
                         </Link>
                       ))}
@@ -335,7 +361,7 @@ export default function Navbar() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-medium truncate">{user.name}</p>
-                    <p className="text-[#64748B] text-xs truncate">{user.email}</p>
+                    <p className="text-[#94A3B8] text-xs truncate">{user.email}</p>
                   </div>
                 </div>
                 <Link href="/dashboard" className="text-[#94A3B8] hover:text-white text-sm font-medium py-2">Dashboard</Link>
@@ -347,7 +373,7 @@ export default function Navbar() {
             ) : (
               <div className="pt-3 border-t border-white/10 flex flex-col gap-3 mt-2">
                 <Link href="/login" className="text-[#94A3B8] hover:text-white text-sm font-medium">Login</Link>
-                <Link href="/register" className="bg-[#E8231A] text-white text-sm font-semibold px-5 py-2.5 rounded-lg text-center">Join Us</Link>
+                <Link href="/register" className="rounded-full bg-[#E8231A] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_30px_-12px_rgba(232,35,26,0.8)] transition-colors hover:bg-[#C41E16]">Join Us</Link>
               </div>
             )}
           </div>

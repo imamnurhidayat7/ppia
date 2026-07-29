@@ -30,7 +30,7 @@ export const translations = {
     "nav.opportunities_sub.partnership": "Partnership",
 
     // Hero Section
-    "hero.title": "Berlayar\nuntuk Indonesia",
+    "hero.title": "Berlabuh.\nBertumbuh.\nBerlayar.",
     "hero.subtitle": "The home of Indonesian students in Auckland. A place to grow, connect, and build the future together.",
     "hero.join": "Join Our Community",
     "hero.meet": "Meet the Team",
@@ -280,7 +280,7 @@ export const translations = {
     "nav.opportunities_sub.partnership": "Kemitraan",
 
     // Hero Section
-    "hero.title": "Berlayar\nuntuk Indonesia",
+    "hero.title": "Berlabuh.\nBertumbuh.\nBerlayar.",
     "hero.subtitle": "Rumah bagi pelajar Indonesia di Auckland. Tempat untuk tumbuh, terhubung, dan membangun masa depan bersama.",
     "hero.join": "Bergabung dengan Komunitas",
     "hero.meet": "Tim Kami",

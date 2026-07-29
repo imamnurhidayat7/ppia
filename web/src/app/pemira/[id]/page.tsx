@@ -403,7 +403,7 @@ export default function ElectionDetailPage() {
                           { label: 'Status', value: statusLabelText },
                         ].map(item => (
                           <div key={item.label} className="bg-slate-50 rounded-xl p-4">
-                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">{item.label}</p>
+                            <p className="text-[12px] font-black text-slate-600 uppercase tracking-wider mb-1">{item.label}</p>
                             <p className="text-sm font-bold text-slate-800">{item.value}</p>
                           </div>
                         ))}

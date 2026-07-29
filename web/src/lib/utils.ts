@@ -16,10 +16,30 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+// Intl throws "Invalid option : option" when dateStyle is combined with the
+// individual date/time components, so the default style must step aside as soon
+// as the caller spells the format out itself.
+const DATE_STYLE_CONFLICTS = [
+  'dateStyle',
+  'weekday',
+  'era',
+  'year',
+  'month',
+  'day',
+  'dayPeriod',
+  'hour',
+  'minute',
+  'second',
+  'fractionalSecondDigits',
+] as const;
+
 // Format date
 export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
+  const callerSetsOwnParts =
+    options !== undefined && DATE_STYLE_CONFLICTS.some(key => options[key] !== undefined);
+
   return new Intl.DateTimeFormat('en-NZ', {
-    dateStyle: 'medium',
+    ...(callerSetsOwnParts ? {} : { dateStyle: 'medium' }),
     ...options,
   }).format(new Date(date));
 }

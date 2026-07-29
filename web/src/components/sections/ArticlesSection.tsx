@@ -137,7 +137,7 @@ export default function ArticlesSection({
   }, [hasInitial]);
 
   return (
-    <section id="articles" className="py-28 bg-[#F8FAFC]">
+    <section id="articles" className="sea-shore relative overflow-hidden py-28">
       <div className="max-w-7xl mx-auto px-6">
         <SectionHeading
           eyebrow={header.badge}
@@ -189,7 +189,7 @@ export default function ArticlesSection({
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: i * 0.1 }}
-                      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#E7EDF4] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-[0_28px_70px_-28px_rgba(15,27,51,0.3)]"
+                      className="chart-paper group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[5px] border border-[#DCE7F1] transition-all duration-300 hover:-translate-y-1 hover:border-[#C3D2E0] hover:shadow-[0_28px_70px_-30px_rgba(7,19,33,0.42)]"
                     >
                       <div
                         className="relative h-48 w-full overflow-hidden"
@@ -207,26 +207,30 @@ export default function ArticlesSection({
                           />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                        {/* Category as a filed label, squared off and ruled,
+                            rather than another pill floating on the image. */}
                         <span
-                          className="absolute bottom-4 left-4 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ring-1 ring-white/25 backdrop-blur-sm"
-                          style={{ background: `${style.categoryColor}D9` }}
+                          className="data-type absolute bottom-0 left-0 px-3 py-1.5 text-[12px] font-bold uppercase text-white"
+                          style={{ background: `${style.categoryColor}E6` }}
                         >
                           {article.category || "Article"}
                         </span>
                       </div>
 
                       <div className="flex flex-1 flex-col p-6">
-                        <div className="mb-3 flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-wide text-[#94A3B8]">
+                        {/* Log-entry meta line: date and duration set as data,
+                            separated by a rule that runs to the card edge. */}
+                        <div className="data-type mb-3 flex items-center gap-3 text-[12px] uppercase ink-muted">
                           <span>
-                            {new Date(article.createdAt).toLocaleDateString("en-US", {
+                            {new Date(article.createdAt).toLocaleDateString("en-NZ", {
+                              day: "2-digit",
                               month: "short",
-                              day: "numeric",
                               year: "numeric",
                             })}
                           </span>
-                          <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#CBD5E1]" />
+                          <span aria-hidden="true" className="rope-rule h-px flex-1 opacity-70" />
                           <span className="flex items-center gap-1">
-                            <Clock size={11} />
+                            <Clock size={10} aria-hidden="true" />
                             {article.readTime ? `${Math.ceil(article.readTime / 60)} min` : "3 min"}
                           </span>
                         </div>
@@ -247,7 +251,7 @@ export default function ArticlesSection({
                         >
                           {article.title}
                         </h3>
-                        <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-[#64748B]">
+                        <p className="line-clamp-2 flex-1 text-sm leading-relaxed ink-body">
                           {toPlainText(article.excerpt)}
                         </p>
 

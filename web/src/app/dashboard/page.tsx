@@ -82,43 +82,56 @@ const PROFILE_FIELDS: { key: string; label: string }[] = [
   { key: 'linkedIn', label: 'LinkedIn' },
 ];
 
+/**
+ * `tint` is now the icon colour only. The circle around it is a porthole frame
+ * (double ring, no fill), so five tiles read as one instrument panel instead of
+ * five differently painted swatches.
+ */
 const QUICK_LINKS = [
   {
     label: 'Articles',
     href: '/dashboard/articles',
     icon: FileText,
     description: 'Community news and writing',
-    tint: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300',
+    tint: 'text-emerald-600 dark:text-emerald-300',
   },
   {
     label: 'Events',
     href: '/dashboard/events',
     icon: Calendar,
     description: 'Community calendar and registrations',
-    tint: 'bg-[#FFF0EF] text-[#E8231A] dark:bg-[#E8231A]/20 dark:text-[#FF8A84]',
+    tint: 'text-[#C41E16] dark:text-[#FF8A84]',
   },
   {
     label: 'Research',
     href: '/dashboard/research',
     icon: BookOpen,
     description: 'Publications and academic work',
-    tint: 'bg-violet-50 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300',
+    tint: 'text-violet-600 dark:text-violet-300',
   },
   {
     label: 'PEMIRA',
     href: '/dashboard/pemira',
     icon: Vote,
     description: 'Student election',
-    tint: 'bg-sky-50 text-sky-600 dark:bg-sky-900/40 dark:text-sky-300',
+    tint: 'text-sky-600 dark:text-sky-300',
   },
   {
     label: 'My profile',
     href: '/dashboard/profile',
     icon: User,
     description: 'Personal details and member card',
-    tint: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+    tint: 'ink-body',
   },
 ];
+
+/** Double-ring porthole used for every decorative icon on this page. */
+const PORTHOLE_RING = {
+  boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)',
+} as const;
+
+/** Metadata dates read as log entries: 05 Mar 2025. */
+const DATE_OPTS = { day: '2-digit', month: 'short', year: 'numeric' } as const;
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -131,7 +144,7 @@ function Panel({ children, className }: { children: React.ReactNode; className?:
   return (
     <div
       className={cn(
-        'rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900',
+        'chart-paper rounded-[5px] border border-[#DCE7F1] p-5 dark:border-slate-800',
         className
       )}
     >
@@ -148,9 +161,13 @@ function SectionHeading({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-4">
-      <h2 className="font-display text-lg font-bold text-slate-900 dark:text-slate-50">{title}</h2>
-      {action}
+    <div className="mb-4">
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="font-display text-lg font-bold ink-strong">{title}</h2>
+        {action}
+      </div>
+      {/* Rope hairline under the section label, as on the public pages. */}
+      <span aria-hidden="true" className="rope-rule mt-2 block opacity-60" />
     </div>
   );
 }
@@ -291,7 +308,10 @@ export default function DashboardPage() {
   if (isLoading || !user) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#E8231A]" />
+        <div
+          aria-hidden="true"
+          className="h-10 w-10 animate-spin rounded-full border-2 border-[#DCE7F1] border-t-[#E8231A] dark:border-slate-800 dark:border-t-[#E8231A]"
+        />
       </div>
     );
   }
@@ -301,16 +321,39 @@ export default function DashboardPage() {
 
   return (
     <div className="animate-fade-in space-y-8">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0D1B33] via-[#1A2B4A] to-[#24406f] p-6 sm:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.06] dashboard-grid-texture" />
-        <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#E8231A]/25 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-sky-400/15 blur-3xl" />
+      {/* Hero — below the waterline, same surface as the public deep-sea bands. */}
+      <section className="sea-deep relative overflow-hidden rounded-[6px] p-6 sm:p-8">
+        <div
+          aria-hidden="true"
+          className="sea-chart-light pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            maskImage: 'radial-gradient(ellipse 80% 75% at 35% 45%, transparent 15%, black 85%)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse 80% 75% at 35% 45%, transparent 15%, black 85%)',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#E8231A]/25 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-sky-400/15 blur-3xl"
+        />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-4">
-            <div className="shrink-0 rounded-2xl border border-white/15 bg-white/10 p-1 backdrop-blur-sm">
-              <Avatar src={user.avatar} name={user.name || user.username} size="xl" />
+            {/* Square avatar to match its frame — a circle inside a rounded
+                square left visible gaps at the corners. */}
+            {/* No padding: the photo fills the frame edge to edge, with the
+                frame doing the clipping so the corners stay rounded. */}
+            <div className="shrink-0 overflow-hidden rounded-[7px] border border-white/15 bg-white/10 backdrop-blur-sm">
+              <Avatar
+                src={user.avatar}
+                name={user.name || user.username}
+                size="xl"
+                shape="square"
+              />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -322,7 +365,7 @@ export default function DashboardPage() {
                       : 'Member'}
                 </Badge>
                 {user.division?.name && (
-                  <span className="rounded-md bg-white/10 px-2 py-0.5 text-xs font-medium text-white/80">
+                  <span className="data-type rounded-[3px] bg-white/10 px-2 py-0.5 text-[12px] font-bold uppercase text-white/80">
                     {user.division.name}
                   </span>
                 )}
@@ -330,14 +373,14 @@ export default function DashboardPage() {
               <h1 className="mt-2 truncate font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
                 {greeting()}, {user.firstName || user.name}
               </h1>
-              <p className="mt-1 truncate text-sm text-white/60">{user.email}</p>
+              <p className="data-type mt-1 truncate text-[12px] text-white/70">{user.email}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/dashboard/events"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-[5px] border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
             >
               <Calendar className="h-4 w-4" />
               Browse events
@@ -347,7 +390,7 @@ export default function DashboardPage() {
                 href={whatsappGroupLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1FAF55]"
+                className="inline-flex items-center gap-2 rounded-[5px] bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1FAF55]"
               >
                 <MessageCircle className="h-4 w-4" />
                 WhatsApp group
@@ -361,27 +404,29 @@ export default function DashboardPage() {
       {(isPending || isRejected) && (
         <div
           className={cn(
-            'flex flex-col gap-3 rounded-2xl border p-5 sm:flex-row sm:items-center',
+            'flex flex-col gap-3 rounded-[5px] border p-5 sm:flex-row sm:items-center',
             isPending
               ? 'border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/20'
               : 'border-danger-200 bg-danger-50 dark:border-danger-900/50 dark:bg-danger-900/20'
           )}
         >
           <span
+            aria-hidden="true"
             className={cn(
-              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
               isPending
-                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
-                : 'bg-danger-100 text-danger-700 dark:bg-danger-900/50 dark:text-danger-300'
+                ? 'text-amber-700 dark:text-amber-300'
+                : 'text-danger-700 dark:text-danger-300'
             )}
+            style={PORTHOLE_RING}
           >
             {isPending ? <Clock className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            <p className="text-sm font-bold ink-strong">
               {isPending ? 'Membership pending approval' : 'Registration rejected'}
             </p>
-            <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-0.5 text-sm ink-body">
               {isPending
                 ? 'The committee is reviewing your registration. Some features unlock once it is approved.'
                 : user.rejectionReason || 'Contact the committee for more information.'}
@@ -389,7 +434,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/dashboard/profile"
-            className="shrink-0 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition-colors hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            className="chart-paper shrink-0 rounded-[5px] border border-[#DCE7F1] px-4 py-2 text-sm font-semibold ink-strong transition-colors hover:border-[#C3D2E0] dark:border-slate-700"
           >
             View profile
           </Link>
@@ -400,20 +445,25 @@ export default function DashboardPage() {
       {election && (
         <Link
           href="/dashboard/pemira"
-          className="group flex flex-col gap-3 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-white p-5 transition-all hover:border-sky-300 hover:shadow-md sm:flex-row sm:items-center dark:border-sky-900/50 dark:from-sky-900/20 dark:to-slate-900"
+          className="chart-paper group flex flex-col gap-3 rounded-[5px] border border-sky-200 p-5 transition-all hover:border-sky-300 hover:shadow-md sm:flex-row sm:items-center dark:border-sky-900/50"
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
+          <span
+            aria-hidden="true"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sky-700 dark:text-sky-300"
+            style={PORTHOLE_RING}
+          >
             <Vote className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              <p className="text-sm font-bold ink-strong">
                 {election.title}
               </p>
               <Badge variant="primary">{election.status}</Badge>
             </div>
-            <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
-              Voting {formatDate(election.votingStart)} – {formatDate(election.votingEnd)}
+            <p className="data-type mt-1 text-[12px] ink-body">
+              Voting {formatDate(election.votingStart, DATE_OPTS)} –{' '}
+              {formatDate(election.votingEnd, DATE_OPTS)}
             </p>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-sky-700 dark:text-sky-300">
@@ -472,7 +522,7 @@ export default function DashboardPage() {
               action={
                 <Link
                   href="/dashboard/events"
-                  className="shrink-0 text-sm font-semibold text-[#E8231A] hover:underline"
+                  className="shrink-0 accent-label text-sm font-semibold hover:underline"
                 >
                   All events
                 </Link>
@@ -486,15 +536,19 @@ export default function DashboardPage() {
               </div>
             ) : myUpcoming.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                  <Calendar className="h-5 w-5 text-slate-400" />
+                <span
+                  aria-hidden="true"
+                  className="flex h-11 w-11 items-center justify-center rounded-full ink-muted"
+                  style={PORTHOLE_RING}
+                >
+                  <Calendar className="h-5 w-5" />
                 </span>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                <p className="text-sm font-medium ink-strong">
                   You have not joined any events yet
                 </p>
                 <Link
                   href="/dashboard/events"
-                  className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-[#E8231A] hover:underline"
+                  className="mt-1 inline-flex items-center gap-1 accent-label text-sm font-semibold hover:underline"
                 >
                   Find an event <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
@@ -507,23 +561,25 @@ export default function DashboardPage() {
                     <li key={registration.id}>
                       <Link
                         href={`/dashboard/events/${event.slug}`}
-                        className="flex items-center gap-4 rounded-xl border border-slate-200 p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+                        className="flex items-center gap-4 rounded-[5px] border border-[#DCE7F1] p-3 transition-colors hover:border-[#C3D2E0] hover:bg-[#F5FAFD] dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
                       >
-                        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-[#0D1B33] text-white">
-                          <span className="text-[10px] font-semibold uppercase leading-none">
+                        {/* Date block reads as a tide-table cell: month above,
+                            day below, both in the data face. */}
+                        <div className="sea-deep flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[5px] text-white">
+                          <span className="data-type text-[12px] font-bold uppercase leading-none">
                             {new Date(event.startDate).toLocaleDateString('en-NZ', {
                               month: 'short',
                             })}
                           </span>
-                          <span className="text-lg font-black leading-none">
+                          <span className="data-type mt-0.5 text-base font-black leading-none">
                             {new Date(event.startDate).getDate()}
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          <p className="truncate text-sm font-semibold ink-strong">
                             {event.title}
                           </p>
-                          <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                          <p className="data-type mt-1 flex items-center gap-1.5 truncate text-[12px] ink-muted">
                             {event.location && (
                               <>
                                 <MapPin className="h-3 w-3 shrink-0" />
@@ -545,7 +601,7 @@ export default function DashboardPage() {
                               without searching the guest list. Not shown once
                               you are already through. */}
                           {registration.checkInCode && !registration.checkedInAt && (
-                            <span className="font-mono text-[11px] font-bold tracking-widest text-slate-400">
+                            <span className="data-type text-[12px] font-bold ink-muted">
                               {registration.checkInCode}
                             </span>
                           )}
@@ -564,7 +620,7 @@ export default function DashboardPage() {
               action={
                 <Link
                   href="/dashboard/articles"
-                  className="shrink-0 text-sm font-semibold text-[#E8231A] hover:underline"
+                  className="shrink-0 accent-label text-sm font-semibold hover:underline"
                 >
                   All articles
                 </Link>
@@ -577,7 +633,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : articles.length === 0 ? (
-              <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              <p className="py-8 text-center text-sm ink-body">
                 No published articles yet.
               </p>
             ) : (
@@ -586,10 +642,10 @@ export default function DashboardPage() {
                   <Link
                     key={article.id}
                     href={`/dashboard/articles/${article.slug}`}
-                    className="group flex gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+                    className="group flex gap-3 rounded-[5px] border border-[#DCE7F1] p-3 transition-colors hover:border-[#C3D2E0] hover:bg-[#F5FAFD] dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
                   >
                     {/* `relative` is what `fill` positions against. */}
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[3px] bg-[#EDF5FB] dark:bg-slate-800">
                       {article.imageUrl ? (
                         <Image
                           // getImageUrl returns undefined for an unrecognised
@@ -604,21 +660,21 @@ export default function DashboardPage() {
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <FileText className="h-5 w-5 text-slate-400" />
+                          <FileText className="h-5 w-5 ink-muted" />
                         </div>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
                       {article.category && (
-                        <span className="text-[11px] font-bold uppercase tracking-wide text-[#E8231A]">
+                        <span className="data-type accent-label text-[12px] font-bold uppercase">
                           {article.category}
                         </span>
                       )}
-                      <p className="line-clamp-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <p className="line-clamp-2 text-sm font-semibold ink-strong">
                         {article.title}
                       </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {formatDate(article.createdAt)}
+                      <p className="data-type mt-1 text-[12px] ink-muted">
+                        {formatDate(article.createdAt, DATE_OPTS)}
                       </p>
                     </div>
                   </Link>
@@ -641,7 +697,7 @@ export default function DashboardPage() {
                     r="15.5"
                     fill="none"
                     strokeWidth="4"
-                    className="stroke-slate-100 dark:stroke-slate-800"
+                    className="stroke-[#DCE7F1] dark:stroke-slate-800"
                   />
                   <circle
                     cx="18"
@@ -654,21 +710,21 @@ export default function DashboardPage() {
                     strokeDasharray={`${(profileGaps.percent / 100) * 97.4} 97.4`}
                   />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-slate-900 dark:text-slate-100">
+                <span className="data-type absolute inset-0 flex items-center justify-center text-sm font-black ink-strong">
                   {profileGaps.percent}%
                 </span>
               </div>
               <div className="min-w-0">
                 {profileGaps.missing.length === 0 ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm ink-body">
                     Your profile is complete. Thank you!
                   </p>
                 ) : (
                   <>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                    <p className="text-sm ink-body">
                       {profileGaps.missing.length} details still missing:
                     </p>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    <p className="mt-1 text-[12px] ink-muted">
                       {profileGaps.missing.slice(0, 3).join(', ')}
                       {profileGaps.missing.length > 3 &&
                         ` +${profileGaps.missing.length - 3} more`}
@@ -679,7 +735,7 @@ export default function DashboardPage() {
             </div>
             <Link
               href="/dashboard/profile"
-              className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="mt-4 flex items-center justify-center gap-2 rounded-[5px] border border-[#DCE7F1] py-2.5 text-sm font-semibold ink-body transition-colors hover:bg-[#F5FAFD] dark:border-slate-700 dark:hover:bg-slate-800"
             >
               Update profile
               <ArrowRight className="h-3.5 w-3.5" />
@@ -692,7 +748,7 @@ export default function DashboardPage() {
               action={
                 <Link
                   href="/dashboard/research"
-                  className="shrink-0 text-sm font-semibold text-[#E8231A] hover:underline"
+                  className="shrink-0 accent-label text-sm font-semibold hover:underline"
                 >
                   All
                 </Link>
@@ -705,7 +761,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : research.length === 0 ? (
-              <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+              <p className="py-6 text-center text-sm ink-body">
                 No publications yet.
               </p>
             ) : (
@@ -714,15 +770,15 @@ export default function DashboardPage() {
                   <li key={item.id}>
                     <Link
                       href={`/dashboard/research/${item.slug}`}
-                      className="-mx-2 flex items-start gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                      className="-mx-2 flex items-start gap-2.5 rounded-[3px] px-2 py-2 transition-colors hover:bg-[#F5FAFD] dark:hover:bg-slate-800/60"
                     >
-                      <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+                      <BookOpen aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
                       <span className="min-w-0 flex-1">
-                        <span className="line-clamp-2 text-sm font-medium text-slate-900 dark:text-slate-100">
+                        <span className="line-clamp-2 text-sm font-medium ink-strong">
                           {item.title}
                         </span>
                         {typeof item.viewCount === 'number' && (
-                          <span className="text-xs text-slate-400">
+                          <span className="data-type block text-[12px] ink-muted">
                             {item.viewCount} views
                           </span>
                         )}
@@ -735,8 +791,12 @@ export default function DashboardPage() {
           </Panel>
 
           {whatsappGroupLink && (
-            <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#25D366] to-[#128C7E] p-5 text-white">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+            <div className="overflow-hidden rounded-[5px] bg-gradient-to-br from-[#25D366] to-[#128C7E] p-5 text-white">
+              <span
+                aria-hidden="true"
+                className="flex h-11 w-11 items-center justify-center rounded-full"
+                style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.35), 0 0 0 4px rgba(255,255,255,0.12)' }}
+              >
                 <MessageCircle className="h-5 w-5" />
               </span>
               <p className="mt-3 font-display text-base font-bold">PPIA WhatsApp group</p>
@@ -747,7 +807,7 @@ export default function DashboardPage() {
                 href={whatsappGroupLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#128C7E] transition-colors hover:bg-white/90"
+                className="mt-4 inline-flex items-center gap-2 rounded-[5px] bg-white px-4 py-2.5 text-sm font-bold text-[#128C7E] transition-colors hover:bg-white/90"
               >
                 Join now
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -765,20 +825,22 @@ export default function DashboardPage() {
             <Link
               key={item.href}
               href={item.href}
-              className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+              className="chart-paper group flex h-full flex-col rounded-[5px] border border-[#DCE7F1] p-5 transition-all hover:-translate-y-0.5 hover:border-[#C3D2E0] hover:shadow-lg dark:border-slate-800 dark:hover:border-slate-700"
             >
               <span
+                aria-hidden="true"
                 className={cn(
-                  'mb-3 flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-105',
+                  'mb-3 flex h-11 w-11 items-center justify-center rounded-full transition-transform group-hover:scale-105',
                   item.tint
                 )}
+                style={PORTHOLE_RING}
               >
                 <item.icon className="h-5 w-5" />
               </span>
-              <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              <span className="text-sm font-bold ink-strong">
                 {item.label}
               </span>
-              <span className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              <span className="mt-1 text-[12px] leading-relaxed ink-muted">
                 {item.description}
               </span>
             </Link>
