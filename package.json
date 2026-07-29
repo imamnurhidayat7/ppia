@@ -2,6 +2,10 @@
   "name": "ppia-auckland",
   "version": "1.0.0",
   "private": true,
+  "//engines": "Node 22+ is required, not just preferred. jsdom (pulled in by isomorphic-dompurify, which sanitises every CMS-authored HTML field) reaches an ESM-only dependency through require(). Node 22.12 made that legal; on Node 20 it throws ERR_REQUIRE_ESM at request time, which took down every server-rendered route in production while prerendered pages kept working. Hosts such as Vercel read this field to pick the runtime.",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:api": "cd api && npm run dev",
