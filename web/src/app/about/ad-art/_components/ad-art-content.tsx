@@ -14,7 +14,7 @@ const DEEP = "#0B1C2E";
 const SHORE = "#FFFFFF";
 
 interface Article { id: string; chapter: string; title: string; articles: { num: string; title: string; content?: string }[] }
-interface Content {
+export interface Content {
   header: { label: string; title: string; titleAccent: string; description: string; breadcrumbs: { label: string }[] };
   /** Pembukaan — the preamble to the Anggaran Dasar. Optional so older CMS rows still render. */
   preamble?: string;
@@ -119,15 +119,26 @@ function ArticleAccordion({ article, index }: { article: Article; index: number 
   );
 }
 
-export default function AdArtPage() {
-  const [content, setContent] = useState<Content | null>(null);
+export default function AdArtContent({ initialContent }: { initialContent: Content | null }) {
+  const [content, setContent] = useState<Content | null>(initialContent);
+  const [activeTab, setActiveTab] = useState<"ad" | "art">("ad");
   useEffect(() => {
+    if (content) return;
     api.getPageBySlug("about/ad-art").then((res) => {
       const value = res?.page?.content as Content | undefined;
       if (value?.header && Array.isArray(value.adArticles)) setContent(value);
     }).catch(() => undefined);
-  }, []);
+  }, [content]);
   if (!content) return <PublicPageSkeleton />;
+
+  const hasArt = !!content.artArticles && content.artArticles.length > 0;
+  const showArt = hasArt && activeTab === "art";
+  const activeArticles = showArt ? content.artArticles! : content.adArticles;
+  const activeLabel = showArt ? "Anggaran Rumah Tangga" : "Anggaran Dasar";
+  const activeAbbr = showArt ? "ART" : "AD";
+  const totalArticles = activeArticles.reduce((sum, a) => sum + a.articles.length, 0);
+  const ActiveIcon = showArt ? Gavel : FileText;
+
   return (
     <>
       <PageHeader {...content.header} />
@@ -200,23 +211,57 @@ export default function AdArtPage() {
             </div>
           )}
 
-          {/* File header for the bundle of chapters: stamped, with the chapter
-              count as metadata rather than as a heading. The document name
-              (AD vs ART) is spelled out here in full, in the title face — the
-              two used to share the identical eyebrow label ("About PPIA"), so
-              nothing on the page said which bound document you were reading. */}
+          {/* Tab switcher (only when ART exists) + bound-document renderer.
+              AD and ART share the same filed-sheet layout, so the whole bundle
+              re-renders from one set of data rather than two stacked sections
+              separated by a hard tonal seam. `key` on the inner motion.div
+              forces a fresh enter/exit animation on every tab change. */}
+          {hasArt && (
+            <div role="tablist" aria-label="Statute documents" className="mb-8 flex items-center gap-1 border-b border-[#DCE7F1] dark:border-white/10">
+              {([
+                { key: "ad" as const, label: "Anggaran Dasar", abbr: "AD" },
+                { key: "art" as const, label: "Anggaran Rumah Tangga", abbr: "ART" },
+              ]).map((tab) => {
+                const selected = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    role="tab"
+                    type="button"
+                    aria-selected={selected}
+                    aria-controls="statute-panel"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`relative -mb-px flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#E8231A] sm:px-6 ${
+                      selected ? "ink-strong" : "ink-muted hover:ink-strong"
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span className="data-type rounded-[3px] border border-current/30 px-1.5 py-0.5 text-[11px] font-bold uppercase">{tab.abbr}</span>
+                    {selected && (
+                      <motion.span
+                        layoutId="statute-tab-underline"
+                        className="absolute inset-x-0 bottom-[-1px] h-[2px] bg-[#E8231A]"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* File header — mirrors the original stamp + chapter/article counts,
+              but tracks the active tab. */}
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <span className="data-type text-[12px] font-bold uppercase accent-label">{content.header.label}</span>
               <h2 className="mt-1.5 text-xl font-black leading-snug ink-strong sm:text-2xl" style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}>
-                Anggaran Dasar <span className="ink-muted">(AD)</span>
+                {activeLabel} <span className="ink-muted">({activeAbbr})</span>
               </h2>
               <p className="data-type mt-2 flex items-center gap-2 text-[12px] uppercase ink-muted">
-                <span>{String(content.adArticles.length).padStart(2, "0")} chapters</span>
+                <span>{String(activeArticles.length).padStart(2, "0")} chapters</span>
                 <span aria-hidden="true" className="rope-rule h-px w-6 opacity-70" />
-                <span>
-                  {String(content.adArticles.reduce((sum, a) => sum + a.articles.length, 0)).padStart(2, "0")} articles
-                </span>
+                <span>{String(totalArticles).padStart(2, "0")} articles</span>
               </p>
             </div>
             <span
@@ -224,81 +269,36 @@ export default function AdArtPage() {
               className="stamp-edge flex h-10 w-10 shrink-0 rotate-[-8deg] items-center justify-center rounded-[2px]"
               style={{ color: "rgba(15,27,51,0.32)" }}
             >
-              <FileText size={14} strokeWidth={2.5} className="text-[#0F1B33]/70" />
+              <ActiveIcon size={14} strokeWidth={2.5} className="text-[#0F1B33]/70" />
             </span>
           </div>
-          {/* One bound document with ruled rows, rather than a stack of
-              floating cards. The chapters are parts of a single statute, so
-              they should read as one filed sheet — and it removes the ragged
-              gaps the separate cards left between chapters. */}
-          <div className="chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] shadow-[0_24px_60px_-34px_rgba(7,19,33,0.4)] dark:border-white/10">
-            <div className="flex items-center justify-between gap-4 border-b border-[#DCE7F1] bg-[#F5FAFD] px-5 py-3 sm:px-6 dark:border-white/10 dark:bg-white/[0.03]">
-              <p className="data-type text-[12px] font-bold uppercase ink-muted">Chapter</p>
-              <p className="data-type text-[12px] uppercase ink-muted">Articles</p>
-            </div>
 
-            {content.adArticles.map((article, i) => (
-              <ArticleAccordion key={article.id} article={article} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ART (Anggaran Rumah Tangga) — the bylaws, presented in the same
-          filed-sheet design as AD so the two read as one statute bundle.
-          Only rendered when the CMS carries artArticles, so a page with AD
-          alone degrades gracefully. */}
-      {content.artArticles && content.artArticles.length > 0 && (
-        <>
-          <WaveTransition from={SHORE} to={DEEP} />
-
-          <section className="sea-deep relative overflow-hidden py-20">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
           <div
-            className="sea-chart absolute inset-0 opacity-[0.04]"
-            style={{
-              maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, transparent 20%, black 85%)",
-              WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, transparent 20%, black 85%)",
-            }}
-          />
-        </div>
-        <div className="relative mx-auto max-w-4xl px-6">
-          <div className="mb-8 flex items-end justify-between gap-4">
-            <div>
-              <span className="data-type text-[12px] font-bold uppercase accent-label">{content.header.label}</span>
-              <h2 className="mt-1.5 text-xl font-black leading-snug text-white sm:text-2xl" style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}>
-                Anggaran Rumah Tangga <span className="text-white/50">(ART)</span>
-              </h2>
-              <p className="data-type mt-2 flex items-center gap-2 text-[12px] uppercase text-white/60">
-                <span>{String(content.artArticles.length).padStart(2, "0")} chapters</span>
-                <span aria-hidden="true" className="h-px w-6 bg-white/25" />
-                <span>
-                  {String(content.artArticles.reduce((sum, a) => sum + a.articles.length, 0)).padStart(2, "0")} articles
-                </span>
-              </p>
-            </div>
-            <span
-              aria-hidden="true"
-              className="stamp-edge flex h-10 w-10 shrink-0 rotate-[-8deg] items-center justify-center rounded-[2px]"
-              style={{ color: "rgba(15,27,51,0.32)" }}
-            >
-              <Gavel size={14} strokeWidth={2.5} className="text-[#0F1B33]/70" />
-            </span>
-          </div>
-          <div className="chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] shadow-[0_24px_60px_-34px_rgba(7,19,33,0.4)]">
-            <div className="flex items-center justify-between gap-4 border-b border-[#DCE7F1] bg-[#F5FAFD] px-5 py-3 sm:px-6">
-              <p className="data-type text-[12px] font-bold uppercase ink-muted">Chapter</p>
-              <p className="data-type text-[12px] uppercase ink-muted">Articles</p>
-            </div>
-
-            {content.artArticles.map((article, i) => (
-              <ArticleAccordion key={article.id} article={article} index={i} />
-            ))}
+            id="statute-panel"
+            role="tabpanel"
+            className="chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] shadow-[0_24px_60px_-34px_rgba(7,19,33,0.4)] dark:border-white/10"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={activeAbbr}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="flex items-center justify-between gap-4 border-b border-[#DCE7F1] bg-[#F5FAFD] px-5 py-3 sm:px-6 dark:border-white/10 dark:bg-white/[0.03]">
+                  <p className="data-type text-[12px] font-bold uppercase ink-muted">Chapter</p>
+                  <p className="data-type text-[12px] uppercase ink-muted">Articles</p>
+                </div>
+                {activeArticles.map((article, i) => (
+                  <ArticleAccordion key={`${activeAbbr}-${article.id}`} article={article} index={i} />
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </section>
-        </>
-      )}
+
     </>
   );
 }

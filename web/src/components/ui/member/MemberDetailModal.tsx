@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
 import { Modal, ModalFooter } from '@/components/ui/modal';
 import { getImageUrl } from '@/lib/utils';
 
@@ -86,7 +87,7 @@ export default function MemberDetailModal({ member, onClose, onApprove, onReject
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Uploaded File</h3>
             <div className="mt-3">
               {isImage(previewUrl) ? (
-                <img src={getImageUrl(previewUrl)} alt="Preview" className="w-full max-h-64 object-contain rounded-lg border border-slate-100" />
+                <Image src={getImageUrl(previewUrl) ?? ''} alt="Preview" width={800} height={256} unoptimized className="w-full max-h-64 object-contain rounded-lg border border-slate-100" />
               ) : isPdf(previewUrl) ? (
                 <iframe src={getImageUrl(previewUrl)} className="w-full h-64 border rounded-lg" title="Document preview" />
               ) : (

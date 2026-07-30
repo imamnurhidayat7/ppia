@@ -4,10 +4,13 @@
  * Member directory.
  *
  * Reads `/members/directory`, which any signed-in member may call. That endpoint
- * returns a narrower field set than the admin member list: no e-mail address,
- * phone number or student id. Members find each other here by what they study
- * and where; getting in touch happens through the social links a member chose to
- * publish, not through details they gave the committee for administration.
+ * returns a narrower field set than the admin member list: no sign-in email,
+ * phone number or student id. The only address returned is `personalEmail`,
+ * which the member opts in by setting, and the directory exposes it only as a
+ * `mailto:` action — never as plain text. Members find each other here by what
+ * they study and where; getting in touch happens through the social links and
+ * the contact email a member chose to publish, not through details they gave
+ * the committee for administration.
  *
  * Filtering is done server-side so a large membership does not have to be
  * downloaded in full to be searched.
@@ -15,7 +18,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Building2, GraduationCap, Users } from 'lucide-react';
+import { Building2, GraduationCap, Mail, Users } from 'lucide-react';
 import api from '@/lib/api';
 import { Avatar, Badge, Button } from '@/components/ui';
 import {
@@ -93,6 +96,11 @@ interface DirectoryMember {
   linkedIn?: string | null;
   instagram?: string | null;
   twitter?: string | null;
+  /**
+   * The contact address the member chose to publish. Surfaced only as a
+   * `mailto:` action — never rendered in plain text.
+   */
+  personalEmail?: string | null;
   division?: DivisionRef | null;
 }
 
@@ -305,7 +313,13 @@ export default function MemberDirectoryPage() {
               const linkedIn = socialUrl('linkedin', member.linkedIn);
               const instagram = socialUrl('instagram', member.instagram);
               const twitter = socialUrl('twitter', member.twitter);
-              const hasSocials = Boolean(linkedIn || instagram || twitter);
+              // `personalEmail` is rendered as a mailto: link, never in plain
+              // text. Empty / whitespace-only strings are treated as absent.
+              const emailHref =
+                member.personalEmail && member.personalEmail.trim()
+                  ? `mailto:${member.personalEmail.trim()}`
+                  : null;
+              const hasSocials = Boolean(linkedIn || instagram || twitter || emailHref);
 
               return (
                 <SectionCard key={member.id} className="flex h-full flex-col">
@@ -372,6 +386,15 @@ export default function MemberDirectoryPage() {
                     )}
                     {hasSocials && (
                       <span className="flex items-center gap-1">
+                        {emailHref && (
+                          <a
+                            href={emailHref}
+                            aria-label={`Email ${member.name}`}
+                            className="rounded-[3px] p-1.5 ink-muted transition-colors hover:bg-[#F5FAFD] hover:text-[#E8231A] dark:hover:bg-slate-800"
+                          >
+                            <Mail aria-hidden="true" size={16} strokeWidth={2} />
+                          </a>
+                        )}
                         {linkedIn && (
                           <a
                             href={linkedIn}

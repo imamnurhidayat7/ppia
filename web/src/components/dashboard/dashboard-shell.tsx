@@ -22,11 +22,12 @@
  * On mobile the tabs collapse into a right-hand sheet.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, ExternalLink, LogOut, Menu, User as UserIcon, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronDown, ExternalLink, Loader2, LogOut, Menu, Shield, User as UserIcon, Users as UsersIcon, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { cn, getImageUrl } from '@/lib/utils';
 import { CommandPalette } from './command-palette';
@@ -265,43 +266,58 @@ function ShellBody({ children, view: forcedView, maxWidth = 'default' }: Dashboa
         {/* Three groups, spaced apart: the public bar's composition, with the
             nav sitting in the middle of the bar rather than crowding the logo. */}
         <div
-          className={cn('mx-auto flex w-full items-center justify-between gap-4 px-6 py-4', container)}
+          className={cn('mx-auto flex w-full items-center justify-between gap-6 px-6 py-4', container)}
         >
-          <div className="flex shrink-0 items-center gap-4">
+          <div className="flex shrink-0 items-center gap-6">
             <Link href="/dashboard" aria-label="PPIA Auckland">
               <Image
                 src="/Logo-PPIA-2025-White.png"
                 alt="PPIA Auckland"
                 width={120}
                 height={48}
-                className="h-10 w-auto"
+                className="h-8 w-auto"
                 priority
               />
             </Link>
 
             {/*
               Workspace switcher.
-              Sits beside the logo because it scopes the nav tabs that follow it:
-              flipping it changes which tree is shown. Only roles that can reach
-              the admin area see it.
+              Two segments under a shared hairline, with the brand-red underline
+              gliding to the active one via `layoutId`. No icons — the underline
+              and the word itself carry enough identity, and adding a glyph to
+              every segment crowds the strip next to the logo. Only visible to
+              roles that can reach the admin area.
             */}
             {isAdmin && (
-              <div className="hidden items-center gap-0.5 rounded-lg border border-white/10 bg-white/5 p-0.5 sm:flex">
-                {(['member', 'admin'] as const).map((target) => {
-                  const current = view === target;
+              <div
+                role="tablist"
+                aria-label="Workspace"
+                className="hidden items-end gap-6 border-b border-white/10 pl-2 sm:flex"
+              >
+                {([
+                  { target: 'member' as const, label: 'Member', href: '/dashboard' },
+                  { target: 'admin' as const, label: 'Admin', href: '/dashboard/admin' },
+                ]).map(({ target, label, href }) => {
+                  const selected = view === target;
                   return (
                     <Link
                       key={target}
-                      href={target === 'admin' ? '/dashboard/admin' : '/dashboard'}
-                      aria-current={current ? 'true' : undefined}
+                      href={href}
+                      role="tab"
+                      aria-selected={selected}
                       className={cn(
-                        'rounded-md px-3 py-1.5 text-xs font-semibold capitalize transition-colors',
-                        current
-                          ? 'bg-white text-[#0D1B33] shadow-sm'
-                          : 'text-[#94A3B8] hover:text-white'
+                        'relative -mb-px px-1 pb-2 text-sm transition-colors',
+                        selected ? 'font-semibold text-white' : 'font-medium text-white/55 hover:text-white'
                       )}
                     >
-                      {target}
+                      {label}
+                      {selected && (
+                        <motion.span
+                          layoutId="dash-workspace-underline"
+                          className="absolute inset-x-0 bottom-[-1px] h-[2px] bg-[#E8231A]"
+                          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                        />
+                      )}
                     </Link>
                   );
                 })}
@@ -325,7 +341,7 @@ function ShellBody({ children, view: forcedView, maxWidth = 'default' }: Dashboa
             ))}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2">
             <NotificationCenter />
             <ThemeToggleButton />
 
@@ -341,19 +357,20 @@ function ShellBody({ children, view: forcedView, maxWidth = 'default' }: Dashboa
               <ExternalLink className="h-4 w-4" />
             </Link>
 
-            {/* User menu: profile, admin/member switch, sign out */}
+            {/* User menu: single-line trigger (avatar + name + chevron) with the
+                role label moved into the dropdown body where it sits with the
+                email. No border or chip background — the avatar disc and the
+                chevron are the affordance, the header dark surface carries the
+                contrast. */}
             <div className="relative" ref={userMenuRef}>
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((value) => !value)}
                 aria-expanded={userMenuOpen}
                 aria-label="Account menu"
-                className="flex items-center gap-2 text-sm font-medium text-[#94A3B8] transition-colors hover:text-white"
+                className="group flex items-center gap-2 rounded-full py-1 pl-1 pr-1.5 transition-colors hover:bg-white/[0.06]"
               >
-                {/* Brand-red disc, as on the public bar. The shared Avatar
-                    component picks its fallback colour by hashing the name, so
-                    the same header rendered cyan for one member and pink for the
-                    next — a different accent per person is not an identity. */}
+                {/* Brand-red disc. */}
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#E8231A]">
                   {user.avatar ? (
                     <Image
@@ -367,11 +384,14 @@ function ShellBody({ children, view: forcedView, maxWidth = 'default' }: Dashboa
                     <UserIcon className="h-4 w-4 text-white" />
                   )}
                 </span>
-                <span className="hidden max-w-[100px] truncate lg:inline">
+                <span className="hidden max-w-[120px] truncate text-sm font-medium text-white/85 group-hover:text-white lg:inline">
                   {user.name || user.username}
                 </span>
                 <ChevronDown
-                  className={cn('h-3.5 w-3.5 transition-transform', userMenuOpen && 'rotate-180')}
+                  className={cn(
+                    'h-3.5 w-3.5 text-white/40 transition-transform group-hover:text-white/70',
+                    userMenuOpen && 'rotate-180 text-white'
+                  )}
                 />
               </button>
 

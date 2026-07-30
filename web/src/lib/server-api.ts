@@ -222,3 +222,12 @@ export async function fetchLandingSection(key: string): Promise<LandingSection |
   );
   return data?.data ?? null;
 }
+
+/**
+ * Fetch a CMS page by slug server-side with ISR caching, so public pages like
+ * AD/ART render their content in the initial HTML instead of fetching it
+ * client-side on mount.
+ */
+export async function fetchPageBySlug(slug: string): Promise<{ content?: unknown } | null> {
+  return getJson<{ content?: unknown }>(`/pages/slug/${encodeURIComponent(slug)}`);
+}

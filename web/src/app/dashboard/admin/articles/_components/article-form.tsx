@@ -4,7 +4,11 @@ import Link from 'next/link';
 import { FileText, Image as ImageIcon, Save, Search, Send, Tags } from 'lucide-react';
 import { Button, Toggle } from '@/components/ui';
 import { ImageUploader } from '@/components/ui/ImageUploader';
-import { RichTextEditor } from '@/components/ui/RichTextEditor';
+import dynamic from 'next/dynamic';
+const RichTextEditor = dynamic(
+  () => import('@/components/ui/RichTextEditor').then(m => m.RichTextEditor),
+  { ssr: false, loading: () => <div className="h-32 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" /> }
+);
 import { Field, FormActions, FormGrid, SectionCard } from '@/components/dashboard';
 import { cn } from '@/lib/utils';
 import type { ArticleFormValues, DivisionRef, TagRef } from './shared';

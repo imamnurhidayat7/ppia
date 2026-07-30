@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import AdArtContent from "./_components/ad-art-content";
+import AdArtContent, { type Content } from "./_components/ad-art-content";
+import { fetchPageBySlug } from "@/lib/server-api";
 
 export const metadata: Metadata = {
   title: "AD-ART",
@@ -15,6 +16,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdArtPage() {
-  return <AdArtContent />;
+export const revalidate = 300;
+
+export default async function AdArtPage() {
+  const data = await fetchPageBySlug("about/ad-art");
+  const content = (data?.content as Content | undefined) ?? null;
+  return <AdArtContent initialContent={content} />;
 }

@@ -32,7 +32,11 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableItem } from '@/components/admin/SortableItem';
 import { useUndoRedo } from '@/lib/hooks/use-undo-redo';
 import { Button, ImageUploader, Input, Select, Textarea, Toggle } from '@/components/ui';
-import { RichTextEditor } from '@/components/ui/RichTextEditor';
+import dynamic from 'next/dynamic';
+const RichTextEditor = dynamic(
+  () => import('@/components/ui/RichTextEditor').then(m => m.RichTextEditor),
+  { ssr: false, loading: () => <div className="h-32 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" /> }
+);
 import { EmptyBlock, Field, IconAction, SectionCard } from '@/components/dashboard';
 import { useToast } from '@/components/Toast';
 import api from '@/lib/api';

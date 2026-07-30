@@ -3,6 +3,7 @@
 import { DATA_SOURCE, describeDatabase } from './lib/data-source'
 import express from 'express'
 import cors from 'cors'
+import compression from 'compression'
 import path from 'path'
 import dotenv from 'dotenv'
 
@@ -68,6 +69,10 @@ app.disable('x-powered-by')
 // Security headers on every response, including /uploads and error responses.
 // Registered before the routes so nothing can answer without them.
 app.use(securityHeaders)
+
+// Compress responses (gzip/deflate). Public JSON payloads (article lists,
+// page content) shrink ~80%, materially improving TTFB on slow links.
+app.use(compression())
 
 /**
  * Allowed browser origins.

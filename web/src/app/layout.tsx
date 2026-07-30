@@ -12,6 +12,7 @@ import BackToTop from "@/components/BackToTop";
 import CookieConsent from "@/components/CookieConsent";
 import { ScrollProgressBar } from "@/components/ScrollReveal";
 import JsonLd from "@/components/JsonLd";
+import { WebVitalsReporter } from "./_web-vitals";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -134,6 +135,7 @@ export default function RootLayout({
             </LandingColorsProvider>
           </LanguageProvider>
         </ThemeProvider>
+        <WebVitalsReporter />
       </body>
     </html>
   );

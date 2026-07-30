@@ -109,6 +109,10 @@ export const USER_DIRECTORY_SELECT = {
   linkedIn: true,
   instagram: true,
   twitter: true,
+  // `personalEmail` is the contact address the member chose to publish. Exposed
+  // only here so the directory can offer a `mailto:` action without rendering
+  // the address in plain text — the frontend reads it as a mailto target.
+  personalEmail: true,
   createdAt: true,
   division: {
     select: {

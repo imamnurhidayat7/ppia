@@ -95,6 +95,23 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', '@heroicons/react', 'framer-motion'],
     scrollRestoration: true,
   },
+  async headers() {
+    return [
+      {
+        source: '/:all*(svg|jpg|jpeg|png|webp|avif|gif|ico|woff2|woff|ttf|eot)',
+        locale: false,
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+    ];
+  },
 };
 
 export default bundleAnalyzer(nextConfig);

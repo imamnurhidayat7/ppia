@@ -11,7 +11,13 @@
     "start": "next start -p 3001",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test \"src/**/*.test.ts\""
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "lighthouse": "lhci autorun",
+    "lighthouse:collect": "lhci collect --url=http://localhost:3001",
+    "perf:test": "bash ../scripts/perf-test.sh",
+    "perf:lighthouse": "bash ../scripts/perf-lighthouse.sh",
+    "perf:api": "bash ../scripts/perf-api.sh",
+    "perf:bundle": "ANALYZE=true next build"
   },
   "dependencies": {
     "@craftjs/core": "^0.2.12",

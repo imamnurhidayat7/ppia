@@ -17,8 +17,12 @@
  */
 
 import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { AlertTriangle, Code2, FileText, Globe, Search, Settings2 } from 'lucide-react';
-import { ContentFormEditor } from '@/components/admin/ContentFormEditor';
+const ContentFormEditor = dynamic(
+  () => import('@/components/admin/ContentFormEditor').then(m => m.ContentFormEditor),
+  { ssr: false, loading: () => <div className="h-32 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" /> }
+);
 import { ImageUploader, Input, Textarea, Toggle } from '@/components/ui';
 import type { FieldSchema } from '@/lib/content-schemas';
 

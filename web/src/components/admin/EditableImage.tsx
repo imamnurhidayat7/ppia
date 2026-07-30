@@ -8,6 +8,7 @@
  */
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Upload, Link2, X, Loader2, ImageIcon } from 'lucide-react';
 import api from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
@@ -154,7 +155,7 @@ export function EditableImage({
                 next/image would render a broken box instead of the image the
                 editor is trying to check. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt="current" className="w-full h-24 object-cover rounded-lg" />
+            <Image src={imageUrl ?? ''} alt="current" width={96} height={96} unoptimized className="w-full h-24 object-cover rounded-lg" />
           </div>
         )}
       </div>
@@ -178,7 +179,7 @@ export function EditableImage({
           supplied hosts, plus `className` and `style` are pass-through from any
           caller, so there is no box for `fill` to position against. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={imageUrl} alt={alt} className={className} style={style} />
+      <Image src={imageUrl ?? ''} alt={alt} width={400} height={300} unoptimized className={className} style={style} />
       {overlay}
       {panel}
     </div>
