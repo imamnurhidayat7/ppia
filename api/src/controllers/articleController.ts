@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import { isBotRequest, shouldCountView } from '../lib/view-tracking';
 
 interface AuthRequest extends Request {
   user?: {
@@ -155,16 +156,49 @@ export const getArticleBySlug = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Increment view count
-    await prisma.article.update({
-      where: { id: article.id },
-      data: { views: { increment: 1 } }
-    });
+    // NOTE: View tracking is handled by a dedicated POST /:id/view endpoint
+    // called from the client-side. We do NOT increment here because this
+    // handler is also hit by Next.js ISR revalidations and CDN refreshes,
+    // which would inflate the count.
 
     res.json({ article });
   } catch (error) {
     console.error('Get article by slug error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Track article view (called from client-side useEffect, not SSR)
+export const trackArticleView = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params as { id: string };
+    const userAgent = req.headers['user-agent'];
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+      || req.socket.remoteAddress
+      || 'unknown';
+
+    // Ignore bots/crawlers and SSR prefetches (no real user-agent)
+    if (isBotRequest(userAgent)) {
+      res.status(204).end();
+      return;
+    }
+
+    // Deduplicate per IP within the cooldown window
+    if (!shouldCountView('article', id, clientIp)) {
+      res.status(204).end();
+      return;
+    }
+
+    await prisma.article.update({
+      where: { id },
+      data: { views: { increment: 1 } },
+    });
+
+    res.status(204).end();
+  } catch (error) {
+    // Silently fail — view tracking should never break the page
+    console.error('Track article view error:', error);
+    res.status(204).end();
   }
 };
 

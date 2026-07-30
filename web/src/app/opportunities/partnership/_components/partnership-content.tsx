@@ -73,7 +73,7 @@ function TierCard({ tier, index }: { tier: { name: string; color: string; price:
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
-      className={`relative rounded-[5px] p-8 transition-all ${featured ? "sea-deep overflow-hidden border border-white/12 text-white shadow-[0_36px_90px_-36px_rgba(7,19,33,0.7)] scale-[1.04] md:scale-105" : CARD}`}
+      className={`relative rounded-[5px] p-8 transition-all ${featured ? "sea-deep overflow-hidden border border-white/12 text-white shadow-[0_36px_90px_-36px_rgba(7,19,33,0.7)] scale-[1.04] md:scale-105 pt-10" : CARD}`}
     >
       {featured && (
         <span
@@ -86,7 +86,7 @@ function TierCard({ tier, index }: { tier: { name: string; color: string; price:
         />
       )}
       {featured && (
-        <span className="data-type absolute -top-3 left-1/2 -translate-x-1/2 rounded-[3px] bg-[#E8231A] px-3 py-1 text-[12px] font-bold uppercase text-white">
+        <span className="data-type absolute top-3 left-1/2 -translate-x-1/2 rounded-[3px] bg-[#E8231A] px-3 py-1 text-[12px] font-bold uppercase text-white">
           Most popular
         </span>
       )}

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import { isBotRequest, shouldCountView } from '../lib/view-tracking';
 
 interface AuthRequest extends Request {
   user?: {
@@ -179,11 +180,9 @@ export const getResearchById = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    // Increment view count
-    await prisma.research.update({
-      where: { id },
-      data: { viewCount: { increment: 1 } }
-    });
+    // NOTE: View tracking is handled by a dedicated POST /:id/view endpoint.
+    // Do NOT increment here — this handler is also hit by Next.js ISR
+    // revalidations and CDN refreshes, which would inflate the count.
 
     res.json({ research });
   } catch (error) {
@@ -217,16 +216,45 @@ export const getResearchBySlug = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Increment view count
-    await prisma.research.update({
-      where: { id: research.id },
-      data: { viewCount: { increment: 1 } }
-    });
+    // NOTE: View tracking is handled by a dedicated POST /:id/view endpoint.
+    // Do NOT increment here — this handler is also hit by Next.js ISR
+    // revalidations and CDN refreshes, which would inflate the count.
 
     res.json({ research });
   } catch (error) {
     console.error('Get research by slug error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Track research view (called from client-side useEffect, not SSR)
+export const trackResearchView = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params as { id: string };
+    const userAgent = req.headers['user-agent'];
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+      || req.socket.remoteAddress
+      || 'unknown';
+
+    if (isBotRequest(userAgent)) {
+      res.status(204).end();
+      return;
+    }
+
+    if (!shouldCountView('research', id, clientIp)) {
+      res.status(204).end();
+      return;
+    }
+
+    await prisma.research.update({
+      where: { id },
+      data: { viewCount: { increment: 1 } },
+    });
+
+    res.status(204).end();
+  } catch (error) {
+    console.error('Track research view error:', error);
+    res.status(204).end();
   }
 };
 

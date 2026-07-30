@@ -2,6 +2,7 @@
 import { toPlainText } from "@/lib/sanitize-html";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
@@ -152,6 +153,7 @@ const topics = [
 ];
 
 export default function ResearchCornerPage() {
+  const router = useRouter();
   const [papers, setPapers] = useState<Research[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -430,7 +432,19 @@ export default function ResearchCornerPage() {
               </div>
             ) : (
             filteredPapers.map((paper, i) => (
-              <Link key={paper.id} href={researchHref(paper)}>
+              <div
+                key={paper.id}
+                role="link"
+                tabIndex={0}
+                onClick={() => router.push(researchHref(paper))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    router.push(researchHref(paper));
+                  }
+                }}
+                className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8231A]/40 rounded-[8px]"
+              >
                 <motion.div
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -558,7 +572,7 @@ export default function ResearchCornerPage() {
                     </div>
                   </div>
                 </motion.div>
-              </Link>
+              </div>
             )))}
           </div>
         </div>

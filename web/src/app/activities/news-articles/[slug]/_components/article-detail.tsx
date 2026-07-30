@@ -106,6 +106,8 @@ export default function ArticleDetail({ article }: { article: PublicArticle }) {
     };
     if (article?.id) {
       fetchComments();
+      // Track view (client-side only — not counted during SSR/ISR)
+      api.trackArticleView(article.id);
     }
   }, [article?.id]);
 

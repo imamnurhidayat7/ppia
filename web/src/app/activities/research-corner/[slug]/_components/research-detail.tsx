@@ -64,6 +64,8 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
     };
     if (research?.id) {
       fetchComments();
+      // Track view (client-side only — not counted during SSR/ISR)
+      api.trackResearchView(research.id);
     }
   }, [research?.id]);
 

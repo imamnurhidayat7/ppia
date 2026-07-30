@@ -5,6 +5,7 @@ import {
   getResearchById,
   getResearchByIdAdmin,
   getResearchBySlug,
+  trackResearchView,
   createResearch,
   updateResearch,
   deleteResearch
@@ -22,6 +23,9 @@ router.get('/admin/:id', authenticate, authorize('SUPER_ADMIN', 'BOARD'), getRes
 router.get('/', getAllResearch);
 router.get('/slug/:slug', getResearchBySlug);
 router.get('/:id', getResearchById);
+
+// Track view (public, called from client-side useEffect — NOT SSR)
+router.post('/:id/view', trackResearchView);
 
 // Admin mutations
 router.post('/', authenticate, authorize('SUPER_ADMIN', 'BOARD'), createResearch);

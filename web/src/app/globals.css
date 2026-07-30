@@ -1003,3 +1003,77 @@ html:not(.dark) .bg-\[\#0D1B33\] {
 .wiki-content p { margin: 0.5rem 0; }
 .wiki-content a { color: #3B82F6; text-decoration: underline; }
 .wiki-content h4 { font-weight: 600; color: #1A2B4A; margin: 0.5rem 0; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * Landing-page dark mode overrides.
+ *
+ * Landing pages were built with hardcoded light-mode colors (bg-white,
+ * text-[#0F1B33], border-[#DCE7F1], etc.) and very few dark: variants.
+ * Rather than rewriting 50+ component files, these overrides remap the
+ * common patterns to dark-appropriate values when .dark is on <html>.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Page / section backgrounds ────────────────────────────────────── */
+.dark body { background-color: #071321; color: #E2E8F0; }
+
+.dark .bg-white { background-color: #0F1B2B !important; }
+.dark .bg-white\/70 { background-color: rgba(15, 27, 43, 0.8) !important; }
+.dark .bg-white\/80 { background-color: rgba(15, 27, 43, 0.85) !important; }
+.dark .bg-white\/90 { background-color: rgba(15, 27, 43, 0.9) !important; }
+.dark .bg-white\/50 { background-color: rgba(15, 27, 43, 0.6) !important; }
+.dark .bg-white\/60 { background-color: rgba(15, 27, 43, 0.7) !important; }
+
+/* Light blue/cream wash surfaces */
+.dark .bg-\[\#EDF5FB\] { background-color: #0D1B2E !important; }
+.dark .bg-\[\#F5FAFD\] { background-color: #0B1828 !important; }
+.dark .bg-\[\#FFF0EF\] { background-color: #2A0F0D !important; }
+.dark .bg-\[\#FEF2F1\] { background-color: #2A0F0D !important; }
+.dark .bg-\[\#F8FAFC\] { background-color: #0F1B2B !important; }
+.dark .bg-\[\#F1F5F9\] { background-color: #0D1B2E !important; }
+
+/* ── Text colors ───────────────────────────────────────────────────── */
+.dark .text-\[\#0F1B33\] { color: #F1F5F9 !important; }
+.dark .text-\[\#1A2B4A\] { color: #E2E8F0 !important; }
+.dark .text-\[\#334155\] { color: #CBD5E1 !important; }
+.dark .text-\[\#475569\] { color: #A8B6C6 !important; }
+.dark .text-\[\#5B6B7C\] { color: #A8B6C6 !important; }
+.dark .text-\[\#64748B\] { color: #94A3B8 !important; }
+.dark .text-\[\#94A3B8\] { color: #7A8B9E !important; }
+.dark .text-\[\#0D1B33\] { color: #F1F5F9 !important; }
+.dark .text-\[\#1E293B\] { color: #E2E8F0 !important; }
+
+/* Keep PPIA red text readable on dark — brighten slightly */
+.dark .text-\[\#E8231A\] { color: #FF6B5B !important; }
+.dark .text-\[\#C41E16\] { color: #FF8A80 !important; }
+
+/* ── Border colors ─────────────────────────────────────────────────── */
+.dark .border-\[\#DCE7F1\] { border-color: #1E3A52 !important; }
+.dark .border-\[\#E2E8F0\] { border-color: #1E3A52 !important; }
+.dark .border-\[\#CBD5E1\] { border-color: #2A4A66 !important; }
+.dark .border-\[\#F1F5F9\] { border-color: #1E3A52 !important; }
+.dark .border-white { border-color: #1E3A52 !important; }
+.dark .border-white\/20 { border-color: rgba(255, 255, 255, 0.15) !important; }
+
+/* ── Hover states for borders ──────────────────────────────────────── */
+.dark .hover\:border-\[\#9FB3C6\]:hover { border-color: #4A6B85 !important; }
+.dark .hover\:border-\[\#E8231A\]:hover { border-color: #FF6B5B !important; }
+
+/* ── Hover text colors ─────────────────────────────────────────────── */
+.dark .hover\:text-\[\#0F1B33\]:hover { color: #F1F5F9 !important; }
+.dark .hover\:text-\[\#E8231A\]:hover { color: #FF6B5B !important; }
+
+/* ── Shadow adjustments for dark cards ─────────────────────────────── */
+.dark .shadow-sm { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important; }
+.dark .shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35) !important; }
+.dark .shadow-lg { box-shadow: 0 10px 15px rgba(0, 0, 0, 0.4) !important; }
+.dark .shadow-xl { box-shadow: 0 20px 25px rgba(0, 0, 0, 0.45) !important; }
+
+/* ── Wiki content dark overrides ───────────────────────────────────── */
+.dark .wiki-content strong { color: #F1F5F9 !important; }
+.dark .wiki-content h4 { color: #F1F5F9 !important; }
+.dark .wiki-content a { color: #60A5FA !important; }
+
+/* ── Sea-shore surface in dark mode ────────────────────────────────── */
+.dark .sea-shore {
+  background: linear-gradient(180deg, #071321 0%, #0A1928 100%);
+}

@@ -3,6 +3,7 @@ import {
   getAllArticles,
   getArticleById,
   getArticleBySlug,
+  trackArticleView,
   createArticle,
   updateArticle,
   deleteArticle,
@@ -16,6 +17,9 @@ const router = Router();
 // Public routes
 router.get('/', getAllArticles);
 router.get('/slug/:slug', getArticleBySlug);
+
+// Track view (public, called from client-side useEffect — NOT SSR)
+router.post('/:id/view', trackArticleView);
 
 // Admin - get all articles (including unpublished) — MUST be before :id param route
 router.get('/admin/all', authenticate, authorize('SUPER_ADMIN', 'BOARD'), getAllArticlesAdmin);

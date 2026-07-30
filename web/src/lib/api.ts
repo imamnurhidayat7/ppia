@@ -331,6 +331,25 @@ class ApiClient {
     return response.data;
   }
 
+  // ── View tracking ──────────────────────────────────────────────────
+  // Called from client-side useEffect only (not SSR) to avoid inflating
+  // counts from ISR revalidations and bot crawls.
+  async trackArticleView(id: string) {
+    try {
+      await this.client.post(`/articles/${id}/view`);
+    } catch {
+      // Non-fatal: view tracking should never break the page
+    }
+  }
+
+  async trackResearchView(id: string) {
+    try {
+      await this.client.post(`/research/${id}/view`);
+    } catch {
+      // Non-fatal
+    }
+  }
+
   async createResearch(data: ResearchInput) {
     const response = await this.client.post('/research', data);
     return response.data;
