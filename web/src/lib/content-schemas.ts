@@ -456,7 +456,7 @@ export const CONTENT_SCHEMAS: Record<string, FieldSchema[]> = {
           itemSchema: [
             { key: 'num', label: 'Number', type: 'text', placeholder: 'Pasal 1' },
             { key: 'title', label: 'Article title', type: 'text' },
-            { key: 'content', label: 'Article text', type: 'textarea', rows: 4 },
+            { key: 'content', label: 'Article text', type: 'richtext' },
           ],
         },
       ],
@@ -477,7 +477,7 @@ export const CONTENT_SCHEMAS: Record<string, FieldSchema[]> = {
           itemSchema: [
             { key: 'num', label: 'Number', type: 'text', placeholder: 'Pasal 1' },
             { key: 'title', label: 'Article title', type: 'text' },
-            { key: 'content', label: 'Article text', type: 'textarea', rows: 4 },
+            { key: 'content', label: 'Article text', type: 'richtext' },
           ],
         },
       ],

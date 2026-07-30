@@ -532,7 +532,7 @@ export default function AdminSettingsPage() {
               type="url"
               value={branding.faviconUrl}
               onChange={(event) => setBranding({ ...branding, faviconUrl: event.target.value })}
-              placeholder="/favicon.ico"
+              placeholder="/favicon.png"
               className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
             />
           </Field>

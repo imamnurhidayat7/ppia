@@ -7,6 +7,7 @@ import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import WaveTransition from "@/components/sections/WaveTransition";
 import { ChevronDown, Scale, Users, FileText, Calendar, Flag, Shield, Gavel } from "lucide-react";
 import api from "@/lib/api";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 /** Seam colours, matching the ends of the .sea-deep / .sea-shore gradients. */
 const DEEP = "#0B1C2E";
@@ -103,7 +104,10 @@ function ArticleAccordion({ article, index }: { article: Article; index: number 
                   <p className="data-type text-[12px] uppercase ink-muted">{item.num}</p>
                   <h4 className="mt-1 font-semibold leading-snug ink-strong">{item.title}</h4>
                   {item.content && (
-                    <p className="mt-1.5 text-sm leading-relaxed ink-body">{item.content}</p>
+                    <div
+                      className="prose prose-sm mt-1.5 max-w-none text-sm leading-relaxed ink-body [&_p]:my-1.5 [&_img]:my-3 [&_img]:rounded-lg [&_img]:max-w-full [&_img]:h-auto [&_a]:text-[#8B5CF6] [&_a]:underline [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6"
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.content) }}
+                    />
                   )}
                 </li>
               ))}
