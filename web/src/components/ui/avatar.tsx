@@ -1,8 +1,8 @@
 'use client';
 
-import { forwardRef, type HTMLAttributes } from 'react';
+import { forwardRef, useEffect, useState, type HTMLAttributes } from 'react';
 import Image from 'next/image';
-import { cn, getInitials } from '@/lib/utils';
+import { cn, getInitials, getImageUrl } from '@/lib/utils';
 
 export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
   src?: string | null;
@@ -55,6 +55,18 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
     const { container, text, image } = sizeMap[size];
     const initials = name ? getInitials(name) : '?';
 
+    // Resolve relative URLs (e.g. /uploads/avatar.jpg) to a full API URL so
+    // next/image fetches from the API origin rather than the web origin.
+    const resolvedSrc = getImageUrl(src);
+
+    // If the image fails to load (404, broken upload, network error), fall
+    // back to the initials tile instead of leaving a broken image frame.
+    const [imgFailed, setImgFailed] = useState(false);
+    useEffect(() => {
+      // Reset failure state when the src changes so a new upload is retried.
+      setImgFailed(false);
+    }, [resolvedSrc]);
+
     // Generate consistent background color from name
     const bgColors = [
       'bg-primary-500',
@@ -73,28 +85,34 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
     return (
       <div
         ref={ref}
-        className={cn('relative inline-flex shrink-0', container, className)}
+        className={cn(
+          'relative inline-flex shrink-0 overflow-hidden',
+          container,
+          // Clip the photo to the shape here so the image (or initials) always
+          // meets the frame edge-to-edge with no gap, even when an outer frame
+          // wraps the avatar without its own rounding.
+          shape === 'circle' ? 'rounded-full' : 'rounded-lg',
+          className
+        )}
         {...props}
       >
-        {src ? (
+        {resolvedSrc && !imgFailed ? (
           <Image
-            src={src}
+            src={resolvedSrc}
             alt={alt}
-            width={image}
-            height={image}
-            // Fill the container: with only width/height the intrinsic image
-            // size won on non-square sources, so the photo sat inside the frame
-            // with gaps instead of filling it.
-            className={cn(
-              'h-full w-full object-cover',
-              shape === 'circle' ? 'rounded-full' : 'rounded-lg'
-            )}
+            fill
+            // `fill` makes the image absolutely positioned and stretch to the
+            // container's full size, so the photo always covers the frame with
+            // no gaps — regardless of the source's intrinsic aspect ratio.
+            sizes={`${image}px`}
+            className="object-cover"
+            onError={() => setImgFailed(true)}
+            unoptimized
           />
         ) : (
           <div
             className={cn(
               'w-full h-full flex items-center justify-center font-semibold text-white',
-              shape === 'circle' ? 'rounded-full' : 'rounded-lg',
               bgColor,
               text
             )}

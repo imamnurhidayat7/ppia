@@ -8,6 +8,9 @@ import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
+import Image from '@tiptap/extension-image';
+import { useToast } from '@/components/Toast';
+import { API_ORIGIN } from '@/lib/api-base';
 import {
   Bold,
   Italic,
@@ -20,6 +23,8 @@ import {
   AlignRight,
   AlignJustify,
   Link as LinkIcon,
+  Image as ImageIcon,
+  Loader2,
   Undo,
   Redo,
   Quote,
@@ -84,6 +89,11 @@ export function RichTextEditor({ value, onChange, label, placeholder }: RichText
       }),
       TextStyle,
       Color,
+      Image.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: { class: 'rounded-lg max-w-full h-auto' },
+      }),
     ],
     content: value || '',
     onUpdate: ({ editor }) => {
@@ -95,6 +105,46 @@ export function RichTextEditor({ value, onChange, label, placeholder }: RichText
       },
     },
   });
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const { showSuccess, showError } = useToast();
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showError('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showError('Image must be under 5MB');
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`${API_ORIGIN}/api/upload`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || `Upload failed (${res.status})`);
+      }
+      const data = await res.json();
+      const url = data.url?.startsWith('http') ? data.url : `${API_ORIGIN}${data.url}`;
+      editor.chain().focus().setImage({ src: url, alt: file.name }).run();
+      showSuccess('Image inserted');
+    } catch (e) {
+      showError(e instanceof Error ? e.message : 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   if (!editor) {
     return (
@@ -247,6 +297,23 @@ export function RichTextEditor({ value, onChange, label, placeholder }: RichText
           >
             <LinkIcon size={16} />
           </ToolbarButton>
+          <ToolbarButton
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            title="Insert Image"
+          >
+            {isUploading ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+          </ToolbarButton>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleImageUpload(file);
+            }}
+          />
 
           <div className="w-px h-6 bg-gray-200 mx-1" />
 

@@ -51,6 +51,9 @@ const ALLOWED_TAGS = [
   'pre',
   'hr',
   'a',
+  // Images — inserted via the rich text editor toolbar. Only server-uploaded
+  // URLs pass the URI regex below (no data: URIs, no javascript:).
+  'img',
   // Tables are not in the toolbar today, but legacy content contains them.
   'table',
   'thead',
@@ -65,7 +68,7 @@ const ALLOWED_TAGS = [
  * the TextAlign and Color extensions. DOMPurify parses and filters CSS, so this
  * does not permit `expression()`, `url(javascript:…)` or similar.
  */
-const ALLOWED_ATTR = ['href', 'target', 'rel', 'title', 'class', 'style', 'colspan', 'rowspan'];
+const ALLOWED_ATTR = ['href', 'target', 'rel', 'title', 'class', 'style', 'colspan', 'rowspan', 'src', 'alt', 'width', 'height'];
 
 let hooksRegistered = false;
 

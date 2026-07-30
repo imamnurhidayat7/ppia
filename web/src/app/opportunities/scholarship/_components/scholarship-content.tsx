@@ -7,6 +7,11 @@ import WaveTransition from "@/components/sections/WaveTransition";
 import { PublicPageSkeleton } from "@/components/skeletons/public-skeletons";
 import { ExternalLink, ChevronRight, Star, CheckCircle, Globe, BookOpen, DollarSign } from "lucide-react";
 import api from "@/lib/api";
+
+const ICON_MAP = { Star, BookOpen, Globe, DollarSign } as const;
+type TipIconName = keyof typeof ICON_MAP;
+const resolveTipIcon = (icon: unknown) =>
+  typeof icon === "string" ? (ICON_MAP[icon as TipIconName] ?? Star) : (icon as typeof Star) ?? Star;
 import { toScholarshipContent, type ScholarshipContent } from "@/lib/scholarship-content";
 
 type ScholarshipFilter = "All" | "Indonesian Gov" | "NZ Gov" | "University";
@@ -35,25 +40,25 @@ interface ScholarshipHeader {
 }
 const applicationTips = [
   {
-    icon: Star,
+    icon: "Star" as const,
     color: "#E8231A",
     title: "Start early",
     desc: "LPDP and Manaaki applications open months before deadlines. Begin your preparation at least 6 months in advance.",
   },
   {
-    icon: BookOpen,
+    icon: "BookOpen" as const,
     color: "#3B82F6",
     title: "Secure your offer first",
     desc: "Most scholarships require a confirmed university offer. Apply for university admission before or alongside your scholarship.",
   },
   {
-    icon: Globe,
+    icon: "Globe" as const,
     color: "#10B981",
     title: "Check eligibility carefully",
     desc: "Each scholarship has specific GPA, age, and study level requirements. Read the fine print before applying.",
   },
   {
-    icon: DollarSign,
+    icon: "DollarSign" as const,
     color: "#F59E0B",
     title: "Combine scholarships",
     desc: "University merit scholarships can sometimes be combined with government funding. Always ask your university's scholarship office.",
@@ -454,7 +459,9 @@ export default function ScholarshipPage() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {activeTips.map((tip, i) => (
+            {activeTips.map((tip, i) => {
+              const TipIcon = resolveTipIcon(tip.icon);
+              return (
               <motion.div
                 key={tip.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -467,7 +474,7 @@ export default function ScholarshipPage() {
                   className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-white"
                   style={{ boxShadow: `inset 0 0 0 1px ${tip.color}33, 0 0 0 4px ${tip.color}0F` }}
                 >
-                  <tip.icon size={20} style={{ color: tip.color }} />
+                  <TipIcon size={20} style={{ color: tip.color }} />
                 </span>
                 <p className="data-type mb-2 text-[12px] uppercase ink-muted">{String(i + 1).padStart(2, "0")}</p>
                 <h3
@@ -478,7 +485,8 @@ export default function ScholarshipPage() {
                 </h3>
                 <p className="ink-body text-xs leading-relaxed">{tip.desc}</p>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

@@ -1,0 +1,267 @@
+export const adArtContent = {
+  header: {
+    label: 'About PPIA',
+    title: 'AD /',
+    titleAccent: 'ART',
+    description:
+      'Anggaran Dasar dan Anggaran Rumah Tangga — the governing constitution of PPIA Auckland.',
+    breadcrumbs: [{ label: 'About' }, { label: 'AD/ART' }],
+  },
+  adArticles: [
+    {
+      id: 'bab-1',
+      chapter: 'BAB I',
+      title: 'Nama dan Tempat Kedudukan',
+      articles: [
+        {
+          num: 'Pasal 1',
+          title: 'Nama',
+          content: 'Organisasi ini bernama Perhimpunan Pelajar Indonesia di Auckland atau yang disingkat dengan nama PPI Auckland, atau dalam bahasa Inggris disebut Auckland Indonesia Student Association atau disingkat AISA.',
+        },
+        {
+          num: 'Pasal 2',
+          title: 'Bentuk dan Sifat',
+          content: 'PPI Auckland berbentuk organisasi Perhimpunan Pelajar Indonesia di kota Auckland, Selandia Baru.\nPPI Auckland merupakan organisasi nirlaba yang bersifat independen, terbuka, akademis, demokratis, tidak terafiliasi organisasi politik atau organisasi keagamaan manapun, dan menjunjung tinggi nilai kekeluargaan sesuai dengan nilai-nilai Pancasila dan Undang-Undang Dasar Negara Republik Indonesia tahun 1945.\nPPI Auckland merupakan anggota konfederasi dari Perhimpunan Pelajar Indonesia Selandia Baru atau yang disingkat dengan nama PPI Selandia baru, yang merupakan anggota dari Perhimpunan Pelajar Indonesia Dunia yang disingkat PPI Dunia. PPI Dunia disahkan dan terdaftar sebagai organisasi berdasarkan Akta Pendirian Badan Hukum Nomor 2 tanggal 4 Juli 2020.\nPPI Auckland merupakan salah satu mitra kerja Kedutaan Besar Republik Indonesia untuk Selandia Baru di Wellington.',
+        },
+        {
+          num: 'Pasal 3',
+          title: 'Kedudukan',
+          content: 'PPI Auckland berkedudukan di kota Auckland, Selandia Baru.',
+        },
+        {
+          num: 'Pasal 4',
+          title: 'Kedaulatan',
+          content: 'Kedaulatan PPI Auckland ada di tangan anggota dan dilaksanakan oleh alat kelengkapan organisasi sesuai dengan ketentuan Anggaran Dasar dan Anggaran Rumah Tangga (untuk selanjutnya disebut dengan AD-ART).',
+        },
+        {
+          num: 'Pasal 5',
+          title: 'Waktu',
+          content: 'PPI Auckland diresmikan melalui AD-ART pada tanggal 28 Oktober 2018 di Auckland, Selandia Baru, untuk jangka waktu yang tidak ditentukan.',
+        },
+        {
+          num: 'Pasal 6',
+          title: 'Lambang',
+          content: 'Lambang organisasi PPI Auckland adalah sebagai berikut:\n2. Arti dan makna lambang:\nLayar kapal sebagai penanda Auckland sebagai “city of sails”.\nMotif batik di atas layar kapal sebagai penggambaran budaya Indonesia yang mengarungi kota Auckland.\nWarna merah dan putih melambangkan warna bendera Indonesia.',
+        },
+      ],
+    },
+    {
+      id: 'bab-2',
+      chapter: 'BAB II',
+      title: 'Asas dan Tujuan',
+      articles: [
+        {
+          num: 'Pasal 7',
+          title: 'Asas',
+          content: 'PPI Auckland berlandaskan Pancasila dan UUD 1945.',
+        },
+        {
+          num: 'Pasal 8',
+          title: 'Tujuan',
+          content: 'Menjadi wadah komunikasi dan informasi bagi seluruh anggotanya.\nMemupuk rasa persatuan, kesatuan, setia kawan dalam suasana kekeluargaan.\nMembina hubungan baik dengan masyarakat internasional pada umumnya dan masyarakat Auckland pada khususnya.\nMengembangkan dan mengenalkan ilmu pengetahuan terkini untuk kepentingan bersama, khususnya untuk masyarakat Indonesia.\nMemperkenalkan dan mempromosikan budaya nasional Indonesia.\nMenjaga nama baik bangsa dan membina rasa cinta tanah air.\nMenjadi media penghubung dengan pelajar Indonesia di luar Auckland secara khusus dan Selandia Baru secara umum.',
+        },
+      ],
+    },
+    {
+      id: 'bab-3',
+      chapter: 'BAB III',
+      title: 'Perangkat Organisasi',
+      articles: [
+        {
+          num: 'Pasal 9',
+          title: 'Alat Kelengkapan Organisasi',
+          content: 'Alat kelengkapan organisasi PPI Auckland terdiri dari:\nKetua Umum dan Badan Eksekutif;\nBadan Pelaksana Harian PPI Auckland; dan\nDewan Pengawas.\n2. Alat kelengkapan organisasi bersifat saling mendukung kelengkapan organisasi yang berjalan sesuai dengan AD-ART.\n3. Pengaturan lebih lanjut tentang alat kelengkapan organisasi sebagaimana dimaksud pada ayat (1) diatur dalam Anggaran Rumah Tangga.',
+        },
+        {
+          num: 'Pasal 10',
+          title: 'Hierarki Keputusan',
+          content: 'Hierarki keputusan yang berlaku untuk alat kelengkapan organisasi PPI Auckland adalah sebagai berikut (mulai dari yang tertinggi):\nAD-ART\nKetetapan Kongres PPI Auckland\nKeputusan Ketua Umum PPI Auckland',
+        },
+      ],
+    },
+    {
+      id: 'bab-4',
+      chapter: 'BAB IV',
+      title: 'Keanggotaan',
+      articles: [
+        {
+          num: 'Pasal 11',
+          title: 'Definisi Anggota',
+          content: 'Anggota PPI Auckland adalah pelajar Indonesia di Auckland yang telah terdaftar melalui form keanggotaan yang disebarkan oleh pengurus PPI Auckland.\nPelajar yang dimaksud pada ayat (1) adalah Warga Negara Indonesia atau keturunan Indonesia hingga 2 (dua) generasi, yang terdaftar sebagai pelajar pada salah satu lembaga Sekolah Menengah Atas atau setara, perguruan tinggi, dan/atau institusi pendidikan atau pengajaran yang setara dan bertempat tinggal di Kota Auckland.',
+        },
+        {
+          num: 'Pasal 12',
+          title: 'Kewajiban Anggota',
+          content: 'Setiap anggota PPI Auckland mempunyai kewajiban:\nMenjunjung tinggi dan menjaga nama baik PPI Auckland;\nBerusaha mencapai tujuan PPI Auckland;\nMenaati dan melaksanakan seluruh peraturan yang berlaku dalam PPI Auckland; dan\nAnggota PPI Auckland dilarang membawa nama PPI Auckland dalam kegiatan organisasi politik dan/atau afiliasi partai politik maupun organisasi keagamaan untuk kepentingan pribadi, maupun kelompok yang bertentangan dengan peraturan perundang-undangan Republik Indonesia.',
+        },
+        {
+          num: 'Pasal 13',
+          title: 'Hak Anggota',
+          content: 'Setiap anggota PPI Auckland mempunyai hak:\nMendapatkan informasi mengenai kegiatan PPI Auckland;\nTerlibat dalam penyusunan dan/atau pelaksanaan kegiatan PPI Auckland;\nMenghadiri, menyatakan pendapat, dan memberikan suara secara bebas dalam kegiatan PPI Auckland;\nMendapatkan surat keterangan keanggotaan PPI Auckland apabila diperlukan;\nMendaftarkan diri untuk berpartisipasi dalam kepengurusan PPI Auckland.',
+        },
+      ],
+    },
+    {
+      id: 'bab-5',
+      chapter: 'BAB V',
+      title: 'Permusyawarahan Organisasi',
+      articles: [
+        {
+          num: 'Pasal 14',
+          title: 'Musyawarah Organisasi',
+          content: 'Jenis dan susunan musyawarah organisasi PPI Auckland terdiri dari:\nKongres PPI Auckland;\nRapat Anggota PPI Auckland; dan\nKongres Luar Biasa.\nDefinisi jenis musyawarah organisasi diatur dalam Anggaran Rumah Tangga Bab V (lima)\nKongres PPI Auckland dianggap sah apabila dihadiri oleh kuorum yang terdiri dari sekurangkurangnya 80% perwakilan setiap jenjang pendidikan yang terdaftar sebagai anggota PPI Auckland dan telah melakukan registrasi kehadiran Kongres, serta seluruh Badan Pelaksana Harian PPI Auckland masa berjalan.\nKehadiran sebagaimana dimaksud pada ayat (3) dapat dilakukan melalui kehadiran langsung maupun daring.\nMusyawarah dalam hal pengambilan keputusan terkait kongres yang berjalan, sekurang- kurangnya disetujui oleh 2/3 (dua per tiga) kuorum sebagaimana dimaksud pada ayat (3)\nApabila dalam pengambilan keputusan kuorum tidak terpenuhi, maka musyawarah ditunda sampai waktu yang ditentukan oleh alat kelengkapan PPI Auckland.\nMusyawarah lanjutan yang diadakan karena kuorum pada musyawarah sebelumnya tidak terpenuhi, sesuai ayat (6) di atas, maka musyawarah lanjutan tidak memiliki kuorum.\nPengambilan keputusan dalam musyawarah lanjutan dilaksanakan dengan sistem pemufakatan seluruh anggota yang hadir. Namun, apabila mufakat tidak tercapai, keputusan diambil berdasarkan sistem pengambilan suara terbanyak dari anggota musyawarah lanjutan yang hadir (voting).',
+        },
+      ],
+    },
+    {
+      id: 'bab-6',
+      chapter: 'BAB VI',
+      title: 'Keuangan',
+      articles: [
+        {
+          num: 'Pasal 15',
+          title: 'Asas Dasar Keuangan',
+          content: 'Asas dasar keuangan memperhatikan peraturan perundang-undangan Republik Indonesia maupun peraturan negara dan/atau wilayah di Selandia Baru.\nKeuangan PPI Auckland diperoleh dari sumbangan-sumbangan yang tidak mengikat atau usaha-usaha lain yang sah dan tidak bertentangan dengan asas dan tujuan PPI Auckland.\nKeuangan PPI Auckland wajib dikelola secara transparan dan akuntabel melalui laporan pertanggung jawaban saat Kongres PPI Auckland sebagaimana diatur dalam Anggaran Rumah Tangga.',
+        },
+        {
+          num: 'Pasal 16',
+          title: 'Pertanggungjawaban',
+          content: 'Segala macam bentuk pengelolaan dan penggunaan keuangan wajib dipertanggungjawabkan kepada anggota melalui mekanisme yang ditentukan dalam Anggaran Rumah Tangga.\nApabila dalam proses pengelolaan dan penggunaan kekayaan terjadi kerugian/kepailitan maka perlu dilaksanakan Kongres Luar Biasa untuk mengidentifikasi penyebab kerugian/kepailitan dan menentukan konsekuensi atas kerugian/kepailitan tersebut.\nKerugian/kepailitan yang terbukti disebabkan oleh kelalaian kepengurusan, kerugian/kepailitan tersebut menjadi tanggung jawab alat kelengkapan organisasi PPI Auckland yang bersangkutan.\nKerugian/kepailitan yang terbukti tidak disebabkan oleh kelalaian kepengurusan, namun disebabkan oleh keadaan tertentu di luar kesengajaan (force majeur), kerugian/kepailitan tersebut menjadi tanggung jawab PPI Auckland secara kolektif (mencakup alat kelengkapan dan anggota) yang diputuskan secara musyawarah.\nApabila terindikasi adanya penyalahgunaan kekuasaan oleh alat kelengkapan PPI Auckland masa berjalan, maka perlu dilaksanakan Kongres Luar Biasa untuk melakukan klarifikasi atas tindakan yang dilakukan serta menentukan konsekuensi atas penyalahgunaan kekuasaan tersebut.',
+        },
+      ],
+    },
+    {
+      id: 'bab-7',
+      chapter: 'BAB VII',
+      title: 'Perubahan dan Pembubaran',
+      articles: [
+        {
+          num: 'Pasal 17',
+          title: 'Perubahan AD-ART',
+          content: 'AD-ART hanya dapat diubah oleh Kongres PPI Auckland dan disepakati oleh sekurang-kurangnya 2/3 (dua per tiga) dari jumlah kuorum yang hadir.\nPerubahan AD-ART dilakukan apabila memenuhi satu alasan dan/atau memenuhi seluruh alasan:\nTerdapat ketentuan AD-ART yang secara nyata dapat menimbulkan kerugian terhadap satu atau lebih anggota;\nPerlunya penambahan klausul pada ketentuan AD-ART untuk menyelesaikan suatu masalah organisasi;\nTerdapat hasil rekomendasi dari Rapat Anggota PPI Auckland;\nTerdapat perubahan keadaan-keadaan di luar organisasi yang berdampak pada ketentuan yang tidak relevan dalam AD-ART.',
+        },
+        {
+          num: 'Pasal 18',
+          title: 'Mekanisme Pembubaran',
+          content: 'Organisasi PPI Auckland dibentuk dengan lingkup waktu yang tidak ada batasnya. Namun, apabila ada hal-hal yang membuat PPI Auckland perlu dibubarkan, pembubaran hanya bisa terjadi apabila memenuhi persyaratan sebagai berikut:\nPembubaran PPI Auckland hanya dapat dilakukan berdasarkan ketetapan Kongres PPI Auckland atau Kongres Luar Biasa yang dipimpin oleh perwakilan alat kelengkapan PPI Auckland.\nPembubaran PPI Auckland hanya dapat dilaksanakan setelah seluruh masalah administrasi dan utang piutang yang dibuat untuk dan atas nama PPI Auckland telah diselesaikan.\nDalam hal pembubaran PPI Auckland, seluruh aset organisasi akan diserahkan kepada badan/lembaga yang ditetapkan oleh musyawarah pada saat pembubaran tersebut.',
+        },
+        {
+          num: 'Pasal 19',
+          title: 'Pengambilan Keputusan Pembubaran',
+          content: 'Keputusan pembubaran PPI Auckland oleh musyawarah organisasi diambil secara mufakat. Apabila mufakat tidak tercapai maka keputusan harus disetujui oleh sekurang-kurangnya 2/3 (dua per tiga) dari kuorum yang hadir melalui mekanisme voting.',
+        },
+      ],
+    },
+    {
+      id: 'bab-8',
+      chapter: 'BAB VIII',
+      title: 'Umum',
+      articles: [
+        {
+          num: 'Pasal 20',
+          title: 'Mekanisme Pemilihan Umum',
+          content: 'Pengurus masa berjalan membentuk komite pemilihan independen untuk menyelenggarakan Pemilihan Umum.\nKomite independen yang dimaksud pada ayat (1) tidak mencakup Ketua Umum PPI Auckland masa berjalan dan tidak terdaftar sebagai anggota maupun pengurus organisasi politik dan organisasi kejahatan yang bertentangan dengan peraturan perundang-undangan Republik Indonesia.\nMekanisme Pemilihan Umum akan diatur lebih lanjut oleh komite independen mengacu kepada Anggaran Rumah Tangga.\nPemilihan Ketua Umum PPI Auckland dilaksanakan melalui voting yang diikuti oleh anggota yang termasuk dalam Daftar Pemilih Tetap.\nDaftar Pemilih Tetap yang dimaksud pada ayat (4) terdiri atas anggota PPI Auckland yang mendaftarkan diri melalui form pendaftaran yang disebarkan oleh komite independen.',
+        },
+      ],
+    },
+    {
+      id: 'bab-9',
+      chapter: 'BAB IX',
+      title: 'Penutup',
+      articles: [
+        {
+          num: 'Pasal 21',
+          title: 'Aturan Peralihan dan Tambahan',
+          content: 'Anggaran Dasar ini berlaku sejak tanggal disahkan.\nSegala ketentuan produk hukum di bawah Anggaran Dasar tetap berlaku sebelum dilakukan perubahan atau tidak bertentangan dengan Anggaran Dasar.\nDengan diberlakukannya Anggaran Dasar ini, Anggaran Dasar sebelumnya dan ketentuan lain yang bertentangan dinyatakan tidak berlaku lagi.',
+        },
+      ],
+    },
+  ],
+  artArticles: [
+    {
+      id: 'art-bab-1',
+      chapter: 'BAB I',
+      title: 'Ketua Umum',
+      articles: [
+        {
+          num: 'Pasal 1',
+          title: 'Definisi Ketua Umum PPI Auckland',
+          content: 'Ketua Umum PPI Auckland adalah alat kelengkapan organisasi PPI Auckland yang bertugas memimpin Badan Pelaksana Harian PPI Auckland dalam menyelenggarakan program kerja PPI Auckland.Ketua Umum PPI Auckland bertugas dan berwenang:Memimpin Kongres PPI Auckland dan Rapat Anggota PPI Auckland, serta menyimpulkan hasil untuk pengambilan keputusan;Menyusun rencana dan program kerja PPI Auckland.Menyusun dan memimpin Badan Pelaksana Harian PPI Auckland;Melakukan koordinasi dengan PPI Selandia Baru dan/atau PPI pada wilayah lain di Selandia Baru; danMenyampaikan laporan kinerja PPI Auckland di akhir kepengurusan.',
+        },
+        {
+          num: 'Pasal 2',
+          title: 'Syarat Ketua Umum PPI Auckland',
+          content: 'Ketua Umum PPI Auckland dipilih dari perseorangan yang mengajukan diri atau diajukan oleh anggota PPI Auckland yang ditentukan berdasarkan sistem pemungutan suara dan disahkan di dalam Kongres PPI Auckland secara musyawarah mufakat.Syarat menjadi Ketua Umum PPI Auckland adalah sebagai berikut:Anggota PPI Auckland yang masih berstatus sebagai mahasiswa aktifTidak terdaftar sebagai anggota maupun pengurus organisasi politik dan/atau organisasi kejahatan yang bertentangan dengan peraturan perundang-undangan Republik IndonesiaWajib memiliki pengalaman organisasi yang dapat ditunjukkan dengan pengalaman menjadi kepala divisi atau setingkat/lebih tinggi pada tingkat pelajar, mahasiswa, organisasi kemasyarakatan, keilmuan ataupun lembaga lain setidaknya 1 (satu) tahunMemenuhi persyaratan lanjutan dan/atau administratif serta mengikuti rangkaian acara yang diadakan oleh panitia Pemilihan Umum PPI Auckland3. Ketua Umum PPI Auckland dapat diberhentikan apabila:Tidak lagi memenuhi ketentuan ayat (2) huruf a sampai c;Tidak dapat melaksanakan tugas secara berkelanjutan atau berhalangan sebagai Ketua Umum PPI Auckland selama 3 (tiga) bulan berturut-turut tanpa keterangan apapun; dan/atauMelakukan pelanggaran yang berpotensi mengganggu ketertiban masyarakat. Pemberhentian Ketua Umum PPI Auckland sebagaimana (3), dapat dilakukan melalui:Penyerahan surat pengunduran diri kepada Badan Pelaksana HarianDiputuskan melalui musyawarah dalam Kongres PPI Auckland, Rapat Anggota atau Kongres Luar Biasa yang dibuktikan melalui berita acara hasil musyawarahDalam hal Ketua Umum PPI Auckland berhenti dari jabatannya, tugas dan fungsi dilaksanakan oleh Badan Pelaksana Harian yang berada di bawah Ketua Umum PPI Auckland secara langsung hingga dipilihnya Ketua Umum PPI Auckland yang definitif melalui Kongres Luar Biasa.Masa jabatan Ketua Umum PPI Auckland yang dipilih melalui Kongres Luar Biasa sebagaimana dimaksud pada ayat (5) hanya berlangsung mengikuti periode kerja Ketua Umum PPI Auckland yang digantikan.',
+        },
+      ],
+    },
+    {
+      id: 'art-bab-2',
+      chapter: 'BAB II',
+      title: 'Badan Eksekutif dan Pelaksana Harian',
+      articles: [
+        {
+          num: 'Pasal 3',
+          title: 'Badan Eksekutif PPI Auckland',
+          content: 'Badan Eksekutif dibentuk oleh Ketua Umum PPI Auckland dan merupakan alat kelengkapan organisasi PPI Auckland yang bertugas untuk membantu pelaksanaan tugas dan fungsi Ketua Umum PPI Auckland.Badan Eksekutif dipilih oleh dan bertanggung jawab kepada Ketua Umum PPI Auckland sesuai dengan rancangan susunan program kerja setiap 1 (satu) periode kerja.Ketua Umum PPI Auckland menetapkan susunan Badan Eksekutif pada masa permulaan periode kerja, selambat-lambatnya 30 hari setelah Ketua Umum PPI Auckland terpilih.Perangkat organisasi Badan Eksekutif mencakup:Wakil Ketua Bidang yang bertugas membantu Ketua Umum PPI Auckland dalam melaksanakan program kerja spesifik terhadap bidang yang menjadi naungannya. Bidang – bidang yang menjadi fokus kepengurusan dapat ditentukan sesuai dengan perkembangan organisasiSekretaris Umum yang bertugas menangani hal administrasi dan kesekretariatan.Bendahara Umum yang bertugas menangani hal tata kelola keuangan dan pembukuan.',
+        },
+        {
+          num: 'Pasal 4',
+          title: 'Badan Pelaksana Harian PPI Auckland',
+          content: 'Badan Pelaksana Harian merupakan alat kelengkapan organisasi PPI Auckland yang terdiri atas:Ketua Umum;Badan Eksekutif;Kepala Divisi. Kepala Divisi sebagaimana dalam ayat (1) dipilih oleh dan bertanggung jawab kepada Ketua Umum PPI Auckland sesuai dengan rancangan susunan program kerja setiap 1 (satu) periode kerja.Ketua Umum PPI Auckland menetapkan susunan Badan Pelaksana Harian pada masa permulaan periode kerja, selambat-lambatnya 30 hari setelah Ketua Umum PPI Auckland terpilih.Perangkat organisasi Badan Pelaksana Harian mempertimbangkan bidang yang sesuai dengan tujuan dan perkembangan organisasi PPI Auckland.Ketua Umum PPI Auckland dapat menambahkan dan/atau memberhentikan Badan Pelaksana Harian dengan mempertimbangkan kinerja maupun kebutuhan organisasi.\nBab 2 | Dewan Pengawas',
+        },
+      ],
+    },
+    {
+      id: 'art-bab-3',
+      chapter: 'BAB III',
+      title: 'Dewan Pengawas',
+      articles: [
+        {
+          num: 'Pasal 5',
+          title: 'Definisi Dewan Pengawas',
+          content: 'Dewan Pengawas adalah alat kelengkapan organisasi PPI Auckland yang memiliki fungsi pengawasan pelaksanaan organisasi oleh alat kelengkapan.Dewan Pengawas dipilih melalui keputusan Rapat Anggota PPI Auckland setelah pelaksanaan Kongres PPI Auckland.Dewan Pengawas memiliki tugas dan wewenang:Mengajukan dan memimpin Kongres Luar biasaMengawasi dan memberikan nasihat kepada alat kelengkapan organisasi PPI Auckland dalam menjalankan seluruh kegiatannyaMemberi peringatan dan teguran kepada alat kelengkapan organisasi PPI Auckland;Menerima laporan/aduan dari anggota PPI Auckland atas kinerja alat kelengkapan organisasi PPI Auckland dalam menjalankan program dan kebijakan strategis PPI Auckland.Alat kelengkapan organisasi PPI Auckland yang dimaksud dalam ayat ini adalah seluruh alat kelengkapan organisasi PPI Auckland kecuali Dewan Pengawas.4. Dewan Pengawas berjumlah paling sedikit 1 (satu) orang dan paling banyak 3 (tiga) orang, yang sebaiknya merepresentasikan jenjang studi dan institusi yang berbeda di Auckland.',
+        },
+        {
+          num: 'Pasal 6',
+          title: 'Syarat Dewan Pengawas',
+          content: 'Syarat menjadi anggota Dewan Pengawas adalah sebagai berikut:Anggota PPI Auckland;Merupakan mahasiswa/pelajar aktif dari salah satu anggota PPI Wilayah yang memiliki masa studi minimal 1 (satu) tahun. Dewan pengawas dapat memiliki masa studi kurang dari 1 (satu) tahun dengan syarat berdomisili di Selandia Baru minimal (satu) tahun sejak terpilih sebagai anggota serta memiliki masa studi minimal 6 (enam) bulan; danTidak boleh merangkap jabatan dengan alat kelengkapan PPI Auckland yang lain.Dalam hal menjaga keseimbangan dan keberlanjutan organisasi, Dewan Pengawas wajib memiliki pengalaman organisasi yang dapat ditunjukkan dengan pengalaman menjadi kepala divisi atau setingkat/lebih tinggi pada tingkat pelajar, mahasiswa, organisasi kemasyarakatan, keilmuan ataupun lembaga lain setidaknya 1 (satu) tahun.2. Anggota Dewan Pengawas dapat diberhentikan apabila:Tidak lagi memenuhi syarat anggota Dewan Pengawas sebagaimana dimaksud dalam ayat (1);Tidak dapat melaksanakan tugas secara berkelanjutan atau berhalangan tetap sebagai Dewan Pengawas selama 3 (tiga) bulan berturut-turut tanpa keterangan apapun; atauAnggota Dewan Pengawas melakukan pelanggaran AD-ART berdasarkan laporan dari alat kelengkapan organisasi dan/atau anggota PPI Auckland.3. Pemberhentian anggota Dewan Pengawas dapat dilakukan melalui musyawarah pada Kongres PPI Auckland, Rapat Anggota, atau Kongres Luar Biasa yang dibuktikan melalui berita acara hasil musyawarah.\nBab 3 | Musyawarah Organisasi',
+        },
+      ],
+    },
+    {
+      id: 'art-bab-4',
+      chapter: 'BAB IV',
+      title: 'Permusyawaratan Organisasi',
+      articles: [
+        {
+          num: 'Pasal 7',
+          title: 'Kongres PPI Auckland',
+          content: 'Kongres PPI Auckland dibentuk secara musyawarah untuk mencapai mufakat dan dilaksanakan paling sedikit 1 (satu) tahun sekali baik secara langsung maupun daring di akhir kepengurusan.Kongres PPI Auckland dipimpin oleh Ketua Umum PPI Auckland dan dihadiri oleh alat kelengkapan organisasi PPI Auckland, anggota PPI Auckland, serta tamu undangan lain yang ditetapkan oleh panitia Kongres PPI Auckland.Kewenangan Kongres PPI Auckland meliputi:Memilih dan menetapkan Ketua Umum PPI Auckland;Mengesahkan Ketua Umum PPI Auckland;Meminta laporan pertanggungjawaban alat kelengkapan organisasi PPI Auckland dalam bentuk dokumen sebagai pedoman alat kelengkapan organisasi PPI Auckland periode selanjutnya;Membahas rencana kerja alat kelengkapan organisasi PPI Auckland untuk 1 (satu) tahun ke depan;Membahas, mengubah, dan menetapkan AD/ART PPI Auckland;Menerima dan menolak pertanggungjawaban alat kelengkapan PPI Auckland;Membuat dan menetapkan Keputusan dan ketetapan yang dianggap perlu; danMengusulkan dan menetapkan pembubaran PPI Auckland.4. Setiap Anggota PPI Auckland memiliki 1 (satu) hak suara dan hak bicara mewakili institusinya masing-masing, sedangkan tamu undangan lain hanya memiliki hak bicara.5. Kongres PPI Auckland dianggap sah apabila dihadiri oleh kuorum yang terdiri dari sekurangkurangnya 80% perwakilan setiap jenjang pendidikan yang terdaftar sebagai anggota PPI Auckland dan telah melakukan registrasi kedatangan Kongres, serta seluruh Badan Pelaksana Harian PPI Auckland masa berjalan.6. Apabila dalam pengambilan keputusan kuorum tidak terpenuhi, maka musyawarah ditunda sampai waktu yang ditentukan oleh alat kelengkapan PPI Auckland.7. Musyawarah yang diadakan karena kuorum pada musyawarah sebelumnya tidak terpenuhi, sesuai ayat (6) di atas, maka musyawarah tidak memiliki kuorum.',
+        },
+        {
+          num: 'Pasal 8',
+          title: 'Rapat Anggota PPI Auckland',
+          content: 'Rapat Anggota PPI Auckland adalah musyawarah anggota PPI Auckland yang dapat dilakukan oleh setiap anggota PPI Auckland dan/atau alat kelengkapan PPI Auckland lainnya.Rapat Anggota PPI Auckland bertujuan untuk pengesahan Badan Pelaksana Harian, mempererat silaturahmi antaralat kelengkapan organisasi PPI Auckland, maupun membahas keperluan tertentu alat kelengkapan PPI Auckland.Rapat Anggota PPI Auckland dapat dilaksanakan sewaktu-waktu sesuai dengan keperluan masingmasing anggota dan/atau alat kelengkapan PPI Auckland lainnya.',
+        },
+        {
+          num: 'Pasal 9',
+          title: 'Kongres Luar Biasa',
+          content: 'Kongres Luar Biasa adalah kongres PPI Auckland yang diselenggarakan pada keadaan mendesak dan penting untuk menyelesaikan permasalahan organisasi yang tidak dapat diselesaikan dalam forum/permusyawaratan lain.Kewenangan Kongres Luar Biasa adalah memeriksa dan memutus usulan dan/atau permohonan yang menjadi agenda Kongres Luar Biasa.Kongres Luar Biasa diselenggarakan atas permintaan sekurangnya 50% (lima puluh persen) ditambah 1 (satu) dari jumlah anggota aktif PPI Auckland yang disampaikan kepada Dewan Pengawas.Kongres Luar Biasa wajib dilaksanakan paling lambat sebulan setelah permintaan pada ayat (3) terpenuhi.Kongres Luar Biasa dipimpin oleh Dewan Pengawas.Agenda Kongres Luar Biasa ditetapkan oleh Dewan Pengawas berdasarkan usulan anggota PPI Auckland.Setiap anggota PPI Auckland memiliki 1 (satu) hak suara dan hak bicara dalam Kongres Luar Biasa.Keputusan Kongres Luar Biasa setara dengan Keputusan Kongres PPI Auckland.\nBab 4 | Penutup',
+        },
+      ],
+    },
+    {
+      id: 'art-bab-5',
+      chapter: 'BAB V',
+      title: 'Aturan Peralihan dan Tambahan',
+      articles: [
+        {
+          num: 'Pasal 10',
+          title: 'Aturan Peralihan dan Tambahan',
+          content: 'Anggaran Rumah Tangga ini berlaku sejak tanggal disahkan.Segala ketentuan produk hukum di bawah Anggaran Rumah Tangga tetap berlaku sebelum dilakukan perubahan atau tidak bertentangan dengan Anggaran Rumah Tangga.Hal-hal yang belum diatur dalam AD-ART akan diatur lebih lanjut dalam bentuk pedoman pelaksanaan organisasi yang akan dituangkan dalam bentuk keputusan Ketua Umum PPI Auckland.AD-ART ini berlaku sejak tanggal ditetapkan dan bersifat mengikat bagi seluruh anggota PPI Auckland.\n\nAuckland, 10 Oktober 2025\nKetua Umum PPI Auckland 2025/2026\nPrasetyo Eka Putra',
+        },
+      ],
+    },
+  ],
+};

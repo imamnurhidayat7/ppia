@@ -347,7 +347,7 @@ export default function DashboardPage() {
                 square left visible gaps at the corners. */}
             {/* No padding: the photo fills the frame edge to edge, with the
                 frame doing the clipping so the corners stay rounded. */}
-            <div className="shrink-0 overflow-hidden rounded-[7px] border border-white/15 bg-white/10 backdrop-blur-sm">
+            <div className="inline-flex shrink-0 items-center justify-center border border-white/15 bg-white/10 backdrop-blur-sm leading-none">
               <Avatar
                 src={user.avatar}
                 name={user.name || user.username}

@@ -66,11 +66,11 @@ export const getArticleAnalytics = async (req: Request, res: Response): Promise<
     });
 
     // Get articles created per day for the last N days
-    const articlesPerDay = await prisma.$queryRaw`
-      SELECT DATE(createdAt) as date, COUNT(*) as count
-      FROM Article
-      WHERE createdAt >= ${startDate}
-      GROUP BY DATE(createdAt)
+    const articlesPerDay = await prisma.$queryRaw<{ date: Date; count: number }[]>`
+      SELECT DATE("createdAt") as date, COUNT(*)::int as count
+      FROM "Article"
+      WHERE "createdAt" >= ${startDate}
+      GROUP BY DATE("createdAt")
       ORDER BY date ASC
     `;
 
@@ -330,11 +330,11 @@ export const getResearchDownloadAnalytics = async (req: Request, res: Response):
 
     // Downloads per day (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const downloadsPerDay = await prisma.$queryRaw`
-      SELECT DATE(downloadedAt) as date, COUNT(*) as count
-      FROM ResearchDownload
-      WHERE researchId = ${researchId} AND downloadedAt >= ${thirtyDaysAgo}
-      GROUP BY DATE(downloadedAt)
+    const downloadsPerDay = await prisma.$queryRaw<{ date: Date; count: number }[]>`
+      SELECT DATE("downloadedAt") as date, COUNT(*)::int as count
+      FROM "ResearchDownload"
+      WHERE "researchId" = ${researchId} AND "downloadedAt" >= ${thirtyDaysAgo}
+      GROUP BY DATE("downloadedAt")
       ORDER BY date ASC
     `;
 

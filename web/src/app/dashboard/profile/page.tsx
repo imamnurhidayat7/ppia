@@ -373,7 +373,7 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center text-center">
               {/* Porthole: the photo sits behind a double-ring frame rather than
                   in a plain rounded square. */}
-              <div className="relative rounded-full p-1" style={PORTHOLE_RING}>
+              <div className="relative inline-flex items-center justify-center rounded-full p-1 leading-none" style={PORTHOLE_RING}>
                 <Avatar src={profile.avatar} name={profile.name} size="2xl" />
                 <button
                   type="button"

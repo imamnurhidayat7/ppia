@@ -424,17 +424,52 @@ export const CONTENT_SCHEMAS: Record<string, FieldSchema[]> = {
   ],
 
   // ── AD & ART — /about/ad-art ──────────────────────────────────
+  //
+  // Two bound documents, not one: Anggaran Dasar (adArticles) is the
+  // constitution, Anggaran Rumah Tangga (artArticles) is the bylaws that
+  // implement it. The public page (ad-art-content.tsx) already renders both as
+  // separate filed-sheet sections, and artArticles has carried real content
+  // since the AD/ART re-seed — but this schema only exposed adArticles, so an
+  // admin opening Canvas had no field to edit the bylaws chapters at all.
   legal_document: [
     { key: 'header', label: 'Page header', type: 'group', fields: HEADER_FIELDS },
     {
+      key: 'preamble',
+      label: 'Pembukaan (preamble)',
+      type: 'textarea',
+      rows: 6,
+      help: 'Read before the Anggaran Dasar. Leave empty to hide this section.',
+    },
+    {
       key: 'adArticles',
-      label: 'Chapters & articles',
+      label: 'AD — Anggaran Dasar (chapters & articles)',
       type: 'array',
       help: 'The constitution, grouped by chapter.',
       itemSchema: [
         { key: 'id', label: 'Unique code', type: 'text', placeholder: 'bab-1', help: 'Lowercase, no spaces.' },
         { key: 'chapter', label: 'Chapter label', type: 'text', placeholder: 'BAB I' },
         { key: 'title', label: 'Chapter title', type: 'text', placeholder: 'Name and registered location' },
+        {
+          key: 'articles',
+          label: 'Articles in this chapter',
+          type: 'array',
+          itemSchema: [
+            { key: 'num', label: 'Number', type: 'text', placeholder: 'Pasal 1' },
+            { key: 'title', label: 'Article title', type: 'text' },
+            { key: 'content', label: 'Article text', type: 'textarea', rows: 4 },
+          ],
+        },
+      ],
+    },
+    {
+      key: 'artArticles',
+      label: 'ART — Anggaran Rumah Tangga (chapters & articles)',
+      type: 'array',
+      help: 'The bylaws, grouped by chapter. Shown as a second bound document below the AD. Leave empty to hide this section.',
+      itemSchema: [
+        { key: 'id', label: 'Unique code', type: 'text', placeholder: 'art-bab-1', help: 'Lowercase, no spaces.' },
+        { key: 'chapter', label: 'Chapter label', type: 'text', placeholder: 'BAB I' },
+        { key: 'title', label: 'Chapter title', type: 'text', placeholder: 'Ketua Umum' },
         {
           key: 'articles',
           label: 'Articles in this chapter',

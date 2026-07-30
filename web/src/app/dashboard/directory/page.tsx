@@ -312,7 +312,7 @@ export default function MemberDirectoryPage() {
                   <div className="flex items-start gap-3">
                     {/* Porthole frame around the portrait, as elsewhere. */}
                     <span
-                      className="shrink-0 rounded-full p-0.5"
+                      className="inline-flex shrink-0 items-center justify-center rounded-full leading-none"
                       style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 4px rgba(11,28,46,0.05)' }}
                     >
                       <Avatar src={member.avatar ?? undefined} name={member.name} size="lg" />
