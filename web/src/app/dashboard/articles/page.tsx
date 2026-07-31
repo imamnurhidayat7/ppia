@@ -51,11 +51,11 @@ interface Post {
   author: string;
 }
 
-type CategoryFilter = 'All' | 'News' | 'Articles';
+type CategoryFilter = 'All' | 'News' | 'Article';
 
 const CATEGORY_LABELS: Record<string, string> = {
   News: 'News',
-  Articles: 'Articles',
+  Article: 'Article',
 };
 
 function categoryLabel(category: string): string {
@@ -83,7 +83,7 @@ export default function DashboardArticlesPage() {
 
   const fetchArticles = useCallback(async () => {
     try {
-      const res = (await api.getArticles({ limit: 50 })) as ArticlesApiResponse;
+      const res = (await api.getArticlesAdmin({ limit: 50 })) as ArticlesApiResponse;
       const items = Array.isArray(res.articles) ? res.articles : [];
       setPosts(
         items.map((article) => ({
@@ -127,7 +127,7 @@ export default function DashboardArticlesPage() {
     () => ({
       All: posts.length,
       News: posts.filter((post) => post.category === 'News').length,
-      Articles: posts.filter((post) => post.category === 'Articles').length,
+      Articles: posts.filter((post) => post.category === 'Article').length,
     }),
     [posts]
   );
@@ -183,8 +183,8 @@ export default function DashboardArticlesPage() {
           value={counts.Articles}
           tone="violet"
           icon={FileText}
-          active={filter === 'Articles'}
-          onClick={() => setFilter('Articles')}
+          active={filter === 'Article'}
+          onClick={() => setFilter('Article')}
         />
       </StatTileRow>
 
