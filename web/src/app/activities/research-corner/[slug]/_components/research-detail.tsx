@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import api from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import WaveTransition from "@/components/sections/WaveTransition";
 import type { PublicResearch } from "@/lib/server-api";
 import {
@@ -41,6 +42,7 @@ interface Comment {
 }
 
 export default function ResearchDetail({ research }: { research: PublicResearch }) {
+  const { isAuthenticated, user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
@@ -74,13 +76,21 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
     if (!research?.id || submittingComment) return;
     setSubmittingComment(true);
     try {
-      await api.createPublicComment({
-        researchId: research.id,
-        content: commentForm.content,
-        userName: commentForm.name,
-        userEmail: commentForm.email,
-        parentId,
-      });
+      if (isAuthenticated) {
+        await api.createComment({
+          researchId: research.id,
+          content: commentForm.content,
+          parentId,
+        });
+      } else {
+        await api.createPublicComment({
+          researchId: research.id,
+          content: commentForm.content,
+          userName: commentForm.name,
+          userEmail: commentForm.email,
+          parentId,
+        });
+      }
       setCommentToast({ type: "success", message: "Comment posted successfully!" });
       setCommentForm({ name: "", email: "", content: "" });
       setShowCommentForm(false);
@@ -457,28 +467,34 @@ export default function ResearchDetail({ research }: { research: PublicResearch 
                     <h4 className="font-semibold text-[#1A2B4A] mb-4">
                       Leave a Comment
                     </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                      <input
-                        type="text"
-                        required
-                        placeholder="Your name"
-                        value={commentForm.name}
-                        onChange={(e) =>
-                          setCommentForm({ ...commentForm, name: e.target.value })
-                        }
-                        className="px-4 py-3 rounded-xl border border-gray-200 focus:border-[#E8231A] outline-none text-sm"
-                      />
-                      <input
-                        type="email"
-                        required
-                        placeholder="Your email"
-                        value={commentForm.email}
-                        onChange={(e) =>
-                          setCommentForm({ ...commentForm, email: e.target.value })
-                        }
-                        className="px-4 py-3 rounded-xl border border-gray-200 focus:border-[#E8231A] outline-none text-sm"
-                      />
-                    </div>
+                    {isAuthenticated ? (
+                      <p className="mb-4 text-sm text-[#5B6B7C]">
+                        Commenting as <span className="font-semibold text-[#1A2B4A]">{user?.name}</span>
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <input
+                          type="text"
+                          required
+                          placeholder="Your name"
+                          value={commentForm.name}
+                          onChange={(e) =>
+                            setCommentForm({ ...commentForm, name: e.target.value })
+                          }
+                          className="px-4 py-3 rounded-xl border border-gray-200 focus:border-[#E8231A] outline-none text-sm"
+                        />
+                        <input
+                          type="email"
+                          required
+                          placeholder="Your email"
+                          value={commentForm.email}
+                          onChange={(e) =>
+                            setCommentForm({ ...commentForm, email: e.target.value })
+                          }
+                          className="px-4 py-3 rounded-xl border border-gray-200 focus:border-[#E8231A] outline-none text-sm"
+                        />
+                      </div>
+                    )}
                     <textarea
                       rows={4}
                       required

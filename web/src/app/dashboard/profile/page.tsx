@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import api from '@/lib/api';
-import { API_ORIGIN } from '@/lib/api-base';
 import type { UserProfile } from '@/lib/api-types';
 import { useToast } from '@/components/Toast';
 import { Avatar, Badge, Button } from '@/components/ui';
@@ -22,6 +21,7 @@ import {
   StatTileRow,
 } from '@/components/dashboard';
 import MemberCardModal from '@/components/MemberCardModal';
+import AvatarPreviewModal from '@/components/dashboard/AvatarPreviewModal';
 import {
   Calendar,
   Camera,
@@ -31,7 +31,6 @@ import {
   Globe,
   IdCard,
   Link2,
-  Loader2,
   Save,
   SquarePen,
   Ticket,
@@ -217,11 +216,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showMemberCard, setShowMemberCard] = useState(false);
+  const [showAvatarPreview, setShowAvatarPreview] = useState(false);
   const [formData, setFormData] = useState<ProfileForm>(EMPTY_FORM);
-
-  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -274,36 +271,10 @@ export default function ProfilePage() {
     setEditing(false);
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !profile) return;
-
-    if (!file.type.startsWith('image/')) {
-      showError('Choose an image file');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      showError('Images can be up to 5MB');
-      return;
-    }
-
-    setUploadingAvatar(true);
-    try {
-      const res = await api.uploadImage(file);
-      // The upload endpoint returns a relative path; store it as absolute.
-      const apiBase = API_ORIGIN;
-      const avatarUrl = res.url.startsWith('http') ? res.url : `${apiBase}${res.url}`;
-      await api.updateProfile({ avatar: avatarUrl });
-      setProfile({ ...profile, avatar: avatarUrl });
-      await updateUser({ avatar: avatarUrl });
-      showSuccess('Profile photo updated');
-    } catch (error) {
-      const err = error as { response?: { data?: { error?: string } }; message?: string };
-      showError(err.response?.data?.error || err.message || 'Could not upload the photo');
-    } finally {
-      setUploadingAvatar(false);
-      if (avatarInputRef.current) avatarInputRef.current.value = '';
-    }
+  const handleAvatarUpdated = async (newAvatarUrl: string) => {
+    if (!profile) return;
+    setProfile({ ...profile, avatar: newAvatarUrl });
+    await updateUser({ avatar: newAvatarUrl });
   };
 
   if (authLoading || loading) {
@@ -371,33 +342,24 @@ export default function ProfilePage() {
         <div className="space-y-6">
           <SectionCard title="Profile photo" description="Shown on your member card and in the directory">
             <div className="flex flex-col items-center text-center">
-              {/* Porthole: the photo sits behind a double-ring frame rather than
-                  in a plain rounded square. */}
-              <div className="relative inline-flex items-center justify-center rounded-full p-1 leading-none" style={PORTHOLE_RING}>
+              {/* Porthole: the photo sits behind a double-ring frame. Click the
+                  photo (or the camera badge in the corner) to open the avatar
+                  preview modal. */}
+              <button
+                type="button"
+                onClick={() => setShowAvatarPreview(true)}
+                aria-label="View and change profile photo"
+                className="group relative inline-block rounded-full p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8231A] focus-visible:ring-offset-2"
+                style={PORTHOLE_RING}
+              >
                 <Avatar src={profile.avatar} name={profile.name} size="2xl" />
-                <button
-                  type="button"
-                  onClick={() => avatarInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                  aria-label="Change profile photo"
-                  className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full bg-[#E8231A] text-white shadow-lg transition-colors hover:bg-[#C41E16] disabled:opacity-50"
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#E8231A] text-white shadow-md transition-transform group-hover:scale-110"
                 >
-                  {uploadingAvatar ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
-                </button>
-                <input
-                  ref={avatarInputRef}
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  aria-label="Upload profile photo"
-                  onChange={handleAvatarUpload}
-                  className="sr-only"
-                />
-              </div>
+                  <Camera className="h-4 w-4" />
+                </span>
+              </button>
               <p className="mt-5 font-display text-base font-bold ink-strong">
                 {profile.name}
               </p>
@@ -406,7 +368,7 @@ export default function ProfilePage() {
               </p>
               <span aria-hidden="true" className="rope-rule my-3 block w-full opacity-60" />
               <p className="text-[12px] ink-muted">
-                Images can be up to 5MB. Click the camera icon to replace it.
+                Click the photo to preview or change it. Images can be up to 5MB.
               </p>
             </div>
           </SectionCard>
@@ -783,6 +745,14 @@ export default function ProfilePage() {
         isOpen={showMemberCard}
         onClose={() => setShowMemberCard(false)}
         member={profile}
+      />
+
+      <AvatarPreviewModal
+        isOpen={showAvatarPreview}
+        onClose={() => setShowAvatarPreview(false)}
+        currentAvatar={profile.avatar}
+        userName={profile.name}
+        onAvatarUpdated={handleAvatarUpdated}
       />
     </PageStack>
   );

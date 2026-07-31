@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
-import { Menu, X, ChevronDown, User, LogOut } from "lucide-react";
+import { Menu, X, ChevronDown, User, UserCircle, LogOut } from "lucide-react";
 import GlobalSearch from "./GlobalSearch";
 import { useLanguage } from "@/lib/language-context";
 import { useMenuItems } from "@/lib/hooks/use-menu-items";
@@ -254,16 +254,14 @@ export default function Navbar() {
                       <User size={16} className="mr-3" />
                       Dashboard
                     </Link>
-                    {(user.role === "SUPER_ADMIN" ) && (
-                      <Link
-                        href="/dashboard/admin"
-                        className="group flex items-center gap-3 px-4 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-sm transition-colors"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <span className="h-1 w-1 shrink-0 rounded-full bg-[#E8231A]/60 transition-colors group-hover:bg-[#E8231A]" />
-                        Admin Panel
-                      </Link>
-                    )}
+                    <Link
+                      href="/dashboard/profile"
+                      className="flex items-center px-4 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-sm transition-colors"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <UserCircle size={16} className="mr-3" />
+                      My Profile
+                    </Link>
                     <button
                       onClick={() => {
                         logout();
@@ -365,9 +363,7 @@ export default function Navbar() {
                   </div>
                 </div>
                 <Link href="/dashboard" className="text-[#94A3B8] hover:text-white text-sm font-medium py-2">Dashboard</Link>
-                {(user.role === "SUPER_ADMIN" ) && (
-                  <Link href="/dashboard/admin" className="text-[#94A3B8] hover:text-white text-sm font-medium py-2">Admin Panel</Link>
-                )}
+                <Link href="/dashboard/profile" className="text-[#94A3B8] hover:text-white text-sm font-medium py-2">My Profile</Link>
                 <button onClick={logout} className="text-left text-[#94A3B8] hover:text-white text-sm font-medium py-2">Logout</button>
               </div>
             ) : (

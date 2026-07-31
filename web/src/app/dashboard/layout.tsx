@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Loader2 } from 'lucide-react';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
+import { WorkspaceTransitionRoot } from '@/components/dashboard/workspace-transition';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -52,9 +53,14 @@ export default function DashboardRootLayout({ children }: DashboardLayoutProps) 
     return null;
   }
 
-  if (isAdminRoute) {
-    return <>{children}</>;
-  }
-
-  return <DashboardShell view="member">{children}</DashboardShell>;
+  return (
+    <>
+      {/* Workspace switch overlay lives at the dashboard root so it survives
+          the route change between member ↔ admin sides. Without this, the
+          transition dies the instant the shell unmounts and the page swap
+          looks instantaneous to the user. */}
+      <WorkspaceTransitionRoot />
+      {isAdminRoute ? children : <DashboardShell view="member">{children}</DashboardShell>}
+    </>
+  );
 }
