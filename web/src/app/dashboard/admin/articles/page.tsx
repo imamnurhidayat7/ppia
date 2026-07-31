@@ -284,9 +284,15 @@ export default function AdminArticlesPage() {
             >
               Refresh
             </Button>
-            <Link href="/dashboard/admin/articles/new">
+            <Link
+              href={
+                contentType === 'News'
+                  ? '/dashboard/admin/articles/news/new'
+                  : '/dashboard/admin/articles/new'
+              }
+            >
               <Button variant="primary" size="sm" leftIcon={<Plus className="h-4 w-4" />}>
-                New post
+                New {contentType === 'News' ? 'news item' : 'article'}
               </Button>
             </Link>
           </>
@@ -378,9 +384,15 @@ export default function AdminArticlesPage() {
               title={`No ${copy.lower}s yet`}
               description={`Create the first ${copy.lower} so it shows on the site.`}
               action={
-                <Link href="/dashboard/admin/articles/new">
+                <Link
+                  href={
+                    contentType === 'News'
+                      ? '/dashboard/admin/articles/news/new'
+                      : '/dashboard/admin/articles/new'
+                  }
+                >
                   <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
-                    New post
+                    New {contentType === 'News' ? 'news item' : 'article'}
                   </Button>
                 </Link>
               }

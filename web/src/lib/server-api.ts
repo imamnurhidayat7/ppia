@@ -205,9 +205,16 @@ export async function fetchHomeEvents(limit = 8): Promise<PublicEvent[]> {
   return data?.events ?? [];
 }
 
-/** Latest published articles for the homepage grid. */
+/**
+ * Latest published articles for the homepage grid.
+ *
+ * Passes `sort=latest` so the response is the most recent posts by `createdAt`
+ * regardless of whether they are featured. The default article list order
+ * surfaces featured posts first, which is the right behaviour for editorial
+ * indexes but wrong for a "what's new" tile at the top of the homepage.
+ */
 export async function fetchHomeArticles(limit = 3): Promise<PublicArticle[]> {
-  const data = await getJson<{ articles?: PublicArticle[] }>(`/articles?limit=${limit}`);
+  const data = await getJson<{ articles?: PublicArticle[] }>(`/articles?limit=${limit}&sort=latest`);
   return data?.articles ?? [];
 }
 

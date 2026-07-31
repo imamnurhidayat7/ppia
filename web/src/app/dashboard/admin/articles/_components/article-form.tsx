@@ -11,7 +11,7 @@ const RichTextEditor = dynamic(
 );
 import { Field, FormActions, FormGrid, SectionCard } from '@/components/dashboard';
 import { cn } from '@/lib/utils';
-import type { ArticleFormValues, DivisionRef, TagRef } from './shared';
+import type { ArticleFormValues, ArticleCategory, DivisionRef, TagRef } from './shared';
 import { slugFromTitle } from './shared';
 
 interface ArticleFormProps {
@@ -26,6 +26,17 @@ interface ArticleFormProps {
   submitLabel: string;
   /** Prefix for input ids so two forms on one route never collide. */
   idPrefix: string;
+  /**
+   * Where this post will live once created. Required so the form cannot
+   * accidentally fall back to the Prisma default ("News"). The parent page
+   * knows the route it owns; we surface that as a read-only chip near the
+   * title so the user can see exactly which collection they're writing for.
+   *
+   * Optional because the research form is mounted here too, but research
+   * posts go through a separate API and have their own collection concept
+   * — they don't need a category chip on the form.
+   */
+  category?: ArticleCategory;
   /** 'article', 'news item' or 'research item' — used in the copy. */
   noun?: string;
   excerptLabel?: string;
@@ -45,6 +56,7 @@ export function ArticleForm({
   cancelHref,
   submitLabel,
   idPrefix,
+  category,
   noun = 'article',
   excerptLabel = 'Excerpt',
   excerptHint = 'Shown on list cards and in search results. Optional.',
@@ -68,6 +80,21 @@ export function ArticleForm({
         icon={FileText}
       >
         <div className="space-y-5">
+          {/* Read-only collection indicator so the user always sees where the
+              post will live once saved. Surfaces the form's `category` prop
+              instead of trusting the user to remember which tab they clicked
+              "New" from. Only rendered when the form has a category (research
+              posts have their own flow). */}
+          {category && (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-[#DCE7F1] bg-[#F5FAFD] px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+              <span className="font-mono text-[11px] uppercase tracking-wider ink-muted">
+                Collection
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-sm bg-[#E8231A]/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-[#C41E16] dark:text-[#FF8A80]">
+                {category}
+              </span>
+            </div>
+          )}
           <FormGrid columns={2}>
             <Field label="Title" htmlFor={`${idPrefix}-title`} required>
               <input

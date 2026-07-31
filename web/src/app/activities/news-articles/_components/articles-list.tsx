@@ -62,6 +62,9 @@ interface ApiArticle {
   author?: { name?: string; username?: string };
   division?: { name?: string };
   isFeatured?: boolean;
+  /** Schema value: "Article" or "News". Drives the public tab the post is
+      grouped under. Optional because some older API responses omit it. */
+  category?: string;
 }
 
 function mapApiArticleToPost(apiArticle: ApiArticle): Post {
@@ -80,11 +83,19 @@ function mapApiArticleToPost(apiArticle: ApiArticle): Post {
     readTime = `${minutes} min read`;
   }
 
+  // Use the API's `category` field as the source of truth. The schema stores
+  // singular values ("Article" / "News") but the public tab shows the plural
+  // form ("Articles") for the article bucket, so we normalise here. Falling
+  // back to "News" when the field is missing is the same default the API uses
+  // when a post is created without a category, so the UI matches what the
+  // admin actually intended.
   let type: "News" | "Articles" = "News";
-  if (apiArticle.division?.name) {
-    const divName = apiArticle.division.name.toLowerCase();
-    if (divName.includes("article") || divName.includes("research")) {
+  if (apiArticle.category) {
+    const cat = apiArticle.category.toLowerCase();
+    if (cat === "article" || cat === "articles") {
       type = "Articles";
+    } else if (cat === "news") {
+      type = "News";
     }
   }
 

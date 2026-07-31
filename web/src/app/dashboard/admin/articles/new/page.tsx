@@ -77,9 +77,9 @@ export default function NewArticlePage() {
         tags: formData.selectedTags,
       };
 
-      await api.createArticle(data);
+      await api.createArticle({ ...data, category: 'Article' });
       showSuccess(
-        formData.published ? 'Post created and published' : 'Post saved as a draft'
+        formData.published ? 'Article created and published' : 'Article saved as a draft'
       );
       router.push('/dashboard/admin/articles');
     } catch (error) {
@@ -106,9 +106,9 @@ export default function NewArticlePage() {
   return (
     <PageStack>
       <PageHeading
-        eyebrow="Content"
-        title="New post"
-        description="Fill in the post details, then save it as a draft or publish it right away."
+        eyebrow="Articles"
+        title="New article"
+        description="Fill in the article details, then save it as a draft or publish it right away."
         icon={FilePlus2}
         backHref="/dashboard/admin/articles"
         backLabel="Back to content list"
@@ -124,6 +124,7 @@ export default function NewArticlePage() {
         cancelHref="/dashboard/admin/articles"
         submitLabel={formData.published ? 'Save and publish' : 'Save draft'}
         idPrefix="article"
+        category="Article"
       />
     </PageStack>
   );

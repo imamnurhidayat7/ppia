@@ -38,6 +38,10 @@ function slugify(text: string): string {
 const categoryColors: Record<string, { from: string; to: string; text: string }> = {
   News: { from: "#1A2B4A", to: "#E8231A", text: "#E8231A" },
   Articles: { from: "#1A2B4A", to: "#8B5CF6", text: "#8B5CF6" },
+  // Schema values are singular ("Article", "News") but the public tab
+  // displays the plural form ("Articles"), so we register both spellings to
+  // keep the colour consistent whichever side the API returns.
+  Article: { from: "#1A2B4A", to: "#8B5CF6", text: "#8B5CF6" },
   default: { from: "#1A2B4A", to: "#3B82F6", text: "#3B82F6" },
 };
 
@@ -63,7 +67,7 @@ function mapArticles(items: unknown): Article[] {
       category:
         (a.category as string) ||
         ((a.division as { name?: string })?.name) ||
-        "Articles",
+        "Article",
       createdAt: a.createdAt as string,
       readTime: a.readTime as number | undefined,
       imageUrl: a.imageUrl as string | undefined,
@@ -194,7 +198,13 @@ export default function ArticlesSection({
                       <div
                         className="relative h-48 w-full overflow-hidden"
                         style={{
-                          background: `linear-gradient(135deg, ${style.gradientFrom}, ${style.gradientTo})`,
+                          // Use `backgroundImage` (not the `background`
+                          // shorthand) so the SSR-emitted style object
+                          // round-trips identically on the client. The
+                          // shorthand expands to multiple `background-*`
+                          // sub-properties during client hydration, which
+                          // triggers a hydration mismatch in React 19.
+                          backgroundImage: `linear-gradient(135deg, ${style.gradientFrom}, ${style.gradientTo})`,
                         }}
                       >
                         {article.imageUrl && (
@@ -208,12 +218,15 @@ export default function ArticlesSection({
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
                         {/* Category as a filed label, squared off and ruled,
-                            rather than another pill floating on the image. */}
+                            rather than another pill floating on the image.
+                            We pluralise the schema value ("Article" →
+                            "Articles") because the singular reads as a
+                            single item, not a collection, on a card. */}
                         <span
                           className="data-type absolute bottom-0 left-0 px-3 py-1.5 text-[12px] font-bold uppercase text-white"
-                          style={{ background: `${style.categoryColor}E6` }}
+                          style={{ backgroundColor: `${style.categoryColor}E6` }}
                         >
-                          {article.category || "Article"}
+                          {article.category === 'Article' ? 'Articles' : (article.category || 'Articles')}
                         </span>
                       </div>
 

@@ -31,7 +31,7 @@ function generateSlug(title: string): string {
 // Get all articles (public - only published)
 export const getAllArticles = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { page = '1', limit = '10', search = '', category, tags, featured } = req.query;
+    const { page = '1', limit = '10', search = '', category, tags, featured, sort } = req.query;
 
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
@@ -70,11 +70,17 @@ export const getAllArticles = async (req: Request, res: Response): Promise<void>
         where,
         skip,
         take: limitNum,
-        orderBy: [
-          { isFeatured: 'desc' },
-          { featuredOrder: 'asc' },
-          { createdAt: 'desc' }
-        ],
+        // `sort=latest` is used by the public homepage to show the three
+        // most recent posts regardless of whether they are featured.
+        // Default keeps the curated order: featured first, then most recent.
+        orderBy:
+          sort === 'latest'
+            ? [{ createdAt: 'desc' }]
+            : [
+                { isFeatured: 'desc' },
+                { featuredOrder: 'asc' },
+                { createdAt: 'desc' }
+              ],
         include: {
           User: {
             select: { id: true, name: true, avatar: true }

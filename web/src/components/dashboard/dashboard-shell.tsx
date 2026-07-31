@@ -23,11 +23,12 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { ChevronDown, ExternalLink, Loader2, LogOut, Menu, Shield, User as UserIcon, Users as UsersIcon, X } from 'lucide-react';
+import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'framer-motion';
+import { Anchor, ArrowRightLeft, ChevronDown, ExternalLink, LogOut, Menu, Shield, User as UserIcon, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { cn, getImageUrl } from '@/lib/utils';
 import { CommandPalette } from './command-palette';
@@ -190,6 +191,294 @@ function NavTab({
   );
 }
 
+/**
+ * WorkspaceSwitcher — single-button mode toggle with a 3.5-second overlay.
+ *
+ * The control reads as a status pill: it shows the CURRENT mode (icon + label),
+ * a tooltip tells the user what clicking will do, and the button itself has a
+ * subtle arrow icon hinting that it changes the value. Avoiding a sliding-thumb
+ * control here means no risk of double labels or layout fights with framer-motion
+ * `layout` in dev mode — and a single button is the clearest possible affordance.
+ *
+ * On click we kick off the route change through `useTransition` AND mount a
+ * full-screen overlay rendered through a React Portal so it sits at the top of
+ * the document tree regardless of stacking contexts in the dashboard chrome.
+ * The overlay runs a 3.5-second timer internally and renders a compass bearing
+ * that sweeps 0° → 270°. Crucially, the timer lives inside the overlay
+ * component itself — it is GUARANTEED to run for the full duration regardless
+ * of how fast Next.js completes the route change.
+ */
+const MIN_DISPLAY_MS = 3500;
+
+function WorkspaceSwitcher({ view }: { view: 'member' | 'admin' }) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [pendingTarget, setPendingTarget] = useState<'member' | 'admin' | null>(null);
+
+  const isAdminMode = view === 'admin';
+  const nextMode = isAdminMode ? 'member' : 'admin';
+  const nextHref = nextMode === 'admin' ? '/dashboard/admin' : '/dashboard';
+
+  const handleToggle = () => {
+    if (pendingTarget) return;
+    setPendingTarget(nextMode);
+    startTransition(() => {
+      router.push(nextHref);
+    });
+  };
+
+  const CurrentIcon = isAdminMode ? Shield : Anchor;
+  const tooltipText = `Switch to ${nextMode === 'admin' ? 'Admin' : 'Member'} mode`;
+
+  return (
+    <>
+      <button
+        type="button"
+        title={tooltipText}
+        aria-label={tooltipText}
+        aria-pressed={pendingTarget !== null}
+        onClick={handleToggle}
+        disabled={pendingTarget !== null}
+        className={cn(
+          'group relative inline-flex h-9 items-center gap-2 rounded-md border px-3 text-xs font-medium transition-all duration-200',
+          'border-white/15 bg-white/[0.06] text-white/90 hover:border-[#E8231A]/40 hover:bg-white/[0.1] hover:text-white',
+          pendingTarget !== null && 'cursor-not-allowed opacity-60'
+        )}
+      >
+        {/* Eyebrow label clarifying what this control does. Constant on the
+            left so it never changes between modes — only the badge on the
+            right changes. */}
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45 group-hover:text-white/70">
+          Mode
+        </span>
+
+        {/* Vertical divider for separation */}
+        <span aria-hidden="true" className="h-3.5 w-px bg-white/15" />
+
+        {/* Current mode badge — shows what's active right now. */}
+        <CurrentIcon className="h-3.5 w-3.5 text-[#E8231A]" aria-hidden="true" />
+        <span className="font-semibold capitalize text-white">{isAdminMode ? 'Admin' : 'Member'}</span>
+
+        {/* Arrow hint — implies the button does something when clicked. */}
+        <ArrowRightLeft aria-hidden="true" className="h-3 w-3 text-white/40 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-white" />
+      </button>
+
+      {/* Overlay is rendered through a portal so it stacks above everything,
+          including any stacking contexts the dashboard chrome might create. */}
+      <AnimatePresence>
+        {pendingTarget && (
+          <WorkspaceOverlayPortal
+            key="workspace-overlay"
+            target={pendingTarget}
+            onComplete={() => setPendingTarget(null)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+/**
+ * WorkspaceOverlayPortal — wraps WorkspaceOverlay in a React Portal so the
+ * overlay escapes any stacking contexts created by the dashboard chrome.
+ *
+ * A portal renders its children into `document.body` directly, so `position:
+ * fixed` is always relative to the viewport. Without this, a parent with
+ * `transform`, `filter`, `will-change`, `backdrop-filter`, or similar CSS can
+ * silently turn a `fixed` element into a positioned descendant of itself —
+ * which is exactly the kind of bug that makes an overlay appear off-centre.
+ */
+function WorkspaceOverlayPortal({
+  target,
+  onComplete,
+}: {
+  target: 'member' | 'admin';
+  onComplete: () => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return createPortal(
+    <WorkspaceOverlay target={target} onComplete={onComplete} />,
+    document.body
+  );
+}
+
+/**
+ * WorkspaceOverlay — full-screen transition screen with a 3-second bearing.
+ *
+ * The timer is set once, in `useEffect`, and never restarted. The only way
+ * the overlay disappears is when this timer fires (which calls `onComplete`
+ * to unmount us), or when the parent unmounts us outright. This is the
+ * simplest possible timing logic and impossible to break with re-renders.
+ */
+function WorkspaceOverlay({
+  target,
+  onComplete,
+}: {
+  target: 'member' | 'admin';
+  onComplete: () => void;
+}) {
+  // Set the timer exactly once on mount. The cleanup fires when the overlay
+  // unmounts (which happens *because* onComplete cleared parent state), so a
+  // late-firing timer is harmless — it just calls a function that has already
+  // done its job.
+  useEffect(() => {
+    const timer = setTimeout(onComplete, MIN_DISPLAY_MS);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  const targetLabel = target === 'admin' ? 'Admin' : 'Member';
+  const TargetIcon = target === 'admin' ? Shield : Anchor;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+      // The wrapper fills the whole viewport and centers its child with
+      // flexbox. min-h-screen and flex items-center justify-center guarantee
+      // the card sits at the exact centre even if the parent has unusual
+      // dimensions. The very high z-index ensures it stacks above the sticky
+      // header (z-40) and any other overlay.
+      className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center bg-[#071321]/90 backdrop-blur-md"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <motion.div
+        initial={{ scale: 0.92, y: 16, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.96, y: 8, opacity: 0 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="relative flex w-[440px] max-w-[92vw] flex-col overflow-hidden rounded-[6px] border border-white/10 bg-[#0B1C2E] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.8)]"
+      >
+        {/* Top eyebrow strip — context before the dial. */}
+        <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-5 py-2.5">
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/50">
+            Bridge · Bearing
+          </span>
+          <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-[#E8231A]">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8231A] opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#E8231A]" />
+            </span>
+            Live
+          </span>
+        </div>
+
+        <div className="flex flex-col items-center px-6 py-9">
+          {/* Compass rose — 220×220 SVG. */}
+          <div className="relative">
+            <svg viewBox="0 0 220 220" width="220" height="220" className="block">
+              {/* Two concentric rings */}
+              <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+              <circle cx="110" cy="110" r="84" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+
+              {/* Tick marks every 15°. Long ticks every 90°. */}
+              {Array.from({ length: 24 }).map((_, i) => {
+                const angle = (i * 15 * Math.PI) / 180;
+                const isCardinal = i % 6 === 0;
+                const inner = isCardinal ? 76 : 82;
+                const outer = 92;
+                const x1 = 110 + Math.sin(angle) * inner;
+                const y1 = 110 - Math.cos(angle) * inner;
+                const x2 = 110 + Math.sin(angle) * outer;
+                const y2 = 110 - Math.cos(angle) * outer;
+                return (
+                  <line
+                    key={i}
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    stroke={isCardinal ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}
+                    strokeWidth={isCardinal ? 1.5 : 1}
+                  />
+                );
+              })}
+
+              {/* Cardinal letters */}
+              <text x="110" y="36" textAnchor="middle" fill="rgba(255,255,255,0.65)" fontFamily="ui-monospace,monospace" fontSize="12" fontWeight="700" letterSpacing="0.1em">N</text>
+              <text x="186" y="115" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontFamily="ui-monospace,monospace" fontSize="11" letterSpacing="0.1em">E</text>
+              <text x="110" y="194" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontFamily="ui-monospace,monospace" fontSize="11" letterSpacing="0.1em">S</text>
+              <text x="34" y="115" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontFamily="ui-monospace,monospace" fontSize="11" letterSpacing="0.1em">W</text>
+
+              {/* Needle — sweeps 0° → 270° over MIN_DISPLAY_MS. */}
+              <motion.g
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 270 }}
+                transition={{ duration: MIN_DISPLAY_MS / 1000, ease: [0.4, 0, 0.2, 1] }}
+                style={{ transformOrigin: '110px 110px' }}
+              >
+                <path d="M 110 32 L 119 110 L 101 110 Z" fill="#E8231A" />
+                <path d="M 110 188 L 119 110 L 101 110 Z" fill="rgba(255,255,255,0.15)" />
+              </motion.g>
+
+              {/* Center pivot */}
+              <circle cx="110" cy="110" r="6" fill="#0B1C2E" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+              <circle cx="110" cy="110" r="2" fill="#E8231A" />
+            </svg>
+
+            {/* Bearing counter at the pivot */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center pb-2">
+              <BearingCounter />
+            </div>
+          </div>
+
+          {/* Status line under the dial. */}
+          <div className="mt-7 flex flex-col items-center gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/45">
+              Changing course
+            </span>
+            <span className="flex items-center gap-2 text-lg font-semibold text-white">
+              <TargetIcon className="h-5 w-5 text-[#E8231A]" aria-hidden="true" />
+              <span>to {targetLabel} mode</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Progress bar — fills 0% → 100% over MIN_DISPLAY_MS. */}
+        <div className="h-[2px] w-full bg-white/[0.06]">
+          <motion.div
+            initial={{ width: '0%' }}
+            animate={{ width: '100%' }}
+            transition={{ duration: MIN_DISPLAY_MS / 1000, ease: 'linear' }}
+            className="h-full bg-[#E8231A]"
+          />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+
+/**
+ * BearingCounter — animates from 0° to 270° over MIN_DISPLAY_MS.
+ *
+ * Implemented as a thin component so the framer-motion `useMotionValue` and
+ * `useTransform` hooks live in their own render scope (they cannot run inside
+ * the parent's JSX expression because that would violate the rules of hooks
+ * when `pendingTarget` is null).
+ */
+function BearingCounter() {
+  const motionValue = useMotionValue(0);
+  const rounded = useTransform(motionValue, (v) => `${Math.round(v)}°`);
+  useEffect(() => {
+    const controls = animate(motionValue, 270, {
+      duration: MIN_DISPLAY_MS / 1000,
+      ease: [0.4, 0, 0.2, 1],
+    });
+    return controls.stop;
+  }, [motionValue]);
+  return (
+    <span className="rounded bg-[#0B1C2E]/80 px-2 py-0.5 font-mono text-[13px] font-semibold tabular-nums text-white">
+      <motion.span>{rounded}</motion.span>
+    </span>
+  );
+}
+
 function ShellBody({ children, view: forcedView, maxWidth = 'default' }: DashboardShellProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -280,49 +569,7 @@ function ShellBody({ children, view: forcedView, maxWidth = 'default' }: Dashboa
               />
             </Link>
 
-            {/*
-              Workspace switcher.
-              Two segments under a shared hairline, with the brand-red underline
-              gliding to the active one via `layoutId`. No icons — the underline
-              and the word itself carry enough identity, and adding a glyph to
-              every segment crowds the strip next to the logo. Only visible to
-              roles that can reach the admin area.
-            */}
-            {isAdmin && (
-              <div
-                role="tablist"
-                aria-label="Workspace"
-                className="hidden items-end gap-6 border-b border-white/10 pl-2 sm:flex"
-              >
-                {([
-                  { target: 'member' as const, label: 'Member', href: '/dashboard' },
-                  { target: 'admin' as const, label: 'Admin', href: '/dashboard/admin' },
-                ]).map(({ target, label, href }) => {
-                  const selected = view === target;
-                  return (
-                    <Link
-                      key={target}
-                      href={href}
-                      role="tab"
-                      aria-selected={selected}
-                      className={cn(
-                        'relative -mb-px px-1 pb-2 text-sm transition-colors',
-                        selected ? 'font-semibold text-white' : 'font-medium text-white/55 hover:text-white'
-                      )}
-                    >
-                      {label}
-                      {selected && (
-                        <motion.span
-                          layoutId="dash-workspace-underline"
-                          className="absolute inset-x-0 bottom-[-1px] h-[2px] bg-[#E8231A]"
-                          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                        />
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+            {isAdmin && <WorkspaceSwitcher view={view} />}
           </div>
 
           {/* Tabs appear from xl up; below that they live in the mobile panel. */}

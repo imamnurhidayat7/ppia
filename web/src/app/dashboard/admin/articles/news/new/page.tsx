@@ -119,6 +119,7 @@ export default function NewNewsArticlePage() {
         cancelHref="/dashboard/admin/articles/news"
         submitLabel={formData.published ? 'Save and publish' : 'Save draft'}
         idPrefix="news"
+        category="News"
         noun="news item"
         contentPlaceholder="Write the news body here…"
       />

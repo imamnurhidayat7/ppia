@@ -62,6 +62,14 @@ export interface ArticleFormValues {
   selectedTags: string[];
 }
 
+/**
+ * Each form instance is created from a specific category route
+ * (`articles/new`, `articles/news/new`, `articles/research/new`). The page
+ * that mounts the form supplies the category so the API never falls back to
+ * the schema default ("News") by accident.
+ */
+export type ArticleCategory = 'Article' | 'News';
+
 export const EMPTY_ARTICLE_FORM: ArticleFormValues = {
   title: '',
   slug: '',
