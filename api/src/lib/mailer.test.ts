@@ -165,12 +165,10 @@ test('the plain-text alternative omits image-only links and the preheader', asyn
   // for it put a bare URL at the top of every plain-text body.
   const captured: string[] = [];
   const originalLog = console.log;
-  const previousToken = process.env.MAILTRAP_TOKEN;
-  const previousKey = process.env.MAILTRAP_API_KEY;
+  const previousKey = process.env.RESEND_API_KEY;
   const previousEnv = process.env.NODE_ENV;
 
-  delete process.env.MAILTRAP_TOKEN;
-  delete process.env.MAILTRAP_API_KEY;
+  delete process.env.RESEND_API_KEY;
   // The unconfigured path prints the flattened body, but only outside production.
   process.env.NODE_ENV = 'test';
   console.log = (...args: unknown[]) => captured.push(args.map(String).join(' '));
@@ -183,8 +181,7 @@ test('the plain-text alternative omits image-only links and the preheader', asyn
     });
   } finally {
     console.log = originalLog;
-    if (previousToken !== undefined) process.env.MAILTRAP_TOKEN = previousToken;
-    if (previousKey !== undefined) process.env.MAILTRAP_API_KEY = previousKey;
+    if (previousKey !== undefined) process.env.RESEND_API_KEY = previousKey;
     if (previousEnv !== undefined) process.env.NODE_ENV = previousEnv;
   }
 
@@ -218,13 +215,13 @@ test('the plain-text alternative drops the preheader and reads cleanly', async (
 });
 
 test('a credential that is a URL rather than a token is not used', async () => {
-  // Pasting the token *page* URL into the variable is an easy mistake, and
-  // presenting it as a token makes Mailtrap lock the account out with
-  // "Too many failed login attempts". Treat it as unconfigured instead.
-  const previousToken = process.env.MAILTRAP_TOKEN;
-  const previousKey = process.env.MAILTRAP_API_KEY;
-  delete process.env.MAILTRAP_TOKEN;
-  process.env.MAILTRAP_API_KEY = 'https://mailtrap.io/api-tokens';
+  // Pasting the dashboard URL into the variable is an easy mistake, and
+  // presenting it as a token makes the provider return 401 on every call,
+  // which is noisy and can trigger rate limiting. Treat it as unconfigured
+  // instead.
+  const previousKey = process.env.RESEND_API_KEY;
+  delete process.env.RESEND_API_KEY;
+  process.env.RESEND_API_KEY = 'https://resend.com/api-keys';
 
   try {
     const result = await sendEmail({
@@ -236,18 +233,14 @@ test('a credential that is a URL rather than a token is not used', async () => {
     assert.equal(result.ok, false);
     assert.equal(result.skipped, true, 'a URL must count as no credential at all');
   } finally {
-    if (previousToken !== undefined) process.env.MAILTRAP_TOKEN = previousToken;
-    else delete process.env.MAILTRAP_TOKEN;
-    if (previousKey !== undefined) process.env.MAILTRAP_API_KEY = previousKey;
-    else delete process.env.MAILTRAP_API_KEY;
+    if (previousKey !== undefined) process.env.RESEND_API_KEY = previousKey;
+    else delete process.env.RESEND_API_KEY;
   }
 });
 
 test('sendEmail reports skipped rather than throwing when unconfigured', async () => {
-  const previousToken = process.env.MAILTRAP_TOKEN;
-  const previousKey = process.env.MAILTRAP_API_KEY;
-  delete process.env.MAILTRAP_TOKEN;
-  delete process.env.MAILTRAP_API_KEY;
+  const previousKey = process.env.RESEND_API_KEY;
+  delete process.env.RESEND_API_KEY;
 
   try {
     const result = await sendEmail({
@@ -262,7 +255,6 @@ test('sendEmail reports skipped rather than throwing when unconfigured', async (
     assert.equal(result.skipped, true);
     assert.ok(result.error);
   } finally {
-    if (previousToken !== undefined) process.env.MAILTRAP_TOKEN = previousToken;
-    if (previousKey !== undefined) process.env.MAILTRAP_API_KEY = previousKey;
+    if (previousKey !== undefined) process.env.RESEND_API_KEY = previousKey;
   }
 });
