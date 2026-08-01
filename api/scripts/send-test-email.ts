@@ -3,11 +3,13 @@
  *
  *   npm run mail:test -- you@example.com
  *
- * With MAILTRAP_USE_SANDBOX=true the message is captured by the Mailtrap inbox
- * and no real recipient is contacted, so any address works as the argument.
+ * With RESEND_API_KEY set, Resend accepts the message; whether it reaches the
+ * inbox depends on the recipient address (use your own while onboarding) and
+ * on the `from` address being a verified Resend sender. The script does not
+ * check delivery — only that the provider accepted the request.
  *
- * Exits non-zero when the provider rejects the message, which makes this usable
- * as a deployment smoke check.
+ * Exits non-zero when the provider rejects the message, which makes this
+ * usable as a deployment smoke check.
  */
 import 'dotenv/config';
 import { sendEmail, renderEmailLayout, renderEmailButton } from '../src/lib/mailer';
@@ -16,14 +18,12 @@ const readEnv = (key: string): string => (process.env[key] || '').split('#')[0].
 
 const main = async (): Promise<void> => {
   const recipient = process.argv[2] || 'mailer-test@example.com';
-  const sandbox = ['true', '1', 'yes'].includes(readEnv('MAILTRAP_USE_SANDBOX').toLowerCase());
 
-  console.log('Mailtrap configuration');
-  console.log(`  mode          : ${sandbox ? 'sandbox (captured, not delivered)' : 'production (real delivery)'}`);
-  console.log(`  token present : ${Boolean(readEnv('MAILTRAP_TOKEN') || readEnv('MAILTRAP_API_KEY'))}`);
-  console.log(`  inbox id      : ${readEnv('MAILTRAP_INBOX_ID') || '(unset)'}`);
-  console.log(`  from          : ${readEnv('MAIL_FROM') || 'no-reply@ppiaauckland.org'}`);
-  console.log(`  recipient     : ${recipient}`);
+  console.log('Resend configuration');
+  console.log(`  api key present : ${Boolean(readEnv('RESEND_API_KEY'))}`);
+  console.log(`  from            : ${readEnv('MAIL_FROM') || 'onboarding@resend.dev'}`);
+  console.log(`  from name       : ${readEnv('MAIL_FROM_NAME') || 'PPIA Auckland'}`);
+  console.log(`  recipient       : ${recipient}`);
   console.log('');
 
   const result = await sendEmail({
@@ -40,23 +40,22 @@ const main = async (): Promise<void> => {
   });
 
   if (result.ok) {
-    console.log('OK — Mailtrap accepted the message.');
-    if (sandbox) console.log('Open the Mailtrap inbox to read it.');
+    console.log('OK — Resend accepted the message.');
     return;
   }
 
   if (result.skipped) {
     console.error('NOT CONFIGURED — the message was logged instead of sent.');
-    console.error('Set MAILTRAP_TOKEN (and MAILTRAP_INBOX_ID when using the sandbox) in api/.env.');
+    console.error('Set RESEND_API_KEY in api/.env.');
     process.exitCode = 1;
     return;
   }
 
   console.error(`FAILED — ${result.error}`);
   console.error('');
-  console.error('A 401 means the token is not a Mailtrap sending API token.');
-  console.error('Sandbox: Mailtrap > Email Testing > your inbox > Integrations > API.');
-  console.error('Production: Mailtrap > Email Sending > Sending Domains > API tokens.');
+  console.error('A 401 means the API key is wrong or revoked.');
+  console.error('A 422 usually means MAIL_FROM is on a domain that has not been');
+  console.error('verified in Resend. Check Domains in the Resend dashboard.');
   process.exitCode = 1;
 };
 
