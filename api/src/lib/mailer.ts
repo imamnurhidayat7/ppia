@@ -1,16 +1,15 @@
 /**
  * Transactional e-mail delivery.
  *
- * Talks to the Mailtrap HTTP API with the global `fetch`, so no extra runtime
- * dependency is required. Two endpoints exist and the choice is driven by
- * `MAILTRAP_USE_SANDBOX`:
+ * Talks to the Resend HTTP API with the global `fetch`, so no runtime
+ * dependency is added. The endpoint is `https://api.resend.com/emails` and the
+ * auth header is `Authorization: Bearer <RESEND_API_KEY>`.
  *
- *   sandbox    -> https://sandbox.api.mailtrap.io/api/send/{inboxId}
- *                 Nothing leaves Mailtrap; every message lands in the inbox.
- *                 Requires MAILTRAP_INBOX_ID.
- *   production -> https://send.api.mailtrap.io/api/send
- *                 Real delivery. The `from` domain must be verified in
- *                 Mailtrap or the API rejects the request.
+ * The `MAIL_FROM` domain must be verified in Resend, or the API rejects the
+ * request. The default in code is `onboarding@resend.dev` (Resend's built-in
+ * test sender) so unconfigured environments and dev runs work without domain
+ * verification; production is expected to set `MAIL_FROM` to a verified
+ * address.
  *
  * Failures never throw. Callers sit inside request handlers where a raised
  * error would turn a successful password reset into a 500 — and, worse, would
@@ -19,10 +18,9 @@
  * Instead every send resolves to a SendResult the caller may inspect or ignore.
  */
 
-const SANDBOX_ENDPOINT = 'https://sandbox.api.mailtrap.io/api/send';
-const PRODUCTION_ENDPOINT = 'https://send.api.mailtrap.io/api/send';
+const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 
-/** How long to wait for Mailtrap before giving up on a single message. */
+/** How long to wait for Resend before giving up on a single message. */
 const REQUEST_TIMEOUT_MS = 10_000;
 
 export interface SendResult {
@@ -39,7 +37,8 @@ export interface SendEmailOptions {
   html: string;
   /** Plain-text alternative. Derived from `html` when omitted. */
   text?: string;
-  /** Groups messages in the Mailtrap dashboard. */
+  /** Groups messages in the dashboard. Accepted on input but not transmitted
+   *  to Resend, which has no equivalent at the wire level. */
   category?: string;
 }
 
@@ -59,14 +58,13 @@ const isTruthy = (value: string): boolean => {
 };
 
 /**
- * A Mailtrap API token is a compact opaque string. Anything containing a scheme,
+ * A Resend API key is a compact opaque string. Anything containing a scheme,
  * a slash or whitespace is something else that was pasted into the variable —
- * most often the URL of the token page.
+ * most often the URL of the key page.
  *
- * Rejecting those matters more than it looks: repeatedly presenting a bad token
- * makes Mailtrap answer `403 Too many failed login attempts` and lock the
- * account out for a while, so a mis-paste turns into an outage that outlasts the
- * fix.
+ * Rejecting those matters more than it looks: repeatedly presenting a bad
+ * key makes the API return 401 on every call, which is noisy and can trigger
+ * rate limiting. A mis-paste turns into an outage that outlasts the fix.
  */
 const looksLikeToken = (value: string): boolean =>
   value.length >= 16 && !/[\s/]/.test(value) && !value.includes('://');
@@ -77,8 +75,8 @@ const firstUsableToken = (...candidates: string[]): string => {
     if (candidate && looksLikeToken(candidate)) return candidate;
     if (candidate) {
       console.warn(
-        '[mailer] Ignoring a Mailtrap credential that does not look like an API token ' +
-          '(it contains a URL, a slash or whitespace). Check MAILTRAP_TOKEN and MAILTRAP_API_KEY.'
+        '[mailer] Ignoring a Resend API key that does not look like a token ' +
+          '(it contains a URL, a slash or whitespace). Check RESEND_API_KEY.'
       );
     }
   }
@@ -90,7 +88,6 @@ interface MailerConfig {
   token: string;
   fromEmail: string;
   fromName: string;
-  sandbox: boolean;
 }
 
 /**
@@ -98,24 +95,14 @@ interface MailerConfig {
  * scripts can adjust the environment without re-importing the module.
  */
 const resolveConfig = (): MailerConfig | null => {
-  // MAILTRAP_TOKEN is the documented name for the sending API token;
-  // MAILTRAP_API_KEY is accepted as an alias because both appear in the wild.
-  const token = firstUsableToken(readEnv('MAILTRAP_TOKEN'), readEnv('MAILTRAP_API_KEY'));
+  const token = firstUsableToken(readEnv('RESEND_API_KEY'));
   if (!token) return null;
 
-  const sandbox = isTruthy(readEnv('MAILTRAP_USE_SANDBOX'));
-  const inboxId = readEnv('MAILTRAP_INBOX_ID');
-
-  // A sandbox send is addressed to a specific inbox; without the id there is
-  // nowhere to deliver, so treat it as unconfigured instead of failing later.
-  if (sandbox && !inboxId) return null;
-
   return {
-    endpoint: sandbox ? `${SANDBOX_ENDPOINT}/${inboxId}` : PRODUCTION_ENDPOINT,
+    endpoint: RESEND_ENDPOINT,
     token,
-    fromEmail: readEnv('MAIL_FROM') || 'no-reply@ppiaauckland.org',
+    fromEmail: readEnv('MAIL_FROM') || 'onboarding@resend.dev',
     fromName: readEnv('MAIL_FROM_NAME') || 'PPIA Auckland',
-    sandbox,
   };
 };
 
@@ -167,7 +154,7 @@ const htmlToText = (html: string): string =>
 let warnedAboutMissingConfig = false;
 
 /**
- * Log the message instead of sending it. Used when Mailtrap is not configured
+ * Log the message instead of sending it. Used when Resend is not configured
  * so local development keeps working without credentials.
  *
  * Bodies carry password-reset and verification links, so they are only printed
@@ -180,8 +167,8 @@ const logInsteadOfSending = (options: SendEmailOptions): SendResult => {
   if (!warnedAboutMissingConfig) {
     warnedAboutMissingConfig = true;
     console.warn(
-      '[mailer] Mailtrap is not configured (MAILTRAP_TOKEN, and MAILTRAP_INBOX_ID ' +
-        'when MAILTRAP_USE_SANDBOX=true). E-mails are being logged, not delivered.'
+      '[mailer] Resend is not configured (RESEND_API_KEY is missing or not a valid token). ' +
+        'E-mails are being logged, not delivered.'
     );
   }
 
@@ -207,12 +194,13 @@ export const sendEmail = async (options: SendEmailOptions): Promise<SendResult> 
   }
 
   const payload = {
-    from: { email: config.fromEmail, name: config.fromName },
-    to: [{ email: options.to }],
+    from: `${config.fromName} <${config.fromEmail}>`,
+    to: [options.to],
     subject: options.subject,
     html: options.html,
     text: options.text ?? htmlToText(options.html),
-    ...(options.category ? { category: options.category } : {}),
+    // `category` is accepted on the input but Resend has no equivalent at the
+    // wire level. Drop it silently rather than fail the send.
   };
 
   try {
@@ -220,25 +208,22 @@ export const sendEmail = async (options: SendEmailOptions): Promise<SendResult> 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Api-Token': config.token,
+        'Authorization': `Bearer ${config.token}`,
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (!response.ok) {
-      // Mailtrap returns { errors: [...] } on rejection. Surface it, but never
+      // Resend returns { errors: [...] } on rejection. Surface it, but never
       // echo the request body — it contains reset tokens.
       const detail = await response.text().catch(() => '');
-      const message = `Mailtrap responded ${response.status}${detail ? `: ${detail.slice(0, 300)}` : ''}`;
+      const message = `Resend responded ${response.status}${detail ? `: ${detail.slice(0, 300)}` : ''}`;
       console.error(`[mailer] Failed to send "${options.subject}" to ${options.to} — ${message}`);
       return { ok: false, error: message };
     }
 
-    console.log(
-      `[mailer] Sent "${options.subject}" to ${options.to}` +
-        (config.sandbox ? ' (Mailtrap sandbox)' : '')
-    );
+    console.log(`[mailer] Sent "${options.subject}" to ${options.to}`);
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
