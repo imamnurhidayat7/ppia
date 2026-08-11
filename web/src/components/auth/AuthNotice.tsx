@@ -49,7 +49,7 @@ export default function AuthNotice({
     <div className="text-center">
       <span
         aria-hidden="true"
-        className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white"
+        className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-white/[0.06]"
         style={{ boxShadow: `inset 0 0 0 1px ${palette.ring}, 0 0 0 5px ${palette.halo}` }}
       >
         <Icon size={28} strokeWidth={2.2} style={{ color: palette.icon }} />
@@ -75,7 +75,7 @@ export default function AuthNotice({
               href={action.href}
               className={
                 action.variant === 'secondary'
-                  ? 'inline-flex items-center justify-center rounded-[4px] border border-[#C3D2E0] bg-white px-6 py-3 text-[15px] font-semibold ink-strong transition-colors hover:bg-[#F5FAFD]'
+                  ? 'inline-flex items-center justify-center rounded-[4px] border border-[#C3D2E0] bg-white px-6 py-3 text-[15px] font-semibold ink-strong transition-colors hover:bg-[#F5FAFD] dark:border-white/15 dark:bg-white/[0.04] dark:hover:bg-white/[0.08]'
                   : 'inline-flex items-center justify-center rounded-[4px] bg-[#C41E16] px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#A81812]'
               }
             >

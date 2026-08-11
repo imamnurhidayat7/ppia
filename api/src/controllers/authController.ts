@@ -13,9 +13,23 @@ import {
   escapeHtml,
 } from '../lib/mailer';
 import { getSetting, getWhatsAppGroupLink } from '../lib/settings';
+import { createAuditLog } from './auditLogController';
+import { getJwtSecret } from '../lib/secrets';
+import { AUTH_COOKIE_NAME } from '../middleware/auth';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
+
+/** Bcrypt cost factor. 12 is the modern minimum; balance against login latency. */
+const BCRYPT_COST = 12;
+
+/** Pin HS256 — defends against algorithm-confusion attacks if the key type ever changes. */
+const JWT_ALGORITHM: jwt.Algorithm = 'HS256';
+
+/** Hash a short-lived opaque token (reset/verification) before storing.
+ * Same approach as password hashing: the stored value is useless on its own. */
+function hashOpaqueToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 interface RegisterRequest extends Request {
   body: {
@@ -86,6 +100,16 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
       return;
     }
 
+    // Password strength — enforced here so it cannot be bypassed by a thin client.
+    if (password.length < 8) {
+      res.status(400).json({ error: 'Password must be at least 8 characters' });
+      return;
+    }
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      res.status(400).json({ error: 'Password must include upper, lower, and a digit' });
+      return;
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -105,8 +129,8 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
       return;
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password (cost 12 — the modern minimum against offline brute force)
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
 
     // Issue the verification token here. `resendVerification` used to be the
     // only place that produced one, so a fresh registration had nothing to
@@ -117,7 +141,7 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
     // Create user (PENDING admin approval — cannot log in until approved)
     const user = await prisma.user.create({
       data: {
-        verificationToken,
+        verificationToken: hashOpaqueToken(verificationToken),
         verificationExpiry,
         email,
         username,
@@ -238,9 +262,32 @@ export const login = async (req: LoginRequest, res: Response): Promise<void> => 
     // Generate JWT with divisionId
     const token = jwt.sign(
       { userId: user.id, role: user.role, divisionId: user.divisionId },
-      JWT_SECRET,
-      { expiresIn: '7d' }
+      getJwtSecret(),
+      { expiresIn: '7d', algorithm: JWT_ALGORITHM }
     );
+
+    await createAuditLog(
+      user.id,
+      'LOGIN',
+      'User',
+      user.id,
+      { role: user.role, method: 'password' },
+      req.ip,
+      req.get('user-agent')
+    );
+
+    // Issue the JWT as an HttpOnly cookie in addition to the bearer token in
+    // the body. The cookie is the safer store — XSS cannot exfiltrate it —
+    // while the body token keeps the legacy localStorage client working until
+    // it is migrated to `credentials: 'include'` only.
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie(AUTH_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7d, matches JWT expiry
+    });
 
     res.json({
       message: 'Login successful',
@@ -259,6 +306,18 @@ export const login = async (req: LoginRequest, res: Response): Promise<void> => 
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+// Logout — clear the auth cookie. The JWT itself is stateless and cannot be
+// revoked without a server-side store, but clearing the cookie forces the
+// browser to re-authenticate on the next request.
+export const logout = async (req: Request, res: Response): Promise<void> => {
+  const userId = (req as any).user?.userId;
+  if (userId) {
+    await createAuditLog(userId, 'LOGOUT', 'User', userId, undefined, req.ip, req.get('user-agent'));
+  }
+  res.clearCookie(AUTH_COOKIE_NAME, { path: '/' });
+  res.json({ message: 'Logged out' });
 };
 
 // Get current user
@@ -532,14 +591,15 @@ export const forgotPassword = async (req: ForgotPasswordRequest, res: Response):
       return;
     }
 
-    // Generate reset token
+    // Generate reset token. The plaintext is sent to the user; only its
+    // SHA-256 hash is stored, so a DB dump cannot be used to reset passwords.
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        resetToken,
+        resetToken: hashOpaqueToken(resetToken),
         resetTokenExpiry
       }
     });
@@ -591,14 +651,18 @@ export const resetPassword = async (req: ResetPasswordRequest, res: Response): P
       return;
     }
 
-    if (password.length < 6) {
-      res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (password.length < 8) {
+      res.status(400).json({ error: 'Password must be at least 8 characters' });
+      return;
+    }
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      res.status(400).json({ error: 'Password must include upper, lower, and a digit' });
       return;
     }
 
     const user = await prisma.user.findFirst({
       where: {
-        resetToken: token,
+        resetToken: hashOpaqueToken(token),
         resetTokenExpiry: {
           gt: new Date()
         }
@@ -610,8 +674,8 @@ export const resetPassword = async (req: ResetPasswordRequest, res: Response): P
       return;
     }
 
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash new password (cost 12 — the modern minimum against offline brute force)
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
 
     await prisma.user.update({
       where: { id: user.id },
@@ -621,6 +685,16 @@ export const resetPassword = async (req: ResetPasswordRequest, res: Response): P
         resetTokenExpiry: null
       }
     });
+
+    await createAuditLog(
+      user.id,
+      'PASSWORD_RESET',
+      'User',
+      user.id,
+      { method: 'email-token' },
+      req.ip,
+      req.get('user-agent')
+    );
 
     res.json({ message: 'Password reset successful. You can now login.' });
   } catch (error) {
@@ -706,7 +780,7 @@ export const verifyEmail = async (req: VerifyEmailRequest, res: Response): Promi
 
     const user = await prisma.user.findFirst({
       where: {
-        verificationToken: token,
+        verificationToken: hashOpaqueToken(token),
         verificationExpiry: {
           gt: new Date()
         }
@@ -785,7 +859,7 @@ export const resendVerification = async (req: ResendVerificationRequest, res: Re
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        verificationToken,
+        verificationToken: hashOpaqueToken(verificationToken),
         verificationExpiry
       }
     });

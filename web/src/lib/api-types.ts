@@ -716,6 +716,36 @@ export interface ColorConfigResponse {
 }
 
 // Pemira (election) types
+export type FormFieldType =
+  | "FIELD_TEXT"
+  | "FIELD_RICHTEXT"
+  | "FIELD_NUMBER"
+  | "FIELD_SINGLE_CHOICE"
+  | "FIELD_MULTIPLE_CHOICE"
+  | "FIELD_IMAGE"
+  | "FIELD_VIDEO_LINK";
+
+export interface ElectionFormField {
+  id: string;
+  electionId: string;
+  type: FormFieldType;
+  label: string;
+  description?: string | null;
+  options?: string[] | null;
+  required: boolean;
+  maxFileSize?: number | null;
+  acceptedTypes?: string[] | null;
+  order: number;
+}
+
+export interface CandidateFormResponse {
+  id: string;
+  candidateId: string;
+  fieldId: string;
+  field?: ElectionFormField;
+  value: unknown;
+}
+
 export interface Candidate {
   id: string;
   name: string;
@@ -724,6 +754,7 @@ export interface Candidate {
   photo?: string;
   voteCount?: number;
   createdAt: string;
+  formResponses?: CandidateFormResponse[];
 }
 
 export interface Election {

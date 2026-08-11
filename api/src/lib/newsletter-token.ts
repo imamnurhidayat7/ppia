@@ -1,3 +1,6 @@
+import crypto from 'crypto';
+import { getJwtSecret } from './secrets';
+
 /**
  * One-click unsubscribe links.
  *
@@ -18,19 +21,11 @@
  * What it does prevent is the thing that matters: unsubscribing somebody else by
  * guessing their address.
  */
-import crypto from 'crypto';
 
 /** Namespaced so a token cannot be replayed against a different feature. */
 const PURPOSE = 'newsletter-unsubscribe';
 
-const secret = (): string => {
-  const value = (process.env.JWT_SECRET || '').split('#')[0].trim();
-  if (!value) {
-    // Signing with a predictable key would let anyone forge links, so refuse.
-    throw new Error('JWT_SECRET must be set to generate unsubscribe links');
-  }
-  return value;
-};
+const secret = (): string => getJwtSecret();
 
 /** Addresses are compared case-insensitively, so sign the normalised form. */
 const canonical = (email: string): string => email.trim().toLowerCase();

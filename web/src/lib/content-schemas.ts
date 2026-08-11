@@ -548,6 +548,17 @@ export const CONTENT_SCHEMAS: Record<string, FieldSchema[]> = {
         { key: 'color', label: 'Colour', type: 'color' },
       ],
     },
+    {
+      key: 'workRightsReminder',
+      label: 'Student work rights reminder',
+      type: 'group',
+      help: 'Highlighted callout shown at the bottom of the "Jobs" tab. Supports <strong> tags for bold text.',
+      fields: [
+        { key: 'label', label: 'Eyebrow', type: 'text', placeholder: 'Student Work Rights Reminder' },
+        { key: 'description', label: 'Description', type: 'textarea', rows: 3, help: 'Supports <strong> tags for bold text.' },
+      ],
+    },
+    { key: 'cta', label: 'Call to action at the bottom', type: 'group', fields: CTA_FIELDS },
   ],
 
   // ── Partnership — /opportunities/partnership ───────────────────

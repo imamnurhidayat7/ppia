@@ -25,6 +25,7 @@ export type { DashboardRole, NavItem, NavSection } from './nav-config';
 // Page building blocks — compose these instead of restyling pages by hand
 export {
   PageStack,
+  BackButton,
   PageHeading,
   PageHero,
   SectionCard,

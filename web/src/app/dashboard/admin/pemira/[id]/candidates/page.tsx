@@ -49,6 +49,17 @@ interface AdminCandidate {
   approvedAt?: string | null;
   createdAt: string;
   user: CandidateUser;
+  formResponses?: Array<{
+    id: string;
+    fieldId: string;
+    value: unknown;
+    field?: {
+      id: string;
+      type: string;
+      label: string;
+      options?: string[] | null;
+    };
+  }>;
 }
 
 type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'outline';
@@ -456,13 +467,23 @@ export default function AdminCandidatesPage() {
             {detailCandidate.slogan && (
               <DetailItem label="Slogan" value={detailCandidate.slogan} />
             )}
-            <DetailItem label="Vision" value={detailCandidate.vision} />
-            <DetailItem label="Mission" value={detailCandidate.mission} />
-            {detailCandidate.experience && (
-              <DetailItem label="Experience" value={detailCandidate.experience} />
-            )}
-            {detailCandidate.program && (
-              <DetailItem label="Programme" value={detailCandidate.program} />
+            {detailCandidate.formResponses && detailCandidate.formResponses.length > 0 ? (
+              <div className="space-y-3">
+                {detailCandidate.formResponses.map((response) => (
+                  <FormResponseDetail key={response.id} response={response} />
+                ))}
+              </div>
+            ) : (
+              <>
+                <DetailItem label="Vision" value={detailCandidate.vision} />
+                <DetailItem label="Mission" value={detailCandidate.mission} />
+                {detailCandidate.experience && (
+                  <DetailItem label="Experience" value={detailCandidate.experience} />
+                )}
+                {detailCandidate.program && (
+                  <DetailItem label="Programme" value={detailCandidate.program} />
+                )}
+              </>
             )}
             {detailCandidate.status === 'REJECTED' && detailCandidate.rejectionReason && (
               <div className="rounded-[4px] border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/30 dark:bg-rose-500/10">
@@ -535,5 +556,67 @@ export default function AdminCandidatesPage() {
         </form>
       </Modal>
     </PageStack>
+  );
+}
+
+/**
+ * Renders a single form-response value in the candidate detail modal. The
+ * value type depends on the field type (string, number, array, image URL).
+ */
+function FormResponseDetail({
+  response,
+}: {
+  response: {
+    id: string;
+    fieldId: string;
+    value: unknown;
+    field?: {
+      id: string;
+      type: string;
+      label: string;
+      options?: string[] | null;
+    };
+  };
+}) {
+  const label = response.field?.label ?? 'Response';
+  const type = response.field?.type ?? 'TEXT';
+  const value = response.value;
+
+  let rendered: React.ReactNode = null;
+
+  if (value === undefined || value === null || value === '') {
+    rendered = <span className="text-sm italic ink-muted">No answer</span>;
+  } else if (type === 'FIELD_IMAGE' && typeof value === 'string') {
+    rendered = (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={value}
+        alt={label}
+        className="mt-2 max-h-64 w-auto rounded-lg border border-slate-200 dark:border-slate-700"
+      />
+    );
+  } else if (type === 'FIELD_MULTIPLE_CHOICE' && Array.isArray(value)) {
+    rendered = (
+      <ul className="mt-1 list-disc pl-5 space-y-0.5 text-sm ink-body">
+        {(value as string[]).map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    );
+  } else {
+    rendered = (
+      <p className="mt-1 whitespace-pre-wrap text-sm ink-body">
+        {typeof value === 'string' ? value : JSON.stringify(value)}
+      </p>
+    );
+  }
+
+  return (
+    <div className="rounded-[4px] border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+      <p className="text-xs font-semibold uppercase tracking-wide ink-muted">
+        {label}
+      </p>
+      {rendered}
+    </div>
   );
 }

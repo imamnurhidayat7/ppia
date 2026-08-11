@@ -320,6 +320,19 @@ h1, h2, h3, h4, h5, h6 {
     radial-gradient(circle at 72% 64%, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px);
 }
 
+/*
+ * Auth pages use `.sea-deep .chart-paper`, which in light mode sets ink
+ * values to navy for legibility on the white card. In dark mode the card
+ * flips to #0F1B2B, so the same ink tokens must flip back to light —
+ * otherwise input text becomes invisible dark-on-dark. These rules
+ * override the higher-specificity `.sea-deep .chart-paper .ink-*` set
+ * once `.dark` is also on <html>.
+ */
+.dark .sea-deep .chart-paper .ink-strong { color: #F1F5F9; }
+.dark .sea-deep .chart-paper .ink-body { color: #CBD5E1; }
+.dark .sea-deep .chart-paper .ink-muted { color: #A8B6C6; }
+.dark .sea-deep .chart-paper .accent-label { color: #FF8A80; }
+
 .dark .rope-rule {
   background-image: repeating-linear-gradient(
     90deg,
@@ -1076,4 +1089,114 @@ html:not(.dark) .bg-\[\#0D1B33\] {
 /* ── Sea-shore surface in dark mode ────────────────────────────────── */
 .dark .sea-shore {
   background: linear-gradient(180deg, #071321 0%, #0A1928 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * Responsive table → stacked cards (no horizontal scroll).
+ *
+ * `.table-cards` opt-in class on a <table> (or its wrapper) turns each row
+ * into a card on small screens (<640px / below the `sm` breakpoint). Column
+ * labels are taken from each <td data-label="..."> attribute, which
+ * TableShell injects at runtime from the matching <th>. At ≥640px the table
+ * behaves as a normal table with headers.
+ *
+ * This is the standard pattern used by the UK GDS and has the advantage of
+ * needing zero per-call-site changes — any dashboard table that already uses
+ * TableShell / Th / Td gets the stacked-card view for free.
+ *═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 639.98px) {
+  /* Table itself becomes a block so rows can flow at container width.
+     Without this, `display: table` still tries to fit all columns and
+     the table overflows its (overflow: hidden) wrapper — content gets
+     clipped and looks broken. */
+  table.table-cards,
+  table.table-cards tbody {
+    display: block;
+    width: 100%;
+  }
+
+  table.table-cards thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Each row becomes a card. */
+  table.table-cards tr {
+    display: block;
+    padding: 12px 16px;
+    border-bottom: 1px solid #E7EFF7;
+  }
+  .dark table.table-cards tr {
+    border-bottom-color: #1E293B;
+  }
+
+  /* Hide repeated row borders — card padding handles spacing. */
+  table.table-cards tbody > tr:last-child {
+    border-bottom: 0;
+  }
+
+  /* Each cell becomes a row of label : value. */
+  table.table-cards td {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 6px 0;
+    text-align: left !important;
+    border: 0;
+    width: 100%;
+  }
+
+  /* Label pill, generated from data-label. */
+  table.table-cards td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    width: 7.5rem;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #475569;
+    line-height: 1.5rem;
+    padding-top: 0.125rem;
+  }
+  .dark table.table-cards td::before {
+    color: #94A3B8;
+  }
+
+  /* Value column takes the remaining width; allow wrapping. */
+  table.table-cards td > * {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+
+  /* Cells without a label render as full-width content (e.g. action rows). */
+  table.table-cards td:not([data-label])::before,
+  table.table-cards td[data-label=""]::before {
+    content: "";
+    display: none;
+  }
+
+  /* Right-aligned action cells full width on mobile. */
+  table.table-cards td[data-label="Actions"] {
+    justify-content: flex-end;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed #E7EFF7;
+  }
+  .dark table.table-cards td[data-label="Actions"] {
+    border-top-color: #1E293B;
+  }
+  table.table-cards td[data-label="Actions"]::before {
+    width: auto;
+  }
 }

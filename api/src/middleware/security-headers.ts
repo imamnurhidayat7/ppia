@@ -74,7 +74,7 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
   // over plain HTTP is ignored by browsers and would pin localhost to HTTPS if
   // it ever were honoured.
   if (isSecureRequest(req)) {
-    res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+    res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   }
 
   next();

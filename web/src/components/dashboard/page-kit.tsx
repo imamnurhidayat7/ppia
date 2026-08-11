@@ -16,6 +16,7 @@
  */
 
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import { ArrowLeft, ChevronRight, Inbox, Loader2, Search, ShieldAlert, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,21 @@ export function PageStack({
   className?: string;
 }) {
   return <div className={cn('animate-fade-in space-y-6', className)}>{children}</div>;
+}
+
+/** Standalone back trail, same shape PageHeading renders above its title. */
+export function BackButton({ href, label = 'Back' }: { href: string; label?: string }) {
+  return (
+    <Link
+      href={href}
+      className="group -ml-2 inline-flex items-center gap-2 rounded-lg py-1 pl-1 pr-2.5 text-[13px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+    >
+      <span className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white transition-colors group-hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900">
+        <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+      </span>
+      {label}
+    </Link>
+  );
 }
 
 interface PageHeadingProps {
@@ -335,6 +351,29 @@ export function TableShell({
   footer?: React.ReactNode;
   className?: string;
 }) {
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  // Sync each header's text into a matching `data-label` on every body cell.
+  // The `.table-cards` CSS rule reads `data-label` to render a label pill per
+  // cell when the table collapses to stacked cards on mobile, so no call site
+  // needs to pass labels manually.
+  useEffect(() => {
+    const table = tableRef.current;
+    if (!table) return;
+    const headerCells = table.querySelectorAll('thead th');
+    const labels: string[] = [];
+    headerCells.forEach((th) => {
+      labels.push((th.textContent || '').trim());
+    });
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach((tr) => {
+      const cells = tr.querySelectorAll('td');
+      cells.forEach((td, i) => {
+        td.setAttribute('data-label', labels[i] ?? '');
+      });
+    });
+  });
+
   return (
     <div
       className={cn(
@@ -342,14 +381,15 @@ export function TableShell({
         className
       )}
     >
-      <div className="overflow-x-auto">
-        <table className="w-full table-fixed">
-          <thead className="border-b border-[#DCE7F1] bg-[#F5FAFD] dark:border-slate-800 dark:bg-slate-800/50">
-            <tr>{head}</tr>
-          </thead>
-          <tbody className="divide-y divide-[#E7EFF7] dark:divide-slate-800">{children}</tbody>
-        </table>
-      </div>
+      <table
+        ref={tableRef}
+        className="table-cards w-full border-collapse block sm:table"
+      >
+        <thead className="border-b border-[#DCE7F1] bg-[#F5FAFD] dark:border-slate-800 dark:bg-slate-800/50">
+          <tr>{head}</tr>
+        </thead>
+        <tbody className="divide-y divide-[#E7EFF7] dark:divide-slate-800">{children}</tbody>
+      </table>
       {footer}
     </div>
   );
@@ -368,7 +408,9 @@ export function Th({
     <th
       className={cn(
         // Column labels are data, set in the mono face like the public tables.
-        'data-type px-4 py-3 text-[12px] font-bold uppercase ink-muted',
+        // whitespace-nowrap keeps headers on one line so the table scrolls
+        // horizontally on small screens instead of collapsing columns.
+        'data-type px-4 py-3 text-[12px] font-bold uppercase whitespace-nowrap ink-muted',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         align === 'left' && 'text-left',
@@ -392,7 +434,7 @@ export function Td({
   return (
     <td
       className={cn(
-        'px-4 py-3 text-sm ink-body',
+        'px-4 py-3 text-sm align-top ink-body',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         className

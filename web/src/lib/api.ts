@@ -28,6 +28,11 @@ class ApiClient {
 
     this.client = axios.create({
       baseURL: `${API_URL}/api`,
+      // The auth token is now also issued as an HttpOnly cookie (set on
+      // login by the API). Sending credentials lets the cookie reach the
+      // API cross-origin. The bearer header below still works during the
+      // transition period.
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -132,6 +137,13 @@ class ApiClient {
   }
 
   async logout() {
+    // Tell the server to clear the HttpOnly cookie, then drop the legacy
+    // localStorage copy. Both stores need to go.
+    try {
+      await this.client.post('/auth/logout');
+    } catch {
+      // The server may already be unreachable; still clear locally.
+    }
     this.removeToken();
   }
 
@@ -522,7 +534,9 @@ class ApiClient {
   }
 
   async getPageBySlug(slug: string) {
-    const response = await this.client.get(`/pages/slug/${slug}`);
+    const response = await this.client.get(`/pages/slug/${slug}`, {
+      headers: { 'Cache-Control': 'no-cache' },
+    });
     return response.data;
   }
 
@@ -588,13 +602,24 @@ class ApiClient {
     return response.data;
   }
 
-  // Upload
+  // Upload an image to the public bucket. Returns the public URL.
+  // NOTE: Do NOT set `Content-Type: multipart/form-data` manually — axios
+  // must compute the multipart boundary itself, otherwise multer on the
+  // server sees the body as a non-multipart stream and `req.file` is
+  // undefined, surfacing as a misleading "No file uploaded" 400.
   async uploadImage(file: File): Promise<{ url: string }> {
     const formData = new FormData();
     formData.append('file', file);
 
     const response = await this.client.post('/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      // Let axios + the browser set the correct multipart/* Content-Type
+      // with the generated boundary.
+      headers: { 'Content-Type': undefined as unknown as string },
+      transformRequest: [(data, headers) => {
+        // Strip any Content-Type so the browser can re-add the boundary.
+        if (headers) delete headers['Content-Type'];
+        return data;
+      }],
     });
     return response.data;
   }
@@ -984,14 +1009,60 @@ class ApiClient {
   }
 
   async registerCandidate(electionId: string, data: {
-    vision: string;
-    mission: string;
+    vision?: string;
+    mission?: string;
     experience?: string;
     program?: string;
     slogan?: string;
     posterUrl?: string;
+    formResponses?: Array<{ fieldId: string; value: unknown }>;
   }) {
     const response = await this.client.post(`/elections/${electionId}/candidates`, data);
+    return response.data;
+  }
+
+  async getElectionFormFields(electionId: string) {
+    const response = await this.client.get(`/elections/${electionId}/form-fields`);
+    return response.data;
+  }
+
+  async createElectionFormField(
+    electionId: string,
+    data: {
+      type: string;
+      label: string;
+      description?: string;
+      options?: string[];
+      required?: boolean;
+      maxFileSize?: number;
+      acceptedTypes?: string[];
+    },
+  ) {
+    const response = await this.client.post(`/elections/${electionId}/form-fields`, data);
+    return response.data;
+  }
+
+  async updateElectionFormField(fieldId: string, data: Partial<{
+    label: string;
+    description: string;
+    options: string[];
+    required: boolean;
+    maxFileSize: number;
+    acceptedTypes: string[];
+  }>) {
+    const response = await this.client.patch(`/elections/form-fields/${fieldId}`, data);
+    return response.data;
+  }
+
+  async deleteElectionFormField(fieldId: string) {
+    const response = await this.client.delete(`/elections/form-fields/${fieldId}`);
+    return response.data;
+  }
+
+  async reorderElectionFormFields(electionId: string, orderedIds: string[]) {
+    const response = await this.client.post(`/elections/${electionId}/form-fields/reorder`, {
+      order: orderedIds,
+    });
     return response.data;
   }
 

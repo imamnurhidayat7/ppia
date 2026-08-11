@@ -151,14 +151,14 @@ export function DataTable<T extends Record<string, any>>({
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-hidden">
+            <table className="table-cards w-full border-collapse block sm:table">
               <thead className="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-100">
                 <tr>
                   {columns.map((col) => (
                     <th
                       key={col.key}
-                      className={`px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider ${
+                      className={`px-6 py-4 text-left text-xs font-semibold whitespace-nowrap text-gray-500 dark:text-slate-400 uppercase tracking-wider ${
                         col.sortable ? 'cursor-pointer hover:bg-gray-100 dark:bg-slate-800 select-none' : ''
                       }`}
                       style={{ width: col.width }}
@@ -183,7 +183,7 @@ export function DataTable<T extends Record<string, any>>({
                 {paginatedData.map((item) => (
                   <tr key={String(item[keyField])} className="hover:bg-gray-50 dark:bg-slate-900/50 transition-colors">
                     {columns.map((col) => (
-                      <td key={col.key} className="px-6 py-4 text-sm text-gray-700 dark:text-slate-300">
+                      <td key={col.key} data-label={col.header} className="px-6 py-4 text-sm align-top text-gray-700 dark:text-slate-300">
                         {col.render
                           ? col.render(item)
                           : item[col.key] !== undefined

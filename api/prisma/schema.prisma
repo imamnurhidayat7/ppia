@@ -3,10 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Runtime queries use the pooled (PgBouncer, port 6543) connection so
   // serverless/multiple instances do not exhaust Postgres connections.
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
   // Schema changes (`prisma db push` / `migrate`) need a direct (port 5432)
   // connection, since DDL and prepared statements do not work through the
   // transaction pooler. DIRECT_URL is therefore required whenever DATABASE_URL
@@ -15,34 +15,34 @@ datasource db {
 }
 
 model Article {
-  id                   String    @id @default(cuid())
+  id                   String     @id @default(cuid())
   title                String
-  slug                 String    @unique
+  slug                 String     @unique
   excerpt              String?
   content              Json
   imageUrl             String?
   divisionId           String?
-  published            Boolean   @default(false)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  published            Boolean    @default(false)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
   authorId             String
-  category             String    @default("News")
-  likes                Int       @default(0)
+  category             String     @default("News")
+  likes                Int        @default(0)
   scheduledPublishAt   DateTime?
   scheduledUnpublishAt DateTime?
-  views                Int       @default(0)
+  views                Int        @default(0)
   // New professional fields
-  isFeatured           Boolean   @default(false)
+  isFeatured           Boolean    @default(false)
   featuredOrder        Int?
-  readingTime          Int       @default(0)
+  readingTime          Int        @default(0)
   metaTitle            String?
   metaDescription      String?
   metaKeywords         String?
-  User                 User      @relation(fields: [authorId], references: [id])
-  Division             Division? @relation(fields: [divisionId], references: [id])
+  User                 User       @relation(fields: [authorId], references: [id])
+  Division             Division?  @relation(fields: [divisionId], references: [id])
   Comment              Comment[]
   Bookmark             Bookmark[]
-  tags                 Tag[]     @relation("ArticleTags")
+  tags                 Tag[]      @relation("ArticleTags")
 }
 
 /// A member saving an article to read again later.
@@ -100,27 +100,71 @@ model AuditLog {
 }
 
 model Candidate {
-  id              String          @id @default(cuid())
+  id              String                  @id @default(cuid())
   electionId      String
   userId          String
-  vision          String          @db.Text
-  mission         String          @db.Text
-  experience      String?         @db.Text
-  program         String?         @db.Text
+  vision          String                  @db.Text
+  mission         String                  @db.Text
+  experience      String?                 @db.Text
+  program         String?                 @db.Text
   slogan          String?
   posterUrl       String?
-  status          CandidateStatus @default(PENDING)
+  status          CandidateStatus         @default(PENDING)
   approvedAt      DateTime?
   approvedBy      String?
-  rejectionReason String?         @db.Text
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  election        Election        @relation(fields: [electionId], references: [id], onDelete: Cascade)
-  user            User            @relation(fields: [userId], references: [id])
+  rejectionReason String?                 @db.Text
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  election        Election                @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  user            User                    @relation(fields: [userId], references: [id])
   votes           Vote[]
+  formResponses   CandidateFormResponse[]
 
   @@unique([electionId, userId])
   @@index([status])
+}
+
+/// Custom question/field that admins attach to an election's candidate
+/// registration form. Rendered dynamically on the public registration page.
+model ElectionFormField {
+  id            String                  @id @default(cuid())
+  electionId    String
+  /// FIELD_TEXT | FIELD_RICHTEXT | FIELD_SINGLE_CHOICE | FIELD_MULTIPLE_CHOICE | FIELD_IMAGE | FIELD_VIDEO_LINK
+  type          String
+  label         String
+  description   String?                 @db.Text
+  /// For choice fields: array of options as JSON string. e.g. '["Yes","No"]'
+  options       Json?
+  required      Boolean                 @default(false)
+  /// Admin-defined max file size in MB (image fields only).
+  maxFileSize   Int?
+  /// Accepted file extensions (image fields only) as JSON string. e.g. '["jpg","png"]'
+  acceptedTypes Json?
+  /// Render order — ascending.
+  order         Int                     @default(0)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  election      Election                @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  responses     CandidateFormResponse[]
+
+  @@index([electionId])
+}
+
+/// One row per candidate per field. `value` is JSON so any field type can
+/// store its data: string for text/richtext/video-link, string for single
+/// choice, string[] for multiple choice, { url, filename, size } for image.
+model CandidateFormResponse {
+  id          String            @id @default(cuid())
+  candidateId String
+  fieldId     String
+  value       Json
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  candidate   Candidate         @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  field       ElectionFormField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, fieldId])
+  @@index([candidateId])
 }
 
 model Comment {
@@ -161,22 +205,23 @@ model Division {
 }
 
 model Election {
-  id                String         @id @default(cuid())
+  id                String              @id @default(cuid())
   title             String
-  description       String?        @db.Text
+  description       String?             @db.Text
   registrationStart DateTime
   registrationEnd   DateTime
   campaignStart     DateTime
   campaignEnd       DateTime
   votingStart       DateTime
   votingEnd         DateTime
-  status            ElectionStatus @default(UPCOMING)
+  status            ElectionStatus      @default(UPCOMING)
   createdBy         String
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
   candidates        Candidate[]
   votes             Vote[]
-  creator           User           @relation("ElectionCreator", fields: [createdBy], references: [id])
+  creator           User                @relation("ElectionCreator", fields: [createdBy], references: [id])
+  formFields        ElectionFormField[]
 
   @@index([status])
   @@index([votingStart])
@@ -272,11 +317,11 @@ model Page {
   id              String      @id @default(cuid())
   title           String
   slug            String      @unique
-  content         Json        // Legacy raw content (kept for backward compat)
-  excerpt         String?     // Short description for SEO & previews
-  metaTitle       String?     // SEO meta title
-  metaDescription String?     // SEO meta description
-  featuredImage   String?     // Hero/banner image URL
+  content         Json // Legacy raw content (kept for backward compat)
+  excerpt         String? // Short description for SEO & previews
+  metaTitle       String? // SEO meta title
+  metaDescription String? // SEO meta description
+  featuredImage   String? // Hero/banner image URL
   pageType        String      @default("standard") // standard | landing | custom (legacy)
   template        String      @default("default") // default | landing | cabinet | timeline | event_list | division_grid
   published       Boolean     @default(false)
@@ -292,74 +337,74 @@ model Page {
 }
 
 model PageBlock {
-  id          String   @id @default(cuid())
-  pageId      String
-  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  type        BlockType
-  title       String?
-  titleId     String?  // Indonesian
-  subtitle    String?
-  subtitleId  String?  // Indonesian
-  content     String?
-  contentId   String?  // Indonesian HTML content
-  linkUrl     String?
-  linkText    String?
-  linkTextId  String?
-  imageUrl    String?
-  iconName    String?  // Lucide icon name
-  color       String?  // Hex color
-  order       Int      @default(0)
-  config      Json?    // Additional block-specific configuration
-  enabled     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid())
+  pageId     String
+  page       Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type       BlockType
+  title      String?
+  titleId    String? // Indonesian
+  subtitle   String?
+  subtitleId String? // Indonesian
+  content    String?
+  contentId  String? // Indonesian HTML content
+  linkUrl    String?
+  linkText   String?
+  linkTextId String?
+  imageUrl   String?
+  iconName   String? // Lucide icon name
+  color      String? // Hex color
+  order      Int       @default(0)
+  config     Json? // Additional block-specific configuration
+  enabled    Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([pageId, order])
 }
 
 // Landing Page CMS Models
 model LandingSection {
-  id          String         @id @default(cuid())
-  key         String         @unique  // "hero", "about", "video", "events", "articles", "membership"
-  title       String?
-  titleId     String?        // Indonesian title
-  subtitle    String?
-  subtitleId  String?        // Indonesian subtitle
-  description String?
-  descriptionId String?      // Indonesian description
-  enabled     Boolean        @default(true)
-  order       Int            @default(0)
-  config      Json?          // Section-specific configuration
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  blocks      SectionBlock[]
+  id            String         @id @default(cuid())
+  key           String         @unique // "hero", "about", "video", "events", "articles", "membership"
+  title         String?
+  titleId       String? // Indonesian title
+  subtitle      String?
+  subtitleId    String? // Indonesian subtitle
+  description   String?
+  descriptionId String? // Indonesian description
+  enabled       Boolean        @default(true)
+  order         Int            @default(0)
+  config        Json? // Section-specific configuration
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  blocks        SectionBlock[]
 
   @@index([key])
   @@index([order])
 }
 
 model SectionBlock {
-  id          String         @id @default(cuid())
-  sectionId   String
-  section     LandingSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  type        BlockType
-  title       String?
-  titleId     String?        // Indonesian
-  subtitle    String?
-  subtitleId  String?        // Indonesian
-  content     String?
-  contentId   String?        // Indonesian HTML content
-  linkUrl     String?
-  linkText    String?
-  linkTextId  String?
-  imageUrl    String?
-  iconName    String?        // Lucide icon name
-  color       String?        // Hex color
-  order       Int            @default(0)
-  config      Json?          // Additional block-specific configuration
-  enabled     Boolean        @default(true)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id         String         @id @default(cuid())
+  sectionId  String
+  section    LandingSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  type       BlockType
+  title      String?
+  titleId    String? // Indonesian
+  subtitle   String?
+  subtitleId String? // Indonesian
+  content    String?
+  contentId  String? // Indonesian HTML content
+  linkUrl    String?
+  linkText   String?
+  linkTextId String?
+  imageUrl   String?
+  iconName   String? // Lucide icon name
+  color      String? // Hex color
+  order      Int            @default(0)
+  config     Json? // Additional block-specific configuration
+  enabled    Boolean        @default(true)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 
   @@index([sectionId, order])
 }
@@ -396,21 +441,21 @@ enum BlockType {
 
 // Menu Configuration
 model MenuItem {
-  id          String       @id @default(cuid())
-  key         String       @unique  // "header_main", "header_right", "footer_about", "footer_activities", "footer_quicklinks"
-  items       Json         // Array of menu items with hierarchy
-  enabled     Boolean      @default(true)
-  updatedAt   DateTime     @updatedAt
+  id        String   @id @default(cuid())
+  key       String   @unique // "header_main", "header_right", "footer_about", "footer_activities", "footer_quicklinks"
+  items     Json // Array of menu items with hierarchy
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
 
   @@index([key])
 }
 
 // Header/Footer Configuration
 model SiteConfig {
-  id          String       @id @default(cuid())
-  key         String       @unique  // "header", "footer", "social"
-  config      Json         // Configuration data
-  updatedAt   DateTime     @updatedAt
+  id        String   @id @default(cuid())
+  key       String   @unique // "header", "footer", "social"
+  config    Json // Configuration data
+  updatedAt DateTime @updatedAt
 
   @@index([key])
 }

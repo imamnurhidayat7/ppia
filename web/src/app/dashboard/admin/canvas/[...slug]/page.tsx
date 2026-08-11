@@ -892,6 +892,23 @@ export default function PageCanvasEditor() {
 
       setDeletedBlockIds([]);
       setDirty(false);
+      // Purge the Next.js cache for this page so the live preview and public
+      // site pick up the new content immediately. Without this, ISR-cached
+      // pages keep serving the old copy until the revalidate window elapses.
+      try {
+        const token = localStorage.getItem('token') || '';
+        await fetch('/api/revalidate', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ paths: [`/${page.slug}`] }),
+        });
+      } catch {
+        // The content is saved either way; a failed purge only means the
+        // public page updates on its own schedule instead of instantly.
+      }
       // Reload the live preview so the editor sees the result immediately.
       setPreviewRefreshKey((n) => n + 1);
       showToast('success', 'Page saved');

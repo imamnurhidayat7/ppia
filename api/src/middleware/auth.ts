@@ -1,8 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
+import { getJwtSecret } from '../lib/secrets';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this';
+/** Pin HS256 — defends against algorithm-confusion attacks if the key type ever changes. */
+const ALLOWED_ALGORITHMS: jwt.Algorithm[] = ['HS256'];
+
+/** Name of the HttpOnly cookie that carries the JWT. */
+export const AUTH_COOKIE_NAME = 'ppia_token';
+
+/** Read the JWT from the Authorization header or the HttpOnly cookie. */
+function extractToken(req: Request): string | null {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.slice(7);
+  }
+  const cookieToken = req.cookies?.[AUTH_COOKIE_NAME];
+  if (typeof cookieToken === 'string' && cookieToken.length > 0) {
+    return cookieToken;
+  }
+  return null;
+}
 
 export interface AuthRequest extends Request {
   user?: {
@@ -24,9 +42,13 @@ export const authenticate = async (
     return;
   }
 
+  // Optional-auth path: a missing/invalid token is not fatal, the request
+  // proceeds as a guest. Errors are swallowed on purpose.
   let userId: string;
   try {
-    const decoded = jwt.verify(authHeader.slice(7), JWT_SECRET) as { userId?: string };
+    const decoded = jwt.verify(authHeader.slice(7), getJwtSecret(), {
+      algorithms: ALLOWED_ALGORITHMS,
+    }) as { userId?: string };
     if (!decoded.userId) throw new Error('Missing user ID');
     userId = decoded.userId;
   } catch {
@@ -84,13 +106,21 @@ export const optionalAuthenticate = async (
   next: NextFunction
 ): Promise<void> => {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
+  const cookieToken = req.cookies?.[AUTH_COOKIE_NAME];
+  if (!authHeader?.startsWith('Bearer ') && !cookieToken) {
     next();
     return;
   }
 
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : cookieToken;
+
+  // Optional-auth path: a missing/invalid token is not fatal, the request
+  // proceeds as a guest. Errors are swallowed on purpose.
+  let userId: string;
   try {
-    const decoded = jwt.verify(authHeader.slice(7), JWT_SECRET) as { userId?: string };
+    const decoded = jwt.verify(token, getJwtSecret(), {
+      algorithms: ALLOWED_ALGORITHMS,
+    }) as { userId?: string };
     if (decoded.userId) {
       const user = await prisma.user.findUnique({
         where: { id: decoded.userId },

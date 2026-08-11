@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   register,
   login,
+  logout,
   me,
   updateProfile,
   forgotPassword,
@@ -27,6 +28,7 @@ const router = Router();
 // middleware/rate-limit.ts for the reasoning behind each budget.
 router.post('/register', registerLimiter, register);
 router.post('/login', loginLimiter, login);
+router.post('/logout', authenticate, logout);
 router.post('/forgot-password', passwordResetRequestLimiter, forgotPassword);
 router.post('/reset-password', passwordResetLimiter, resetPassword);
 router.post('/verify-email', passwordResetLimiter, verifyEmail);

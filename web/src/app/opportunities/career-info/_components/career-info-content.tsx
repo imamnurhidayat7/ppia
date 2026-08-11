@@ -9,7 +9,7 @@ import { Briefcase, ExternalLink, Clock, ChevronRight, BookOpen, Users, Star } f
 import api from "@/lib/api";
 
  type ResourceTab = "Jobs" | "CV & Interview" | "NZ Work Culture";
- interface CareerContent { header: { label: string; title: string; titleAccent: string; description: string; breadcrumbs: { label: string }[] }; platforms?: any[]; cvTips?: any[]; workCultureTips?: any[]; stats?: { value: string; label: string }[]; }
+ interface CareerContent { header: { label: string; title: string; titleAccent: string; description: string; breadcrumbs: { label: string }[] }; platforms?: any[]; cvTips?: any[]; workCultureTips?: any[]; workRightsReminder?: { label?: string; description?: string }; cta?: { title?: string; description?: string; buttonText?: string; buttonHref?: string }; stats?: { value: string; label: string }[]; }
 
 /**
  * Seam colours, matching the ends of the `.sea-deep` / `.sea-shore` gradients
@@ -33,6 +33,8 @@ export default function CareerInfoPage() {
   const activeCvTips = content.cvTips ?? [];
   const activeWorkCultureTips = content.workCultureTips ?? [];
   const activeStats = content.stats ?? [];
+  const reminder = content.workRightsReminder ?? {};
+  const cta = content.cta ?? {};
 
   return (
     <>
@@ -171,10 +173,8 @@ export default function CareerInfoPage() {
                   <Clock size={18} className="accent-label" />
                 </span>
                 <div>
-                  <p className="data-type mb-1 text-[12px] font-bold uppercase accent-label">Student Work Rights Reminder</p>
-                  <p className="ink-body text-sm">
-                    On a student visa you can work up to <strong>20 hours/week</strong> during semester and <strong>full-time</strong> during scheduled holidays. Always confirm your specific visa conditions.
-                  </p>
+                  <p className="data-type mb-1 text-[12px] font-bold uppercase accent-label">{reminder.label ?? 'Student Work Rights Reminder'}</p>
+                  <p className="ink-body text-sm" dangerouslySetInnerHTML={{ __html: reminder.description ?? 'On a student visa you can work up to <strong>20 hours/week</strong> during semester and <strong>full-time</strong> during scheduled holidays. Always confirm your specific visa conditions.' }} />
                 </div>
               </motion.div>
             </motion.div>
@@ -206,7 +206,7 @@ export default function CareerInfoPage() {
                       className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white"
                       style={{ boxShadow: `inset 0 0 0 1px ${tip.color}33, 0 0 0 4px ${tip.color}0F` }}
                     >
-                      <tip.icon size={20} style={{ color: tip.color }} />
+                      <BookOpen size={20} style={{ color: tip.color }} />
                     </span>
                     <div>
                       <p className="data-type mb-2 text-[12px] uppercase ink-muted">{String(i + 1).padStart(2, "0")}</p>
@@ -295,17 +295,17 @@ export default function CareerInfoPage() {
                 className="font-black text-white text-2xl md:text-3xl"
                 style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
               >
-                Need Career Advice?
+                {cta.title ?? 'Need Career Advice?'}
               </h3>
               <p className="text-white/75 mt-2">
-                Ask in the PPIA community — many members have navigated the NZ job market and are happy to help.
+                {cta.description ?? 'Ask in the PPIA community — many members have navigated the NZ job market and are happy to help.'}
               </p>
             </div>
             <a
-              href="#membership"
+              href={cta.buttonHref ?? '#membership'}
               className="relative z-10 shrink-0 flex items-center gap-2 bg-[#E8231A] hover:bg-[#C41E16] text-white font-semibold px-8 py-4 rounded-[4px] transition-all duration-200 shadow-lg shadow-red-900/30 whitespace-nowrap hover:gap-3"
             >
-              Join the Community
+              {cta.buttonText ?? 'Join the Community'}
               <ChevronRight size={16} />
             </a>
           </motion.div>

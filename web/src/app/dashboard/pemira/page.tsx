@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
@@ -20,7 +19,6 @@ import BallotCard from '@/components/pemira/BallotCard';
 import ResultsBar from '@/components/pemira/ResultsBar';
 import ElectionTimeline from '@/components/pemira/ElectionTimeline';
 import CountdownTimer from '@/components/pemira/CountdownTimer';
-import CandidateRegistrationForm from '@/components/pemira/CandidateRegistrationForm';
 import {
   AlertCircle,
   CheckCircle2,
@@ -100,13 +98,6 @@ interface CandidatesResponse {
   candidates?: Candidate[];
 }
 
-interface CandidateRegistrationInput {
-  vision: string;
-  mission: string;
-  experience?: string;
-  program?: string;
-  slogan?: string;
-}
 
 /** Log-entry form: 05 Mar 2025. */
 function formatDate(value: string): string {
@@ -136,8 +127,6 @@ function ElectionItem({
   const [results, setResults] = useState<ResultsResponse | null>(null);
   const [myCandidate, setMyCandidate] = useState<Candidate | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const [showRegForm, setShowRegForm] = useState(false);
-  const [regSuccess, setRegSuccess] = useState(false);
 
   const isRegistration =
     nowMs >= new Date(election.registrationStart).getTime() &&
@@ -215,13 +204,6 @@ function ElectionItem({
     [dataLoaded, election.id, isClosed, isVoting, userId]
   );
 
-  const handleRegister = async (data: CandidateRegistrationInput) => {
-    await api.registerCandidate(election.id, data);
-    setShowRegForm(false);
-    setRegSuccess(true);
-    await loadDetails(true);
-  };
-
   const handleVote = async (candidateId: string) => {
     await api.castVote(election.id, candidateId);
     await loadDetails(true);
@@ -288,6 +270,13 @@ function ElectionItem({
           >
             <ExternalLink className="h-4 w-4" />
           </Link>
+          {isRegistration && (
+            <Link href={`/dashboard/pemira/${election.id}/register`}>
+              <Button variant="primary" size="sm" leftIcon={<UserPlus className="h-4 w-4" />}>
+                Register
+              </Button>
+            </Link>
+          )}
           <Button
             variant="secondary"
             size="sm"
@@ -324,7 +313,7 @@ function ElectionItem({
             </div>
           )}
 
-          {myCandidate?.status === 'REJECTED' && !regSuccess && (
+          {myCandidate?.status === 'REJECTED' && (
             <div className="space-y-3 rounded-[5px] border border-danger-200 bg-danger-50 p-4 dark:border-danger-900/50 dark:bg-danger-900/20">
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger-500" />
@@ -344,18 +333,16 @@ function ElectionItem({
                 </div>
               </div>
               {isRegistration && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  className="w-full"
-                  leftIcon={<RefreshCw className="h-4 w-4" />}
-                  onClick={() => {
-                    setRegSuccess(false);
-                    setShowRegForm(true);
-                  }}
-                >
-                  Apply again
-                </Button>
+                <Link href={`/dashboard/pemira/${election.id}/register`}>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="w-full"
+                    leftIcon={<RefreshCw className="h-4 w-4" />}
+                  >
+                    Apply again
+                  </Button>
+                </Link>
               )}
             </div>
           )}
@@ -396,24 +383,16 @@ function ElectionItem({
             </div>
           )}
 
-          {regSuccess && (
-            <div className="flex items-start gap-3 rounded-[5px] border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-900/20">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-              <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
-                Registration submitted. Awaiting committee verification.
-              </p>
-            </div>
-          )}
-
-          {isRegistration && !myCandidate && !regSuccess && (
-            <Button
-              variant="primary"
-              className="w-full"
-              leftIcon={<UserPlus className="h-4 w-4" />}
-              onClick={() => setShowRegForm(true)}
-            >
-              Register as a candidate
-            </Button>
+          {isRegistration && !myCandidate && (
+            <Link href={`/dashboard/pemira/${election.id}/register`}>
+              <Button
+                variant="primary"
+                className="w-full"
+                leftIcon={<UserPlus className="h-4 w-4" />}
+              >
+                Register as a candidate
+              </Button>
+            </Link>
           )}
 
           {isVoting && !myVote && approvedCandidates.length > 0 && (
@@ -448,14 +427,6 @@ function ElectionItem({
         </div>
       )}
 
-      <AnimatePresence>
-        {showRegForm && (
-          <CandidateRegistrationForm
-            onSubmit={handleRegister}
-            onClose={() => setShowRegForm(false)}
-          />
-        )}
-      </AnimatePresence>
     </SectionCard>
   );
 }

@@ -565,18 +565,19 @@ export function PageBlockRenderer({ block }: PageBlockRendererProps) {
     }
     case 'TABLE': {
       const data = safeParse(content, { headers: [], rows: [] });
+      const headers: string[] = data.headers || [];
       return (
         <section className="max-w-4xl mx-auto px-6 py-16">
           {block.title && <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">{block.title}</h2>}
-          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-sm">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <table className="table-cards w-full border-collapse text-sm block sm:table">
               <thead className="bg-slate-50 dark:bg-slate-800">
-                <tr>{(data.headers || []).map((h: string, i: number) => <th key={i} className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-200">{h}</th>)}</tr>
+                <tr>{headers.map((h: string, i: number) => <th key={i} className="px-4 py-3 text-left font-semibold whitespace-nowrap text-slate-700 dark:text-slate-200">{h}</th>)}</tr>
               </thead>
               <tbody>
                 {(data.rows || []).map((row: string[], i: number) => (
                   <tr key={i} className="border-t border-slate-200 dark:border-slate-700">
-                    {row.map((cell, j) => <td key={j} className="px-4 py-3 text-slate-600 dark:text-slate-300">{cell}</td>)}
+                    {row.map((cell, j) => <td key={j} data-label={headers[j] || ''} className="px-4 py-3 align-top text-slate-600 dark:text-slate-300">{cell}</td>)}
                   </tr>
                 ))}
               </tbody>

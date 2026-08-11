@@ -14,7 +14,14 @@ export const getElections = async (req: Request, res: Response) => {
       include: { _count: { select: { candidates: true, votes: true } } },
       orderBy: { votingStart: 'desc' },
     });
-    res.json({ elections });
+    // Status stored in the DB is the "editorial" status; recompute it from the
+    // phase dates so the timeboxed flow (registration → campaign → voting) is
+    // reflected live even if admins never flipped the manual status.
+    const computedElections = elections.map((election) => {
+      const { computedStatus } = computeElectionState(election);
+      return { ...election, status: computedStatus };
+    });
+    res.json({ elections: computedElections });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch elections' });
@@ -41,7 +48,8 @@ export const getActiveElection = async (req: Request, res: Response) => {
       orderBy: { votingStart: 'desc' },
     });
     if (!election) return res.json({ election: null });
-    res.json({ election: computeElectionState(election).election });
+    const { computedStatus } = computeElectionState(election);
+    res.json({ election: { ...election, status: computedStatus } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch active election' });
@@ -63,7 +71,8 @@ export const getElectionById = async (req: Request, res: Response) => {
       },
     });
     if (!election) return res.status(404).json({ error: 'Election not found' });
-    res.json({ election });
+    const { computedStatus } = computeElectionState(election);
+    res.json({ election: { ...election, status: computedStatus } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch election' });

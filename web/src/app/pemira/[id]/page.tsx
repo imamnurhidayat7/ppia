@@ -13,7 +13,6 @@ import BallotCard from '@/components/pemira/BallotCard';
 import ResultsBar from '@/components/pemira/ResultsBar';
 import ElectionTimeline from '@/components/pemira/ElectionTimeline';
 import CountdownTimer from '@/components/pemira/CountdownTimer';
-import CandidateRegistrationForm from '@/components/pemira/CandidateRegistrationForm';
 import {
   Loader2, Vote, Users, ArrowLeft, Trophy,
   UserPlus, AlertCircle, CheckCircle2, Info,
@@ -47,7 +46,6 @@ export default function ElectionDetailPage() {
   const [myVote, setMyVote] = useState<any>(null);
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showRegForm, setShowRegForm] = useState(false);
   const [regSuccess, setRegSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<'candidates' | 'about'>('candidates');
 
@@ -85,13 +83,6 @@ export default function ElectionDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.id, isAuthenticated]);
   /* eslint-enable react-hooks/set-state-in-effect */
-
-  const handleRegister = async (data: any) => {
-    await api.registerCandidate(params.id, data);
-    setShowRegForm(false);
-    setRegSuccess(true);
-    await loadElection();
-  };
 
   const handleVote = async (candidateId: string) => {
     await api.castVote(params.id, candidateId);
@@ -252,8 +243,8 @@ export default function ElectionDetailPage() {
               </motion.div>
             )}
 
-            {/* Registration CTA */}
-            {isRegistration && isAuthenticated && !myCandidacy && !regSuccess && (
+            {/* Registration CTA — link to register page, login if not authenticated */}
+            {isRegistration && !myCandidacy && !regSuccess && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -272,12 +263,12 @@ export default function ElectionDetailPage() {
                       Register before {formatDate(election.registrationEnd)}
                     </p>
                   </div>
-                  <button
-                    onClick={() => setShowRegForm(true)}
+                  <Link
+                    href={isAuthenticated ? `/dashboard/pemira/${election.id}/register` : `/login?next=/dashboard/pemira/${election.id}/register`}
                     className="flex-shrink-0 px-6 py-3 rounded-xl bg-[#E8231A] hover:bg-[#C71E15] text-white font-bold text-sm transition-all hover:-translate-y-0.5 shadow-lg"
                   >
                     Register now
-                  </button>
+                  </Link>
                 </div>
               </motion.div>
             )}
@@ -445,16 +436,6 @@ export default function ElectionDetailPage() {
       </div>
 
       <Footer />
-
-      {/* Registration form modal */}
-      <AnimatePresence>
-        {showRegForm && (
-          <CandidateRegistrationForm
-            onSubmit={handleRegister}
-            onClose={() => setShowRegForm(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

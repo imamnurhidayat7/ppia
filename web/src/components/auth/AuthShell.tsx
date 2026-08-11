@@ -136,9 +136,23 @@ export default function AuthShell({
   );
 }
 
-/** Field styles, shared by every auth form so they cannot drift apart. */
+/**
+ * Field styles, shared by every auth form so they cannot drift apart.
+ *
+ * Light surface is a white sheet on `.chart-paper`; in dark mode the card
+ * flips to #0F1B2B, so the field needs a translucent fill + light border
+ * to stay legible instead of becoming a white slab.
+ */
 export const AUTH_FIELD =
-  'w-full rounded-[4px] border border-[#C3D2E0] bg-white px-4 py-3 text-[15px] ink-strong outline-none transition-colors placeholder:text-[#64748B] focus:border-[#C41E16] focus:ring-2 focus:ring-[#C41E16]/25';
+  'w-full rounded-[4px] border border-[#C3D2E0] bg-white px-4 py-3 text-[15px] ink-strong outline-none transition-colors placeholder:text-[#64748B] focus:border-[#C41E16] focus:ring-2 focus:ring-[#C41E16]/25 dark:border-white/15 dark:bg-white/[0.04] dark:placeholder:text-slate-400';
+
+/** Alert/error box: warm red wash on light, deeper red wash on dark. */
+export const AUTH_ALERT =
+  'mt-5 flex items-start gap-3 rounded-[4px] border border-[#F3C9C6] bg-[#FEF2F1] px-4 py-3 text-[14px] dark:border-[#E8231A]/30 dark:bg-[#E8231A]/10';
+
+/** Success box: mint on light, emerald tint on dark. */
+export const AUTH_SUCCESS =
+  'flex items-center gap-3 rounded-[4px] border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3 dark:border-emerald-500/30 dark:bg-emerald-500/10';
 
 /** Label styles: 12px, not the 10px used for decorative metadata elsewhere. */
 export const AUTH_LABEL = 'data-type mb-2 block text-[12px] font-bold uppercase ink-muted';

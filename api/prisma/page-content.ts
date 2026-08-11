@@ -620,6 +620,10 @@ export const careerInfoContent = {
     { name: 'Seek NZ', url: 'seek.co.nz', desc: 'Large job board with thousands of NZ listings', color: '#3B82F6' },
     { name: 'University Careers', url: 'auckland.ac.nz/careers', desc: 'Your university career services portal', color: '#8B5CF6' },
   ],
+  workRightsReminder: {
+    label: 'Student Work Rights Reminder',
+    description: 'On a student visa you can work up to <strong>20 hours/week</strong> during semester and <strong>full-time</strong> during scheduled holidays. Always confirm your specific visa conditions.',
+  },
   cvTips: [
     { title: 'Work Rights as a Student', desc: 'On a student visa, you can work up to 20 hours per week during semester and full-time during scheduled holidays. Confirm your specific conditions in your visa approval letter.', highlight: true, color: '#E8231A' },
     { title: 'Get an IRD Number First', desc: 'Before starting any job, obtain an IRD (tax) number at ird.govt.nz — every employee in NZ needs one.', color: '#3B82F6' },
@@ -632,6 +636,12 @@ export const careerInfoContent = {
     { title: 'Direct Communication', desc: "Kiwis value directness and honesty. It's normal to respectfully push back on ideas or say 'no' when needed.", color: '#F59E0B' },
     { title: 'Work-Life Balance', desc: 'NZ values personal time. Avoid sending work emails late at night or on weekends unless urgent.', color: '#E8231A' },
   ],
+  cta: {
+    title: 'Need Career Advice?',
+    description: 'Ask in the PPIA community — many members have navigated the NZ job market and are happy to help.',
+    buttonText: 'Join the Community',
+    buttonHref: '#membership',
+  },
 };
 
 // ============================================

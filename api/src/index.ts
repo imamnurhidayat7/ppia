@@ -39,8 +39,15 @@ import privateFileRoutes from './routes/privateFiles'
 import { STORAGE_DRIVER, LOCAL_STORAGE_PATHS } from './lib/storage'
 import { securityHeaders } from './middleware/security-headers'
 import { publicReadCache } from './middleware/public-cache'
+import cookieParser from 'cookie-parser'
+import { assertSecretConfigured } from './lib/secrets'
 
 dotenv.config()
+
+// Fail fast at boot if the JWT secret is missing or too short. A missing secret
+// is a configuration error; without this check the API would run in a state
+// where anyone can forge admin tokens.
+assertSecretConfigured()
 
 const app = express()
 const PORT = process.env.PORT || 5000

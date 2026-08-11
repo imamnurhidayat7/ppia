@@ -10,7 +10,7 @@ import { SkeletonTable } from '@/components/ui/Skeleton';
 import { EmptyMembers } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/Toast';
 import { useConfirm, ConfirmHost } from '@/hooks/useConfirm';
-import { PageHeading, useDashboardData } from '@/components/dashboard';
+import { BackButton, useDashboardData } from '@/components/dashboard';
 import { cn, formatDate } from '@/lib/utils';
 import {
   ArrowDown,
@@ -28,15 +28,6 @@ import {
   Users,
   X,
 } from 'lucide-react';
-
-/** Metadata dates read as log entries: 05 Mar 2025. */
-const DATE_OPTS = {
-  dateStyle: undefined,
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-} as const;
-
 
 const POSITIONS = [
   { value: 'PRESIDENT', label: 'President' },
@@ -93,9 +84,9 @@ function statusOf(member: AdminMember): MembershipStatus {
 }
 
 function RoleBadge({ role }: { role: string }) {
-  if (role === 'SUPER_ADMIN') return <Badge variant="danger" className="data-type uppercase">Super Admin</Badge>;
-  if (role === 'BOARD') return <Badge variant="primary" className="data-type uppercase">Board</Badge>;
-  return <Badge variant="default" className="data-type uppercase">Member</Badge>;
+  if (role === 'SUPER_ADMIN') return <Badge variant="danger">Super Admin</Badge>;
+  if (role === 'BOARD') return <Badge variant="primary">Board</Badge>;
+  return <Badge variant="default">Member</Badge>;
 }
 
 function StatusPill({ status }: { status: MembershipStatus }) {
@@ -123,11 +114,11 @@ function StatusPill({ status }: { status: MembershipStatus }) {
   return (
     <span
       className={cn(
-        'data-type inline-flex items-center gap-1.5 rounded-[3px] px-2.5 py-1 text-[12px] font-bold uppercase ring-1',
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1',
         style.className
       )}
     >
-      <span aria-hidden="true" className={cn('h-1.5 w-1.5 rounded-full', style.dot)} />
+      <span className={cn('h-1.5 w-1.5 rounded-full', style.dot)} />
       {style.label}
     </span>
   );
@@ -155,12 +146,12 @@ function SortHeader({
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          'data-type inline-flex items-center gap-1.5 text-[12px] font-bold uppercase transition-colors',
+          'inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide transition-colors',
           active
-            ? 'ink-strong'
-            : 'ink-muted hover:text-slate-800 dark:hover:text-slate-200'
+            ? 'text-slate-900 dark:text-slate-100'
+            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
         )}
-        aria-label={`Sort by ${label}`}
+        aria-label={`Urutkan berdasarkan ${label}`}
       >
         {label}
         {active ? (
@@ -186,7 +177,7 @@ function MembersLoading() {
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[0, 1, 2, 3].map((row) => (
-          <div key={row} className="h-24 rounded-[5px] skeleton" />
+          <div key={row} className="h-24 rounded-2xl skeleton" />
         ))}
       </div>
       <SkeletonTable rows={8} columns={6} />
@@ -245,7 +236,7 @@ function MembersManager() {
       setDivisions(divisionPayload.divisions ?? []);
     } catch (error) {
       const err = error as { message?: string };
-      showError(err.message || 'Could not load member data');
+      showError(err.message || 'Gagal memuat data anggota');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -297,7 +288,7 @@ function MembersManager() {
     return [...result].sort((a, b) => {
       switch (sortKey) {
         case 'name':
-          return factor * (a.name || '').localeCompare(b.name || '', 'en-NZ');
+          return factor * (a.name || '').localeCompare(b.name || '', 'id');
         case 'role':
           return factor * ((ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9));
         case 'status':
@@ -376,20 +367,13 @@ function MembersManager() {
   }, [fetchData, refreshShellData]);
 
   const handleApprove = async (member: AdminMember) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Approve member?',
-      message: `${member.name} will be able to log in and access member features right away.`,
-      confirmLabel: 'Yes, approve',
-      variant: 'warning',
-    });
-    if (!ok) return;
     try {
       await api.approveMember(member.id);
-      showSuccess(`${member.name} approved`);
+      showSuccess(`${member.name} disetujui`);
       await afterMutation();
     } catch (error) {
       const err = error as { message?: string };
-      showError(err.message || 'Could not approve member');
+      showError(err.message || 'Gagal menyetujui anggota');
     }
   };
 
@@ -408,11 +392,11 @@ function MembersManager() {
     if (failed === 0) {
       showSuccess(
         rejectTarget.length === 1
-          ? `Registration for ${rejectTarget[0].name} rejected`
-          : `${rejectTarget.length} registrations rejected`
+          ? `Pendaftaran ${rejectTarget[0].name} ditolak`
+          : `${rejectTarget.length} pendaftaran ditolak`
       );
     } else {
-      showError(`${failed} of ${rejectTarget.length} rejections failed`);
+      showError(`${failed} dari ${rejectTarget.length} penolakan gagal`);
     }
     await afterMutation();
   };
@@ -420,9 +404,9 @@ function MembersManager() {
   const handleBulkApprove = async () => {
     if (selectablePending.length === 0) return;
     const ok = await confirmCtx.confirm({
-      title: `Approve ${selectablePending.length} members?`,
-      message: 'The selected members will be able to log in and access member features right away.',
-      confirmLabel: 'Yes, approve',
+      title: `Setujui ${selectablePending.length} anggota?`,
+      message: 'Anggota terpilih akan langsung bisa masuk dan mengakses fitur member.',
+      confirmLabel: 'Ya, setujui',
     });
     if (!ok) return;
 
@@ -434,24 +418,24 @@ function MembersManager() {
     setBulkBusy(false);
     setSelected(new Set());
     if (failed === 0) {
-      showSuccess(`${selectablePending.length} members approved`);
+      showSuccess(`${selectablePending.length} anggota disetujui`);
     } else {
-      showError(`${failed} of ${selectablePending.length} approvals failed`);
+      showError(`${failed} dari ${selectablePending.length} persetujuan gagal`);
     }
     await afterMutation();
   };
 
   const handleDelete = async (member: AdminMember) => {
     const ok = await confirmCtx.confirm({
-      title: 'Delete member?',
-      message: `${member.name}'s data will be permanently deleted and cannot be undone.`,
-      confirmLabel: 'Yes, delete',
+      title: 'Hapus anggota?',
+      message: `Data ${member.name} akan dihapus permanen dan tidak bisa dibatalkan.`,
+      confirmLabel: 'Ya, hapus',
       variant: 'danger',
     });
     if (!ok) return;
     try {
       await api.deleteMember(member.id);
-      showSuccess('Member deleted');
+      showSuccess('Anggota dihapus');
       setSelected((current) => {
         const next = new Set(current);
         next.delete(member.id);
@@ -460,16 +444,16 @@ function MembersManager() {
       await afterMutation();
     } catch (error) {
       const err = error as { message?: string };
-      showError(err.message || 'Could not delete member');
+      showError(err.message || 'Gagal menghapus anggota');
     }
   };
 
   const handleBulkDelete = async () => {
     if (selectedMembers.length === 0) return;
     const ok = await confirmCtx.confirm({
-      title: `Delete ${selectedMembers.length} members?`,
-      message: 'All selected member data will be permanently deleted. This action cannot be undone.',
-      confirmLabel: 'Yes, delete all',
+      title: `Hapus ${selectedMembers.length} anggota?`,
+      message: 'Semua data anggota terpilih akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+      confirmLabel: 'Ya, hapus semua',
       variant: 'danger',
     });
     if (!ok) return;
@@ -482,9 +466,9 @@ function MembersManager() {
     setBulkBusy(false);
     setSelected(new Set());
     if (failed === 0) {
-      showSuccess(`${selectedMembers.length} members deleted`);
+      showSuccess(`${selectedMembers.length} anggota dihapus`);
     } else {
-      showError(`${failed} of ${selectedMembers.length} deletions failed`);
+      showError(`${failed} dari ${selectedMembers.length} penghapusan gagal`);
     }
     await afterMutation();
   };
@@ -504,12 +488,12 @@ function MembersManager() {
     setSaving(true);
     try {
       await api.updateMember(editingMember.id, formData);
-      showSuccess('Member details updated');
+      showSuccess('Data anggota diperbarui');
       setEditingMember(null);
       await afterMutation();
     } catch (error) {
       const err = error as { message?: string };
-      showError(err.message || 'Could not update member');
+      showError(err.message || 'Gagal memperbarui anggota');
     } finally {
       setSaving(false);
     }
@@ -518,10 +502,10 @@ function MembersManager() {
   /** Exports whatever the current filters show, not the whole table. */
   const exportCsv = () => {
     if (filteredMembers.length === 0) {
-      showError('No data to export');
+      showError('Tidak ada data untuk diekspor');
       return;
     }
-    const headers = ['Name', 'Email', 'Role', 'Position', 'Status', 'Division', 'University', 'Registered'];
+    const headers = ['Nama', 'Email', 'Role', 'Posisi', 'Status', 'Divisi', 'Universitas', 'Terdaftar'];
     const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const rows = filteredMembers.map((member) =>
       [
@@ -542,10 +526,10 @@ function MembersManager() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ppia-members-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `anggota-ppia-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    showSuccess(`${filteredMembers.length} rows exported`);
+    showSuccess(`${filteredMembers.length} baris diekspor`);
   };
 
   if (showSkeleton) {
@@ -555,65 +539,61 @@ function MembersManager() {
   if (!isSuperAdmin) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center text-center">
-        <div aria-hidden="true" style={{ boxShadow: 'inset 0 0 0 1px #F3C9C6, 0 0 0 5px rgba(176,24,18,0.10)' }} className="mb-4 flex h-14 w-14 items-center justify-center rounded-full">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-danger-50 dark:bg-danger-900/40">
           <Ban className="h-7 w-7 text-danger-600 dark:text-danger-300" />
         </div>
-        <h2 className="mb-1 text-lg font-bold ink-strong">Access denied</h2>
-        <p className="text-sm ink-muted">
-          Only Super Admin can manage members.
+        <h2 className="mb-1 text-lg font-bold text-slate-900 dark:text-slate-100">Akses ditolak</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Manajemen anggota hanya untuk Super Admin.
         </p>
       </div>
     );
   }
 
   const statusTabs = [
-    { key: '', label: 'All', count: counts.all, dot: 'bg-slate-400', active: 'bg-[#EDF5FB] dark:bg-slate-800' },
+    { key: '', label: 'Semua', count: counts.all, dot: 'bg-slate-400', active: 'bg-slate-100 dark:bg-slate-800' },
     { key: 'PENDING', label: 'Pending', count: counts.PENDING, dot: 'bg-amber-500', active: 'bg-amber-50 dark:bg-amber-900/25' },
-    { key: 'APPROVED', label: 'Approved', count: counts.APPROVED, dot: 'bg-emerald-500', active: 'bg-emerald-50 dark:bg-emerald-900/25' },
-    { key: 'REJECTED', label: 'Rejected', count: counts.REJECTED, dot: 'bg-danger-500', active: 'bg-danger-50 dark:bg-danger-900/25' },
+    { key: 'APPROVED', label: 'Disetujui', count: counts.APPROVED, dot: 'bg-emerald-500', active: 'bg-emerald-50 dark:bg-emerald-900/25' },
+    { key: 'REJECTED', label: 'Ditolak', count: counts.REJECTED, dot: 'bg-danger-500', active: 'bg-danger-50 dark:bg-danger-900/25' },
   ];
 
   return (
     <div className="animate-fade-in space-y-6">
-      {/*
-        Uses the shared PageHeading like every other admin page. This screen had
-        its own hand-rolled header plus a standalone BackButton, which is why the
-        back control floated on its own with roughly twice the gap of the others.
-      */}
-      <PageHeading
-        icon={Users}
-        title="Manage members"
-        description={
-          counts.all +
-          ' members registered' +
-          (counts.PENDING > 0 ? ` • ${counts.PENDING} pending approval` : '')
-        }
-        backHref="/dashboard/admin"
-        backLabel="Back to admin panel"
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />}
-              onClick={() => {
-                setRefreshing(true);
-                fetchData();
-              }}
-            >
-              Refresh
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<Download className="h-4 w-4" />}
-              onClick={exportCsv}
-            >
-              Export CSV
-            </Button>
-          </>
-        }
-      />
+      <BackButton href="/dashboard/admin" label="Kembali ke Panel Admin" />
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-black text-slate-900 dark:text-slate-50">
+            Manajemen Anggota
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            {counts.all} anggota terdaftar
+            {counts.PENDING > 0 && ` • ${counts.PENDING} menunggu persetujuan`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />}
+            onClick={() => {
+              setRefreshing(true);
+              fetchData();
+            }}
+          >
+            Muat ulang
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<Download className="h-4 w-4" />}
+            onClick={exportCsv}
+          >
+            Ekspor CSV
+          </Button>
+        </div>
+      </div>
 
       {/* Status tabs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -629,19 +609,19 @@ function MembersManager() {
               }}
               aria-pressed={active}
               className={cn(
-                'rounded-[5px] border p-4 text-left transition-all',
+                'rounded-2xl border p-4 text-left transition-all',
                 active
-                  ? cn('border-transparent ring-2 ring-[#C3D2E0] dark:ring-slate-600', tab.active)
-                  : 'chart-paper border-[#DCE7F1] hover:border-[#C3D2E0] dark:border-slate-800 dark:hover:border-slate-700'
+                  ? cn('border-transparent ring-2 ring-slate-300 dark:ring-slate-600', tab.active)
+                  : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700'
               )}
             >
               <span className="flex items-center gap-2">
-                <span aria-hidden="true" className={cn('h-2 w-2 rounded-full', tab.dot)} />
-                <span className="data-type text-[12px] font-bold uppercase ink-muted">
+                <span className={cn('h-2 w-2 rounded-full', tab.dot)} />
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                   {tab.label}
                 </span>
               </span>
-              <span className="data-type mt-1 block font-display text-2xl font-black ink-strong">
+              <span className="mt-1 block font-display text-2xl font-black text-slate-900 dark:text-slate-50">
                 {tab.count}
               </span>
             </button>
@@ -650,20 +630,16 @@ function MembersManager() {
       </div>
 
       {counts.PENDING > 0 && statusFilter !== 'PENDING' && (
-        <div className="flex items-start gap-3 rounded-[5px] border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20">
-          <span
-            aria-hidden="true"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-amber-700 dark:text-amber-300"
-            style={{ boxShadow: 'inset 0 0 0 1px rgba(146,64,14,0.25), 0 0 0 4px rgba(146,64,14,0.08)' }}
-          >
-            <Clock className="h-4 w-4" />
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/50">
+            <Clock className="h-4 w-4 text-amber-700 dark:text-amber-300" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-amber-900 dark:text-amber-100">
-              {counts.PENDING} registrations awaiting a decision
+              {counts.PENDING} pendaftaran menunggu keputusan
             </p>
-            <p className="mt-0.5 text-[13px] text-amber-800 dark:text-amber-200">
-              Select multiple rows at once to approve or reject them in bulk.
+            <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-200">
+              Pilih beberapa baris sekaligus untuk menyetujui atau menolak secara massal.
             </p>
           </div>
           <button
@@ -672,9 +648,9 @@ function MembersManager() {
               setStatusFilter('PENDING');
               setCurrentPage(1);
             }}
-            className="data-type shrink-0 rounded-[3px] bg-white px-3 py-1.5 text-[12px] font-bold uppercase text-amber-800 shadow-sm transition-colors hover:bg-amber-50 dark:bg-slate-800 dark:text-amber-200"
+            className="shrink-0 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-amber-800 shadow-sm transition-colors hover:bg-amber-50 dark:bg-slate-800 dark:text-amber-200"
           >
-            Review
+            Tinjau
           </button>
         </div>
       )}
@@ -682,17 +658,17 @@ function MembersManager() {
       {/* Filters */}
       <div className="flex flex-col gap-3 lg:flex-row">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ink-muted" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
-            placeholder="Search by name, email, university, division…"
+            placeholder="Cari nama, email, universitas, divisi…"
             value={searchQuery}
             onChange={(event) => {
               setSearchQuery(event.target.value);
               setCurrentPage(1);
             }}
-            className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 input-with-icon"
-            aria-label="Search members"
+            className="input-base pl-9"
+            aria-label="Cari anggota"
           />
         </div>
         <select
@@ -701,10 +677,10 @@ function MembersManager() {
             setRoleFilter(event.target.value);
             setCurrentPage(1);
           }}
-          aria-label="Filter by role"
-          className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 lg:w-44"
+          aria-label="Filter role"
+          className="input-base lg:w-44"
         >
-          <option value="">All roles</option>
+          <option value="">Semua role</option>
           {ROLES.map((role) => (
             <option key={role.value} value={role.value}>
               {role.label}
@@ -717,11 +693,11 @@ function MembersManager() {
             setDivisionFilter(event.target.value);
             setCurrentPage(1);
           }}
-          aria-label="Filter by division"
-          className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 lg:w-48"
+          aria-label="Filter divisi"
+          className="input-base lg:w-48"
         >
-          <option value="">All divisions</option>
-          <option value="NONE">No division</option>
+          <option value="">Semua divisi</option>
+          <option value="NONE">Tanpa divisi</option>
           {divisions.map((division) => (
             <option key={division.id} value={division.id}>
               {division.name}
@@ -730,26 +706,22 @@ function MembersManager() {
         </select>
         {hasFilters && (
           <Button variant="ghost" size="md" leftIcon={<X className="h-4 w-4" />} onClick={clearFilters}>
-            Clear filters
+            Reset
           </Button>
         )}
       </div>
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="chart-paper animate-fade-in-up sticky bottom-4 z-20 flex flex-col gap-3 rounded-[5px] border border-[#DCE7F1] p-3 shadow-lg sm:flex-row sm:items-center dark:border-slate-700">
+        <div className="animate-fade-in-up sticky bottom-4 z-20 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg sm:flex-row sm:items-center dark:border-slate-700 dark:bg-slate-900">
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full ink-muted"
-              style={{ boxShadow: 'inset 0 0 0 1px rgba(11,28,46,0.14), 0 0 0 3px rgba(11,28,46,0.05)' }}
-            >
-              <Users className="h-4 w-4" />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
+              <Users className="h-4 w-4 text-slate-500" />
             </span>
-            <p className="data-type text-sm font-semibold ink-strong">
-              {selected.size} selected
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {selected.size} dipilih
               {selectablePending.length > 0 && (
-                <span className="ml-1 font-normal ink-muted">
+                <span className="ml-1 font-normal text-slate-500 dark:text-slate-400">
                   ({selectablePending.length} pending)
                 </span>
               )}
@@ -763,7 +735,7 @@ function MembersManager() {
               disabled={selectablePending.length === 0 || bulkBusy}
               onClick={handleBulkApprove}
             >
-              Approve
+              Setujui
             </Button>
             <Button
               size="sm"
@@ -772,7 +744,7 @@ function MembersManager() {
               disabled={selectablePending.length === 0 || bulkBusy}
               onClick={() => setRejectTarget(selectablePending)}
             >
-              Reject
+              Tolak
             </Button>
             <Button
               size="sm"
@@ -781,29 +753,29 @@ function MembersManager() {
               disabled={bulkBusy}
               onClick={handleBulkDelete}
             >
-              Delete
+              Hapus
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
-              Cancel
+              Batal
             </Button>
           </div>
         </div>
       )}
 
       {/* Table */}
-      <div className="chart-paper overflow-hidden rounded-[5px] border border-[#DCE7F1] dark:border-slate-800">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         {filteredMembers.length === 0 ? (
           hasFilters ? (
             <div className="py-14 text-center">
-              <p className="text-sm font-medium ink-body">
-                No matching members
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                Tidak ada anggota yang cocok
               </p>
               <button
                 type="button"
                 onClick={clearFilters}
                 className="mt-2 text-sm font-semibold text-[#E8231A] hover:underline"
               >
-                Clear filters
+                Reset filter
               </button>
             </div>
           ) : (
@@ -812,19 +784,19 @@ function MembersManager() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="border-b border-[#DCE7F1] bg-[#F5FAFD] dark:border-slate-800 dark:bg-slate-800/50">
+              <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
                 <tr>
                   <th className="w-10 px-4 py-3">
                     <input
                       type="checkbox"
                       checked={pageAllSelected}
                       onChange={togglePageSelection}
-                      aria-label="Select all on this page"
-                      className="h-4 w-4 cursor-pointer rounded-[3px] border-[#C3D2E0] text-[#E8231A] focus:ring-[#E8231A]/30"
+                      aria-label="Pilih semua di halaman ini"
+                      className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#E8231A] focus:ring-[#E8231A]/30"
                     />
                   </th>
                   <SortHeader
-                    label="Member"
+                    label="Anggota"
                     sortKey="name"
                     activeKey={sortKey}
                     direction={sortDirection}
@@ -844,22 +816,22 @@ function MembersManager() {
                     direction={sortDirection}
                     onSort={handleSort}
                   />
-                  <th className="px-4 py-3 text-left data-type text-[12px] font-bold uppercase ink-muted">
-                    Division
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Divisi
                   </th>
                   <SortHeader
-                    label="Registered"
+                    label="Terdaftar"
                     sortKey="createdAt"
                     activeKey={sortKey}
                     direction={sortDirection}
                     onSort={handleSort}
                   />
-                  <th className="px-4 py-3 text-right data-type text-[12px] font-bold uppercase ink-muted">
-                    Actions
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Aksi
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E7EFF7] dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {paginatedMembers.map((member) => {
                   const status = statusOf(member);
                   const isSelected = selected.has(member.id);
@@ -870,7 +842,7 @@ function MembersManager() {
                         'transition-colors',
                         isSelected
                           ? 'bg-[#FFF0EF] dark:bg-[#E8231A]/10'
-                          : 'hover:bg-[#F5FAFD] dark:hover:bg-slate-800/50'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       )}
                     >
                       <td className="px-4 py-3">
@@ -878,8 +850,8 @@ function MembersManager() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelect(member.id)}
-                          aria-label={`Select ${member.name}`}
-                          className="h-4 w-4 cursor-pointer rounded-[3px] border-[#C3D2E0] text-[#E8231A] focus:ring-[#E8231A]/30"
+                          aria-label={`Pilih ${member.name}`}
+                          className="h-4 w-4 cursor-pointer rounded border-slate-300 text-[#E8231A] focus:ring-[#E8231A]/30"
                         />
                       </td>
                       <td className="px-4 py-3">
@@ -888,15 +860,15 @@ function MembersManager() {
                           <div className="min-w-0">
                             <Link
                               href={`/dashboard/admin/members/${member.id}`}
-                              className="block truncate text-sm font-semibold ink-strong hover:underline"
+                              className="block truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
                             >
                               {member.name}
                             </Link>
-                            <p className="truncate text-[12px] ink-muted">
+                            <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                               {member.email}
                             </p>
                             {member.university && (
-                              <p className="truncate text-[12px] ink-muted">{member.university}</p>
+                              <p className="truncate text-xs text-slate-400">{member.university}</p>
                             )}
                           </div>
                         </div>
@@ -904,7 +876,7 @@ function MembersManager() {
                       <td className="px-4 py-3">
                         <RoleBadge role={member.role} />
                         {member.position && (
-                          <p className="mt-1 text-[12px] ink-muted">
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                             {member.position}
                           </p>
                         )}
@@ -915,7 +887,7 @@ function MembersManager() {
                       <td className="px-4 py-3">
                         {member.division ? (
                           <span
-                            className="data-type inline-flex rounded-[3px] px-2 py-1 text-[12px] font-bold uppercase"
+                            className="inline-flex rounded-full px-2 py-1 text-xs font-medium"
                             style={{
                               backgroundColor: `${member.division.color || '#6366F1'}20`,
                               color: member.division.color || '#6366F1',
@@ -924,11 +896,11 @@ function MembersManager() {
                             {member.division.name}
                           </span>
                         ) : (
-                          <span className="text-sm ink-muted">—</span>
+                          <span className="text-sm text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm ink-body">
-                        {formatDate(member.createdAt, DATE_OPTS)}
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                        {formatDate(member.createdAt)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1.5">
@@ -940,7 +912,7 @@ function MembersManager() {
                                 leftIcon={<Check className="h-3.5 w-3.5" />}
                                 onClick={() => handleApprove(member)}
                               >
-                                Approve
+                                Setujui
                               </Button>
                               <Button
                                 size="xs"
@@ -948,30 +920,30 @@ function MembersManager() {
                                 leftIcon={<Ban className="h-3.5 w-3.5" />}
                                 onClick={() => setRejectTarget([member])}
                               >
-                                Reject
+                                Tolak
                               </Button>
                             </>
                           )}
                           <Link
                             href={`/dashboard/admin/members/${member.id}`}
-                            title="View details"
-                            className="flex h-8 w-8 items-center justify-center rounded-[3px] ink-muted transition-colors hover:bg-[#EDF5FB] hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            title="Lihat detail"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
                           <button
                             type="button"
                             onClick={() => openEdit(member)}
-                            title="Edit role & division"
-                            className="flex h-8 w-8 items-center justify-center rounded-[3px] ink-muted transition-colors hover:bg-[#EDF5FB] hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            title="Ubah role & divisi"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(member)}
-                            title="Delete member"
-                            className="flex h-8 w-8 items-center justify-center rounded-[3px] text-danger-600 transition-colors hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-900/30"
+                            title="Hapus anggota"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-danger-600 transition-colors hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-900/30"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -1005,7 +977,7 @@ function MembersManager() {
       <Modal
         isOpen={Boolean(editingMember)}
         onClose={() => setEditingMember(null)}
-        title="Edit member"
+        title="Ubah anggota"
         description={editingMember?.name}
         size="lg"
       >
@@ -1013,7 +985,7 @@ function MembersManager() {
           <div>
             <label
               htmlFor="member-role"
-              className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
             >
               Role
             </label>
@@ -1021,7 +993,7 @@ function MembersManager() {
               id="member-role"
               value={formData.role}
               onChange={(event) => setFormData({ ...formData, role: event.target.value })}
-              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
+              className="input-base"
             >
               {ROLES.map((role) => (
                 <option key={role.value} value={role.value}>
@@ -1034,17 +1006,17 @@ function MembersManager() {
           <div>
             <label
               htmlFor="member-position"
-              className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
             >
-              Position
+              Posisi
             </label>
             <select
               id="member-position"
               value={formData.position}
               onChange={(event) => setFormData({ ...formData, position: event.target.value })}
-              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
+              className="input-base"
             >
-              <option value="">No position</option>
+              <option value="">Tanpa posisi</option>
               {POSITIONS.map((position) => (
                 <option key={position.value} value={position.value}>
                   {position.label}
@@ -1056,17 +1028,17 @@ function MembersManager() {
           <div>
             <label
               htmlFor="member-division"
-              className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
             >
-              Division
+              Divisi
             </label>
             <select
               id="member-division"
               value={formData.divisionId}
               onChange={(event) => setFormData({ ...formData, divisionId: event.target.value })}
-              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700"
+              className="input-base"
             >
-              <option value="">No division</option>
+              <option value="">Tanpa divisi</option>
               {divisions.map((division) => (
                 <option key={division.id} value={division.id}>
                   {division.name}
@@ -1074,18 +1046,18 @@ function MembersManager() {
               ))}
             </select>
             {formData.role === 'BOARD' && !formData.divisionId && !formData.position && (
-              <p className="mt-1.5 text-[12px] text-amber-600 dark:text-amber-400">
-                The Board role requires a division or position.
+              <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+                Role Board memerlukan divisi atau posisi.
               </p>
             )}
           </div>
 
           <ModalFooter>
             <Button type="button" variant="secondary" onClick={() => setEditingMember(null)}>
-              Cancel
+              Batal
             </Button>
             <Button type="submit" variant="primary" isLoading={saving}>
-              Save changes
+              Simpan perubahan
             </Button>
           </ModalFooter>
         </form>
@@ -1100,13 +1072,13 @@ function MembersManager() {
         }}
         title={
           rejectTarget && rejectTarget.length > 1
-            ? `Reject ${rejectTarget.length} registrations`
-            : 'Reject registration'
+            ? `Tolak ${rejectTarget.length} pendaftaran`
+            : 'Tolak pendaftaran'
         }
         description={
           rejectTarget && rejectTarget.length === 1
             ? rejectTarget[0].name
-            : 'The same reason will be used for all selected members.'
+            : 'Alasan yang sama akan dipakai untuk semua anggota terpilih.'
         }
         size="lg"
       >
@@ -1114,20 +1086,20 @@ function MembersManager() {
           <div>
             <label
               htmlFor="reject-reason"
-              className="data-type mb-2 block text-[12px] font-bold uppercase ink-muted"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
             >
-              Rejection reason <span className="ink-muted">(optional)</span>
+              Alasan penolakan <span className="text-slate-400">(opsional)</span>
             </label>
             <textarea
               id="reject-reason"
               rows={4}
               value={rejectReason}
               onChange={(event) => setRejectReason(event.target.value)}
-              placeholder="For example: the student details could not be verified."
-              className="input-base rounded-[4px] border-[#C3D2E0] dark:border-slate-700 resize-none"
+              placeholder="Contoh: data mahasiswa tidak dapat diverifikasi."
+              className="input-base resize-none"
             />
-            <p className="mt-1.5 text-[12px] ink-muted">
-              This reason is saved on the member record and can be reviewed later.
+            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+              Alasan ini tersimpan pada data anggota dan bisa dilihat kembali nanti.
             </p>
           </div>
           <ModalFooter>
@@ -1139,10 +1111,10 @@ function MembersManager() {
                 setRejectReason('');
               }}
             >
-              Cancel
+              Batal
             </Button>
             <Button type="button" variant="danger" isLoading={bulkBusy} onClick={submitReject}>
-              Reject registration
+              Tolak pendaftaran
             </Button>
           </ModalFooter>
         </div>

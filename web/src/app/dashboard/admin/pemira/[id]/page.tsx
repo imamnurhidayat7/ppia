@@ -8,6 +8,7 @@ import api from '@/lib/api';
 import { useToast } from '@/components/Toast';
 import { useConfirm, ConfirmHost } from '@/hooks/useConfirm';
 import { Badge, Button, Modal, ModalFooter } from '@/components/ui';
+import FormFieldsEditor from '@/components/pemira/admin/FormFieldsEditor';
 import {
   AccessDenied,
   DetailItem,
@@ -414,6 +415,17 @@ export default function ManageElectionPage() {
           </Button>
         </SectionCard>
       </div>
+
+      {/* Custom registration form fields. Lets the admin replace the default
+          Vision/Mission questions with bespoke prompts, choice questions, or
+          image uploads tailored to this election. */}
+      <SectionCard
+        title="Registration form fields"
+        description="Replace the default vision/mission questions with custom prompts for this election."
+        icon={Settings2}
+      >
+        <FormFieldsEditor electionId={election.id} />
+      </SectionCard>
 
       {/* Danger zone: removing the last election also drops PEMIRA from the
           public header, so it is called out on its own rather than tucked in

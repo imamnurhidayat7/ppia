@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Mail } from 'lucide-react';
-import AuthShell, { AUTH_FIELD, AUTH_LABEL } from '@/components/auth/AuthShell';
+import AuthShell, { AUTH_FIELD, AUTH_LABEL, AUTH_ALERT, AUTH_SUCCESS } from '@/components/auth/AuthShell';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center">
             <span
               aria-hidden="true"
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white"
+              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-white/[0.06]"
               style={{ boxShadow: 'inset 0 0 0 1px #A7F3D0, 0 0 0 5px rgba(4,120,87,0.10)' }}
             >
               <CheckCircle2 size={30} className="text-[#047857]" />
@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
             {error && (
               <div
                 role="alert"
-                className="mt-5 flex items-start gap-3 rounded-[4px] border border-[#F3C9C6] bg-[#FEF2F1] px-4 py-3 text-[14px]"
+                className={AUTH_ALERT}
                 style={{ color: '#8F120D' }}
               >
                 <AlertCircle size={17} className="mt-0.5 shrink-0" aria-hidden="true" />

@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock } from 'lucide-react';
-import AuthShell, { AUTH_FIELD, AUTH_LABEL } from '@/components/auth/AuthShell';
+import AuthShell, { AUTH_FIELD, AUTH_LABEL, AUTH_ALERT } from '@/components/auth/AuthShell';
 import AuthNotice from '@/components/auth/AuthNotice';
 
 function ResetPasswordContent() {
@@ -108,7 +108,7 @@ function ResetPasswordContent() {
       {error && (
         <div
           role="alert"
-          className="mt-5 flex items-start gap-3 rounded-[4px] border border-[#F3C9C6] bg-[#FEF2F1] px-4 py-3 text-[14px]"
+          className={AUTH_ALERT}
           style={{ color: '#8F120D' }}
         >
           <AlertCircle size={17} className="mt-0.5 shrink-0" aria-hidden="true" />

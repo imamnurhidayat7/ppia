@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { AlertCircle, ArrowRight, Eye, EyeOff, Anchor } from 'lucide-react';
-import AuthShell, { AUTH_FIELD, AUTH_LABEL } from '@/components/auth/AuthShell';
+import AuthShell, { AUTH_FIELD, AUTH_LABEL, AUTH_ALERT } from '@/components/auth/AuthShell';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -16,11 +16,21 @@ export default function LoginPage() {
   const { login, user } = useAuth();
   const router = useRouter();
 
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next');
+
   useEffect(() => {
-    if (user) {
-      router.replace(user.role === 'SUPER_ADMIN' || user.role === 'BOARD' ? '/dashboard/admin' : '/dashboard');
+    if (!user) return;
+    if (next && next.startsWith('/') && !next.startsWith('//')) {
+      // Hard redirect avoids client-side router race conditions that can
+      // occur right after login (e.g. the dashboard layout also pushing a
+      // navigation). A full page load re-initialises auth from the token,
+      // so the target page mounts already authenticated.
+      window.location.href = next;
+      return;
     }
-  }, [user, router]);
+    router.replace(user.role === 'SUPER_ADMIN' || user.role === 'BOARD' ? '/dashboard/admin' : '/dashboard');
+  }, [user, router, next]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +90,7 @@ export default function LoginPage() {
         {error && (
           <div
             role="alert"
-            className="mt-5 flex items-start gap-3 rounded-[4px] border border-[#F3C9C6] bg-[#FEF2F1] px-4 py-3 text-[14px]"
+            className={AUTH_ALERT}
             style={{ color: '#8F120D' }}
           >
             <AlertCircle size={17} className="mt-0.5 shrink-0" aria-hidden="true" />
@@ -171,5 +181,13 @@ export default function LoginPage() {
         </p>
       </div>
     </AuthShell>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

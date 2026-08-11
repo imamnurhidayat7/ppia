@@ -25,9 +25,9 @@ export default function DashboardRootLayout({ children }: DashboardLayoutProps) 
   // already hydration-stable without a separate `mounted` flag.
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push(pathname ? `/login?next=${encodeURIComponent(pathname)}` : '/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, pathname]);
 
   if (isLoading) {
     return (

@@ -66,7 +66,7 @@ const API_URL = (process.env.API_URL || 'http://localhost:4000')
   .trim()
   .replace(/\/+$/, '');
 
-const SIGNING_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this';
+import { getSigningSecret } from './secrets';
 
 let cached: SupabaseClient | null = null;
 
@@ -163,7 +163,7 @@ export async function uploadPrivateObject(
 /** HMAC over the key and expiry, so a local link cannot be forged or extended. */
 function signLocalKey(objectPath: string, expiresAt: number): string {
   return crypto
-    .createHmac('sha256', SIGNING_SECRET)
+    .createHmac('sha256', getSigningSecret())
     .update(`${objectPath}:${expiresAt}`)
     .digest('hex');
 }

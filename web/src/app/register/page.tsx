@@ -19,7 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import api from '@/lib/api';
-import AuthShell, { AUTH_FIELD, AUTH_LABEL } from '@/components/auth/AuthShell';
+import AuthShell, { AUTH_FIELD, AUTH_LABEL, AUTH_ALERT, AUTH_SUCCESS } from '@/components/auth/AuthShell';
 
 const DEGREES = [
   { value: 'BACHELOR', label: 'Bachelor' },
@@ -45,7 +45,7 @@ const STEP_TITLE: Record<Step, string> = {
 };
 
 const inputCls = AUTH_FIELD;
-const selectCls = `${AUTH_FIELD} appearance-none`;
+const selectCls = `${AUTH_FIELD} appearance-none [&>option]:dark:bg-[#0F1B2B] [&>option]:dark:text-slate-100`;
 const labelCls = AUTH_LABEL;
 
 /** Required-field marker. Colour meets AA on the card; the text carries the meaning. */
@@ -152,7 +152,7 @@ export default function RegisterPage() {
         >
           <span
             aria-hidden="true"
-            className="mx-auto block h-8 w-8 animate-spin rounded-full border-2 border-[#DCE7F1] border-t-[#C41E16]"
+            className="mx-auto block h-8 w-8 animate-spin rounded-full border-2 border-[#DCE7F1] border-t-[#C41E16] dark:border-white/15 dark:border-t-[#C41E16]"
           />
           <p className="data-type mt-5 text-[12px] font-bold uppercase ink-muted">
             Checking registration availability…
@@ -278,7 +278,7 @@ export default function RegisterPage() {
         {error && (
           <div
             role="alert"
-            className="mt-5 flex items-start gap-3 rounded-[4px] border border-[#F3C9C6] bg-[#FEF2F1] px-4 py-3 text-[14px]"
+            className={AUTH_ALERT}
             style={{ color: '#8F120D' }}
           >
             <AlertCircle size={17} className="mt-0.5 shrink-0" aria-hidden="true" />
@@ -313,13 +313,13 @@ export default function RegisterPage() {
               <label className={labelCls}>LoA / CoE / LoG <Req /></label>
               <p className="data-type mb-2 text-[12px] uppercase ink-muted">PDF · max 2 MB</p>
               {!loaCoeFile ? (
-                <label htmlFor="loaCoe" className="flex cursor-pointer flex-col items-center gap-2 rounded-[4px] border-2 border-dashed border-[#C3D2E0] bg-white py-7 transition-colors hover:border-[#C41E16]">
+                <label htmlFor="loaCoe" className="flex cursor-pointer flex-col items-center gap-2 rounded-[4px] border-2 border-dashed border-[#C3D2E0] bg-white py-7 transition-colors hover:border-[#C41E16] dark:border-white/20 dark:bg-white/[0.03] dark:hover:border-[#C41E16]">
                   <Upload size={22} className="ink-muted" aria-hidden="true" />
                   <span className="text-[14px] font-medium ink-body">Click to upload</span>
                   <input type="file" id="loaCoe" accept="application/pdf" onChange={handleLoaCoe} className="hidden" />
                 </label>
               ) : (
-                <div className="flex items-center gap-3 rounded-[4px] border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3">
+                <div className={AUTH_SUCCESS + ' px-4 py-3'}>
                   <FileText size={18} className="shrink-0 text-[#047857]" aria-hidden="true" />
                   <span className="flex-1 truncate text-[14px] ink-strong">{loaCoeFile.name}</span>
                   <button type="button" aria-label="Remove uploaded document" onClick={()=>setLoaCoeFile(null)} className="rounded-[3px] p-1 ink-muted transition-colors hover:text-[#B01812]"><X size={16} /></button>
@@ -332,7 +332,7 @@ export default function RegisterPage() {
           {/* Step 3: Confirm */}
           {step === 3 && (<>
             {/* Review reads as a filled-in manifest rather than a grey box. */}
-            <div className="rounded-[4px] border border-[#DCE7F1] bg-white p-5">
+            <div className="rounded-[4px] border border-[#DCE7F1] bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="data-type text-[12px] font-bold uppercase ink-muted">Review your details</p>
               <span aria-hidden="true" className="rope-rule my-3 block opacity-70" />
               <dl className="space-y-2.5 text-[15px]">
@@ -351,13 +351,13 @@ export default function RegisterPage() {
               </dl>
             </div>
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-[4px] border border-[#DCE7F1] bg-white p-4">
-              <input type="checkbox" name="consent" checked={formData.consent} onChange={set} className="mt-0.5 h-5 w-5 rounded border-[#C3D2E0] text-[#C41E16] focus:ring-[#C41E16]" />
+            <label className="flex cursor-pointer items-start gap-3 rounded-[4px] border border-[#DCE7F1] bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+              <input type="checkbox" name="consent" checked={formData.consent} onChange={set} className="mt-0.5 h-5 w-5 rounded border-[#C3D2E0] text-[#C41E16] focus:ring-[#C41E16] dark:border-white/25 dark:bg-white/[0.04]" />
               <span className="text-[15px] leading-relaxed ink-body">Register for UoA Engage (optional)</span>
             </label>
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-[4px] border border-[#DCE7F1] bg-white p-4">
-              <input type="checkbox" name="confirmation" required checked={formData.confirmation} onChange={set} className="mt-0.5 h-5 w-5 rounded border-[#C3D2E0] text-[#C41E16] focus:ring-[#C41E16]" />
+            <label className="flex cursor-pointer items-start gap-3 rounded-[4px] border border-[#DCE7F1] bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+              <input type="checkbox" name="confirmation" required checked={formData.confirmation} onChange={set} className="mt-0.5 h-5 w-5 rounded border-[#C3D2E0] text-[#C41E16] focus:ring-[#C41E16] dark:border-white/25 dark:bg-white/[0.04]" />
               <span className="text-[15px] leading-relaxed ink-body">
                 I agree to the{' '}
                 <Link href="/legal/privacy-policy" className="accent-label font-semibold hover:underline">Privacy Policy</Link>
@@ -371,7 +371,7 @@ export default function RegisterPage() {
           {/* Navigation */}
           <div className="flex items-center gap-3 pt-2">
             {step > 0 && (
-              <button type="button" onClick={() => setStep((step - 1) as Step)} className="flex items-center gap-1.5 rounded-[4px] border border-[#C3D2E0] bg-white px-5 py-3 text-[15px] font-medium ink-strong transition-colors hover:bg-[#F5FAFD]">
+              <button type="button" onClick={() => setStep((step - 1) as Step)} className="flex items-center gap-1.5 rounded-[4px] border border-[#C3D2E0] bg-white px-5 py-3 text-[15px] font-medium ink-strong transition-colors hover:bg-[#F5FAFD] dark:border-white/15 dark:bg-white/[0.04] dark:hover:bg-white/[0.08]">
                 <ArrowLeft size={16} aria-hidden="true" />Back
               </button>
             )}

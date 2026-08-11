@@ -32,18 +32,18 @@ export default function RegistrationPendingPage() {
           <strong className="ink-strong">awaiting admin approval</strong>.
         </p>
 
-        <div className="rounded-[4px] border border-[#FDE68A] bg-[#FFFBEB] p-4">
+        <div className="rounded-[4px] border border-[#FDE68A] bg-[#FFFBEB] p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
           <p className="data-type flex items-center gap-2 text-[12px] font-bold uppercase" style={{ color: '#92400E' }}>
             <Clock size={14} aria-hidden="true" />
             What happens next
           </p>
-          <p className="mt-2 text-[15px] leading-relaxed" style={{ color: '#78350F' }}>
+          <p className="mt-2 text-[15px] leading-relaxed dark:text-amber-100" style={{ color: '#78350F' }}>
             Our team reviews your application. Once approved you can sign in and join the PPIA WhatsApp community
             group.
           </p>
         </div>
 
-        <div className="flex items-start gap-3 rounded-[4px] border border-[#DCE7F1] bg-white p-4">
+        <div className="flex items-start gap-3 rounded-[4px] border border-[#DCE7F1] bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
           <MessageCircle size={17} className="mt-0.5 shrink-0 text-[#0F7A3D]" aria-hidden="true" />
           <p className="text-[15px] leading-relaxed ink-body">
             The invite link arrives with your approval e-mail.
