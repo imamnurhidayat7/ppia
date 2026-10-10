@@ -66,6 +66,99 @@ const API_URL = (process.env.API_URL || 'http://localhost:4000')
   .trim()
   .replace(/\/+$/, '');
 
+/**
+ * Public base URL under which stored object keys resolve to browser-loadable
+ * URLs. This is the seam that makes moving file storage a config change:
+ * database rows keep the stable object KEY (e.g. `1720000000-123.png`), and
+ * only this base changes when files move from Supabase to a Hostinger VPS,
+ * a CDN, or anything else that can serve bytes over HTTP.
+ *
+ * Resolution order:
+ *   1. `PUBLIC_FILES_BASE_URL` when set explicitly (CDN or custom domain).
+ *   2. The Supabase public-object base for the configured bucket.
+ *   3. `${API_URL}/uploads` (local driver: Express serves that directory).
+ */
+function readEnv(name: string): string {
+  return (process.env[name] || '').split('#')[0].trim();
+}
+
+export function supabasePublicBase(): string | null {
+  if (!url) return null;
+  return `${url.replace(/\/+$/, '')}/storage/v1/object/public/${PUBLIC_BUCKET}`;
+}
+
+export function resolvePublicBase(env: {
+  explicit?: string;
+  driver: StorageDriver;
+  apiUrl: string;
+  supabaseBase: string | null;
+}): string {
+  const explicit = (env.explicit || '').replace(/\/+$/, '');
+  if (explicit) return explicit;
+  if (env.driver === 'supabase' && env.supabaseBase) return env.supabaseBase;
+  return `${env.apiUrl.replace(/\/+$/, '')}/uploads`;
+}
+
+export const PUBLIC_FILES_BASE_URL: string = resolvePublicBase({
+  explicit: readEnv('PUBLIC_FILES_BASE_URL'),
+  driver: STORAGE_DRIVER,
+  apiUrl: API_URL,
+  supabaseBase: supabasePublicBase(),
+});
+
+/** Extra historical base URLs, for the one-off key normalisation script. */
+export function legacyPublicBases(): string[] {
+  const extra = readEnv('LEGACY_PUBLIC_BASES')
+    .split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  const known = [PUBLIC_FILES_BASE_URL, supabasePublicBase(), `${API_URL}/uploads`];
+  return Array.from(new Set([...known.filter((b): b is string => !!b), ...extra]));
+}
+
+/** True for fully-qualified browser URLs (and data:/blob: payloads). */
+export function isAbsoluteUrl(value?: string | null): boolean {
+  if (!value) return false;
+  return /^(https?:\/\/|data:|blob:)/i.test(value);
+}
+
+/**
+ * Build the browser-loadable URL for a stored object key.
+ * Absolute values (legacy rows, pasted external URLs) pass through untouched.
+ */
+export function publicUrlForKey(key: string): string {
+  if (isAbsoluteUrl(key)) return key;
+  const clean = key.replace(/^\/+/, '');
+  return `${PUBLIC_FILES_BASE_URL}/${clean}`;
+}
+
+/**
+ * Reduce a stored value to its stable object key, or null when the value is
+ * not one of ours (external URLs, site assets like `/logo.svg`).
+ *
+ * Bare keys (`1720000000-123.png`, `loa-coe/x.pdf`) and `/uploads/<key>`
+ * relatives pass through; absolute URLs only match against the known storage
+ * prefixes so unrelated links are never mangled.
+ */
+export function storedKeyForValue(
+  value?: string | null,
+  prefixes: string[] = legacyPublicBases()
+): string | null {
+  if (!value) return null;
+  if (!isAbsoluteUrl(value)) {
+    if (value.startsWith('/uploads/')) return value.slice('/uploads/'.length);
+    if (value.startsWith('/')) return null;
+    return isSafeObjectKey(value) ? value : null;
+  }
+  for (const prefix of prefixes) {
+    if (prefix && value.startsWith(`${prefix}/`)) {
+      const key = value.slice(prefix.length + 1);
+      if (isSafeObjectKey(key)) return key;
+    }
+  }
+  return null;
+}
+
 import { getSigningSecret } from './secrets';
 
 let cached: SupabaseClient | null = null;
@@ -115,18 +208,22 @@ async function writeLocal(baseDir: string, objectPath: string, buffer: Buffer): 
 }
 
 /**
- * Upload a buffer to public storage and return a URL the browser can load.
+ * Upload a buffer to public storage.
+ *
+ * Returns both forms: `url` is the absolute URL for immediate display, `key`
+ * is the stable storage key callers must persist. Keys survive a storage move
+ * (only `PUBLIC_FILES_BASE_URL` changes); absolute URLs do not.
  * `objectPath` is the key, e.g. `1720000000-123.png`.
  */
 export async function uploadPublicObject(
   objectPath: string,
   buffer: Buffer,
   contentType: string
-): Promise<string> {
+): Promise<{ url: string; key: string }> {
   if (STORAGE_DRIVER === 'local') {
     await writeLocal(LOCAL_PUBLIC_DIR, objectPath, buffer);
     // Served by the static handler mounted at /uploads in index.ts.
-    return `${API_URL}/uploads/${objectPath}`;
+    return { url: `${API_URL}/uploads/${objectPath}`, key: objectPath };
   }
 
   const sb = client();
@@ -134,7 +231,10 @@ export async function uploadPublicObject(
     .from(PUBLIC_BUCKET)
     .upload(objectPath, buffer, { contentType, upsert: false });
   if (error) throw new Error(`Storage upload failed: ${error.message}`);
-  return sb.storage.from(PUBLIC_BUCKET).getPublicUrl(objectPath).data.publicUrl;
+  return {
+    url: sb.storage.from(PUBLIC_BUCKET).getPublicUrl(objectPath).data.publicUrl,
+    key: objectPath,
+  };
 }
 
 /**

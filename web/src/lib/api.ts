@@ -602,12 +602,14 @@ class ApiClient {
     return response.data;
   }
 
-  // Upload an image to the public bucket. Returns the public URL.
+  // Upload an image to the public bucket. Returns the public URL (for
+  // immediate preview) and the stable storage key (the value to persist —
+  // keys survive a file-storage move, absolute URLs do not).
   // NOTE: Do NOT set `Content-Type: multipart/form-data` manually — axios
   // must compute the multipart boundary itself, otherwise multer on the
   // server sees the body as a non-multipart stream and `req.file` is
   // undefined, surfacing as a misleading "No file uploaded" 400.
-  async uploadImage(file: File): Promise<{ url: string }> {
+  async uploadImage(file: File): Promise<{ url: string; key?: string }> {
     const formData = new FormData();
     formData.append('file', file);
 

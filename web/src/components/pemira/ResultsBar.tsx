@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Crown, Trophy } from 'lucide-react';
-import { API_ORIGIN } from '@/lib/api-base';
+import { getImageUrl as getFullUrl } from '@/lib/utils';
 
 interface Result {
   id: string;
@@ -12,13 +12,6 @@ interface Result {
   slogan?: string;
   voteCount: number;
   percentage: number;
-}
-
-const API_BASE_URL = API_ORIGIN;
-function getFullUrl(url?: string | null) {
-  if (!url) return undefined;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
 }
 
 export default function ResultsBar({ results, totalVotes }: { results: Result[]; totalVotes: number }) {

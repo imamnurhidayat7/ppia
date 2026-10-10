@@ -8,6 +8,7 @@ import { Menu, X, ChevronDown, User, UserCircle, LogOut } from "lucide-react";
 import GlobalSearch from "./GlobalSearch";
 import { useLanguage } from "@/lib/language-context";
 import { useMenuItems } from "@/lib/hooks/use-menu-items";
+import { ThemeToggleButton } from "@/components/dashboard/theme-toggle";
 import type { MenuItem } from "@/lib/api-types";
 
 /**
@@ -211,6 +212,7 @@ export default function Navbar() {
 
         {/* Search & CTA */}
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggleButton />
           <GlobalSearch />
           {isAuthenticated && user ? (
             <div className="relative" ref={userMenuRef}>
@@ -297,14 +299,17 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden text-white p-2"
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* Mobile controls: theme toggle + menu toggle */}
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggleButton />
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-white p-2"
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}

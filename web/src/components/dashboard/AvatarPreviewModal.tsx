@@ -112,9 +112,13 @@ export default function AvatarPreviewModal({
     try {
       const res = await api.uploadImage(selectedFile);
       const apiBase = API_ORIGIN;
-      const avatarUrl = res.url.startsWith('http') ? res.url : `${apiBase}${res.url}`;
-      await api.updateProfile({ avatar: avatarUrl });
-      if (onAvatarUpdated) await onAvatarUpdated(avatarUrl);
+      const previewableUrl = res.url.startsWith('http') ? res.url : `${apiBase}${res.url}`;
+      // Persist the storage KEY, not the URL: keys stay valid when file
+      // storage moves hosts (only the files base URL changes). Readers
+      // resolve keys via getImageUrl; absolute legacy URLs keep working.
+      const storedValue = res.key ?? previewableUrl;
+      await api.updateProfile({ avatar: storedValue });
+      if (onAvatarUpdated) await onAvatarUpdated(storedValue);
       showSuccess('Profile photo updated');
       onClose();
     } catch (error) {

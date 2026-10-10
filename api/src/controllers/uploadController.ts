@@ -104,7 +104,7 @@ export const uploadDocument = multer({
   limits: { fileSize: 2 * 1024 * 1024, files: 1 },
 });
 
-/** Image upload → public bucket. Returns a public URL. */
+/** Image upload → public bucket. Returns the display URL and the stable key. */
 export const uploadFile = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
@@ -125,10 +125,18 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
     }
 
     const objectName = uniqueName(check.ext);
-    const publicUrl = await uploadPublicObject(objectName, req.file.buffer, req.file.mimetype);
+    // Persist `key`, not `url`: keys stay valid when file storage moves to a
+    // new host (only PUBLIC_FILES_BASE_URL changes), absolute URLs do not.
+    // `url` remains for immediate preview rendering.
+    const { url: publicUrl, key } = await uploadPublicObject(
+      objectName,
+      req.file.buffer,
+      req.file.mimetype
+    );
 
     res.json({
       url: publicUrl,
+      key,
       filename: objectName,
       mimetype: req.file.mimetype,
       size: req.file.size,

@@ -20,6 +20,7 @@
     "db:verify-content-contract": "tsx prisma/verify-page-content-contract.ts",
     "db:audit-public-content": "tsx prisma/audit-public-content-contract.ts",
     "mail:test": "tsx scripts/send-test-email.ts",
+    "storage:normalize-keys": "tsx scripts/normalize-storage-keys.ts",
     "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "node --import tsx --test \"src/**/*.test.ts\""
   },

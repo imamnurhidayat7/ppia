@@ -48,10 +48,16 @@ export function ImageUploader({
 
       if (response.ok) {
         const data = await response.json();
-        const fullUrl = data.url.startsWith('http://') || data.url.startsWith('https://')
-          ? data.url
-          : `${API_URL}${data.url}`;
-        onChange?.(fullUrl);
+        // Persist the storage key when the API provides one: keys stay valid
+        // when file storage moves hosts, absolute URLs do not. The preview
+        // below resolves keys via getImageUrl, so both shapes render.
+        const storedValue: string =
+          typeof data.key === 'string' && data.key.length > 0
+            ? data.key
+            : data.url.startsWith('http://') || data.url.startsWith('https://')
+              ? data.url
+              : `${API_URL}${data.url}`;
+        onChange?.(storedValue);
         return;
       }
       throw new Error('Upload failed');

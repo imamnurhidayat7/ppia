@@ -21,6 +21,36 @@ const API_ORIGIN = (() => {
 })();
 
 /**
+ * Origin of the public files base (see NEXT_PUBLIC_FILES_BASE_URL). Stored
+ * file values are keys resolved against this base at display time, so the
+ * browser loads them directly (Avatar uses `unoptimized`) and the host must
+ * be an explicit `img-src` entry — a missing host is exactly the "broken in
+ * list, fine in detail" symptom. Falls back to the API origin, matching the
+ * `FILES_BASE_URL` default in lib/api-base.ts.
+ */
+const FILES_ORIGIN = (() => {
+  const raw = process.env.NEXT_PUBLIC_FILES_BASE_URL;
+  if (raw) {
+    try {
+      return new URL(raw).origin;
+    } catch {
+      return '';
+    }
+  }
+  return API_ORIGIN;
+})();
+
+/**
+ * Extra image hosts (NEXT_PUBLIC_IMAGE_HOSTS, comma-separated): a previous
+ * storage host kept alive during a migration transition, a CDN, etc. Adding
+ * a host is config, not a code edit.
+ */
+const EXTRA_IMAGE_HOSTS = (process.env.NEXT_PUBLIC_IMAGE_HOSTS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+/**
  * Content-Security-Policy for the app.
  *
  * Two entries are load-bearing and cannot simply be tightened:
@@ -53,6 +83,8 @@ const buildCsp = (): string => {
     'https://plus.unsplash.com',
     'https://picsum.photos',
     API_ORIGIN,
+    FILES_ORIGIN,
+    ...EXTRA_IMAGE_HOSTS,
   ].filter(Boolean);
 
   const connectSrc = [

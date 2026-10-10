@@ -23,6 +23,7 @@ import type {
 import {
   Button,
   Input,
+  Select,
   Tabs,
   TabsContent,
   TabsList,
@@ -784,14 +785,12 @@ function ContactEditor({
               </div>
               <FormGrid columns={2}>
                 <Field label="Icon" htmlFor={`ch-icon-${i}`}>
-                  <select
+                  <Select
                     id={`ch-icon-${i}`}
                     value={ch.icon}
                     onChange={(e) => updateChannel(i, { icon: e.target.value })}
-                    className={FIELD_CLASS}
-                  >
-                    {ICON_OPTIONS.map((ic) => (<option key={ic} value={ic}>{ic}</option>))}
-                  </select>
+                    options={ICON_OPTIONS.map((ic) => ({ value: ic, label: ic }))}
+                  />
                 </Field>
                 <Field label="Color" htmlFor={`ch-color-${i}`} hint="Hex e.g. #E8231A">
                   <Input id={`ch-color-${i}`} value={ch.color} onChange={(e) => updateChannel(i, { color: e.target.value })} placeholder="#E8231A" />
@@ -835,12 +834,11 @@ function ContactEditor({
                 <Input id={`faq-q-${i}`} value={faq.q} onChange={(e) => updateFAQ(i, { q: e.target.value })} placeholder="How do I join?" />
               </Field>
               <Field label="Answer (HTML supported)" htmlFor={`faq-a-${i}`}>
-                <textarea
+                <Textarea
                   id={`faq-a-${i}`}
                   value={faq.a}
                   onChange={(e) => updateFAQ(i, { a: e.target.value })}
                   rows={4}
-                  className={FIELD_CLASS}
                   placeholder="Registration is free. Click Join in the nav..."
                 />
               </Field>

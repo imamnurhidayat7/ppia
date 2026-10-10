@@ -36,7 +36,7 @@ import faqRoutes from './routes/faqs'
 import bookmarkRoutes from './routes/bookmarks'
 import notificationRoutes from './routes/notifications'
 import privateFileRoutes from './routes/privateFiles'
-import { STORAGE_DRIVER, LOCAL_STORAGE_PATHS } from './lib/storage'
+import { STORAGE_DRIVER, LOCAL_STORAGE_PATHS, PUBLIC_FILES_BASE_URL } from './lib/storage'
 import { securityHeaders } from './middleware/security-headers'
 import { publicReadCache } from './middleware/public-cache'
 import cookieParser from 'cookie-parser'
@@ -200,6 +200,10 @@ app.listen(PORT, () => {
       ? `Storage: local disk — public ${LOCAL_STORAGE_PATHS.public}, private ${LOCAL_STORAGE_PATHS.private}`
       : 'Storage: Supabase Storage'
   )
+  // The public base is what turns stored object keys into browser URLs. When
+  // files move hosts, this line is what the operator checks — the keys in the
+  // database stay untouched.
+  console.log(`Public files base: ${PUBLIC_FILES_BASE_URL}`)
 })
 
 export default app

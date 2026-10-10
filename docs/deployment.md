@@ -70,6 +70,39 @@ If you deliberately run the local driver in production, mount a persistent volum
 at `STORAGE_LOCAL_DIR` (or the API's working directory) covering both `uploads/`
 and `storage/private/`.
 
+## Moving file storage without code changes
+
+Database rows store stable object KEYS, not absolute URLs, and both apps resolve
+keys through a configured base (`PUBLIC_FILES_BASE_URL` on the API,
+`NEXT_PUBLIC_FILES_BASE_URL` on the web). Moving files between hosts is therefore
+config + copy + one command. Example: Supabase Storage → Hostinger VPS disk:
+
+1. **Prepare the VPS.** Deploy the API with `DATA_SOURCE=supabase` (database stays
+   put) + `STORAGE_DRIVER=local` + `STORAGE_LOCAL_DIR=/data/ppia` (a persistent
+   path), and serve `/uploads` from that directory via nginx, as in
+   [Reverse proxy](#reverse-proxy) above. Set `API_URL` to the API's real public
+   URL. Leave `PUBLIC_FILES_BASE_URL` empty — it defaults to
+   `${API_URL}/uploads`.
+2. **Copy the objects.** Download every object from the Supabase `uploads` bucket
+   (and `PPIA_Private`) and place them under `/data/ppia/uploads/` (and
+   `storage/private/`) with the **same keys**. Object keys are flat
+   (`<timestamp>-<rand>.<ext>`), so this is a 1:1 copy.
+3. **Normalise legacy rows.** Rows written before key-based uploads hold absolute
+   URLs. From `api/`, with `LEGACY_PUBLIC_BASES` listing any retired bases:
+   `npm run storage:normalize-keys` (dry run, review counts),
+   then `npm run storage:normalize-keys -- --apply`. Scalar columns collapse to
+   keys; rich-text HTML is rebased onto the current public base. Re-running is
+   safe (idempotent).
+4. **Point the web app.** Set `NEXT_PUBLIC_FILES_BASE_URL` to the same value as
+   the API's `PUBLIC_FILES_BASE_URL` and rebuild/redeploy the web app
+   (build-time variable). During the transition, add the old host to
+   `NEXT_PUBLIC_IMAGE_HOSTS` so not-yet-rewritten absolute URLs keep loading;
+   remove it afterwards.
+5. **Verify, then decommission.** Check the members list (direct-loaded avatars)
+   *and* a member detail page (optimizer-loaded photo) — the two paths exercise
+   different allowlists. Confirm the API boot log shows the expected
+   `Public files base: …`. Only then delete or privatise the old bucket.
+
 ## Pre-launch checklist
 
 - [ ] `JWT_SECRET` is unique to production and kept secret
@@ -79,6 +112,15 @@ and `storage/private/`.
 - [ ] `TRUST_PROXY` matches the proxy topology; `RATE_LIMIT_DISABLED` is not set
 - [ ] Mail is configured (or intentionally left in log-only mode)
 - [ ] `NEXT_PUBLIC_API_URL` in the web build points at the production API
+- [ ] `NEXT_PUBLIC_FILES_BASE_URL` is set and identical to the API's
+      `PUBLIC_FILES_BASE_URL` (required whenever files live outside the API —
+      Supabase Storage, a CDN — otherwise direct-loaded images break while
+      optimizer-loaded copies keep working)
+- [ ] `NEXT_PUBLIC_IMAGE_HOSTS` lists only hosts still in use (remove retired
+      transition hosts)
+- [ ] After any storage move: objects copied with identical keys, then
+      `npm run storage:normalize-keys -- --apply` run from `api/` (dry run first)
+- [ ] API boot log shows the expected `Public files base: …`
 - [ ] `STORAGE_DRIVER=supabase` with its bucket credentials set — or, if running
       the local driver on purpose, its directories are on persistent storage
 - [ ] A first `SUPER_ADMIN` account exists (see

@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { API_ORIGIN } from '@/lib/api-base';
+import { getImageUrl as getFullUrl } from '@/lib/utils';
 
 interface Props {
   candidate: {
@@ -18,14 +18,6 @@ interface Props {
   };
   onSelect?: () => void;
   selected?: boolean;
-}
-
-const API_BASE_URL = API_ORIGIN;
-
-function getFullUrl(url?: string | null) {
-  if (!url) return undefined;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
 }
 
 export default function CandidateCard({ candidate, onSelect, selected }: Props) {

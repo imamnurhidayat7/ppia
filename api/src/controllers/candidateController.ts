@@ -109,7 +109,7 @@ export const registerCandidate = async (req: Request, res: Response) => {
       }));
 
     const baseData = hasCustomFields
-      ? { slogan, posterUrl, status: 'PENDING' as const }
+      ? { slogan, posterUrl, status: 'PENDING' as const, vision: vision ?? '', mission: mission ?? '' }
       : {
           vision: vision ?? '',
           mission: mission ?? '',

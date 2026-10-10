@@ -182,6 +182,9 @@ export function ArticleEditor({
 
         if (response.ok) {
           const data = await response.json();
+          // Rich-text HTML is rendered raw (no resolver pass), so the <img>
+          // keeps the absolute URL. On a storage move, rebase it with
+          // `npm run storage:normalize-keys` in api/ — see docs/deployment.md.
           const img = `<img src="${data.url}" alt="uploaded image" class="max-w-full h-auto rounded-lg my-4" />`;
           editorRef.current?.focus();
           document.execCommand('insertHTML', false, img);

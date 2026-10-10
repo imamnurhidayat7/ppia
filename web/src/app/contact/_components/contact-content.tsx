@@ -274,7 +274,6 @@ export default function ContactPage() {
         titleAccent={content?.titleAccent}
         description={content?.description ?? "Reach out — we'd love to hear from you."}
         breadcrumbs={content?.breadcrumbs ?? [{ label: "Contact" }]}
-        layout="split"
       />
 
       <WaveTransition from={DEEP} to={SHORE} />

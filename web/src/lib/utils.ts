@@ -1,5 +1,5 @@
 import { clsx, type ClassValue } from 'clsx';
-import { API_ORIGIN as API_BASE_URL } from './api-base';
+import { API_ORIGIN as API_BASE_URL, FILES_BASE_URL } from './api-base';
 
 // Simple clsx implementation without external dependency
 export function cn(...inputs: ClassValue[]): string {
@@ -143,10 +143,17 @@ export function pickText(
   return value ?? undefined;
 }
 
-// Resolve relative image URLs to full API URLs
+// Resolve stored file references to browser-loadable image URLs.
+//
+// Three shapes, in order:
+//   absolute URL (legacy rows, pasted external URLs) → returned as-is;
+//   `/…` path (site assets, legacy API-relative uploads) → API origin;
+//   bare storage KEY (`1720000000-123.png`) → FILES_BASE_URL.
+// Keys are what new uploads persist, so moving file storage only changes
+// NEXT_PUBLIC_FILES_BASE_URL and never the stored values.
 export function getImageUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  // Relative URL like /uploads/filename.jpg → prepend API base
-  return `${API_BASE_URL}${url}`;
+  if (/^(https?:\/\/|data:|blob:)/i.test(url)) return url;
+  if (url.startsWith('/')) return `${API_BASE_URL}${url}`;
+  return `${FILES_BASE_URL}/${url}`;
 }
