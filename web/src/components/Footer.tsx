@@ -55,44 +55,71 @@ const socials = [
 
 export default function Footer() {
   const { t, language } = useLanguage();
-  const { menu } = useMenuItems("footer_quicklinks");
+  // Footer mengikuti 3 setting di Dashboard > System > Navigation menu:
+  // "Footer: about", "Footer: activities", "Footer: quick links".
+  // Setiap kolom tambah/hapus/ubah dari sana, per bahasa, plus toggle Show menu.
+  const { menu: aboutMenu } = useMenuItems("footer_about");
+  const { menu: activitiesMenu } = useMenuItems("footer_activities");
+  const { menu: quicklinksMenu } = useMenuItems("footer_quicklinks");
 
-  const defaultFooterLinks = {
-    About: [
-      { label: t("nav.about_sub.ambition"), href: "/about/ambition-action" },
-      { label: t("nav.about_sub.cabinet"), href: "/about/cabinet" },
-      { label: t("nav.about_sub.adart"), href: "/about/ad-art" },
-      { label: t("nav.contact"), href: "/contact" },
-    ],
-    Community: [
-      { label: t("nav.activities_sub.events"), href: "/activities/events" },
-      { label: t("nav.activities_sub.news"), href: "/activities/news-articles" },
-      { label: t("nav.activities_sub.research"), href: "/activities/research-corner" },
-    ],
-    Resources: [
-      { label: t("nav.opportunities_sub.wiki"), href: "/opportunities/wiki-ppia" },
-      { label: t("nav.opportunities_sub.scholarship"), href: "/opportunities/scholarship" },
-      { label: t("nav.opportunities_sub.career"), href: "/opportunities/career-info" },
-    ],
+  const langKey = language === "id" ? "id" : "en";
+
+  const defaultAbout: MenuItem[] = [
+    { label: t("nav.about_sub.ambition"), href: "/about/ambition-action" },
+    { label: t("nav.about_sub.cabinet"), href: "/about/cabinet" },
+    { label: t("nav.about_sub.adart"), href: "/about/ad-art" },
+    { label: t("nav.contact"), href: "/contact" },
+  ];
+  const defaultActivities: MenuItem[] = [
+    { label: t("nav.activities_sub.events"), href: "/activities/events" },
+    { label: t("nav.activities_sub.news"), href: "/activities/news-articles" },
+    { label: t("nav.activities_sub.research"), href: "/activities/research-corner" },
+  ];
+  const defaultQuicklinks: MenuItem[] = [
+    { label: t("nav.opportunities_sub.wiki"), href: "/opportunities/wiki-ppia" },
+    { label: t("nav.opportunities_sub.scholarship"), href: "/opportunities/scholarship" },
+    { label: t("nav.opportunities_sub.career"), href: "/opportunities/career-info" },
+  ];
+
+  /**
+   * Satu kolom footer mengikuti satu setting menu.
+   * - menu === null (loading / API mati / belum di-seed) -> fallback bawaan.
+   * - menu.enabled === false -> kolom disembunyikan.
+   * - menu ada -> pakai items sesuai bahasa apa adanya; kolom kosong
+   *   disembunyikan sehingga hapus semua dari setting benar-benar menghapus.
+   * Item CMS berbentuk flat `{ label, href }`; kalau admin memakai children,
+   * children ikut dirender (flatten) supaya tidak hilang.
+   */
+  const resolveColumnItems = (
+    menu: { enabled: boolean; items?: { en?: MenuItem[]; id?: MenuItem[] } } | null,
+    fallback: MenuItem[]
+  ): MenuItem[] | null => {
+    if (!menu) return fallback;
+    if (menu.enabled === false) return null;
+    const items = menu.items?.[langKey] ?? [];
+    if (items.length === 0) return null;
+    return items.flatMap((item) =>
+      item.children && item.children.length > 0 ? [item, ...item.children] : [item]
+    );
   };
 
   // Use CMS footer menu items if available, otherwise fall back to defaults
-  const footerLinks = useMemo<Record<string, MenuItem[]>>(() => {
-    if (menu?.items && menu.enabled !== false) {
-      const items = language === "id" ? menu.items.id : menu.items.en;
-      if (items && items.length > 0) {
-        // Convert CMS items to the footer links structure
-        const result: Record<string, MenuItem[]> = {};
-        items.forEach((item) => {
-          const category = item.label;
-          result[category] = item.children || [];
-        });
-        if (Object.keys(result).length > 0) return result;
-      }
-    }
-    return defaultFooterLinks;
+  const footerLinks = useMemo<Array<{ title: string; links: MenuItem[] }>>(() => {
+    const columns: Array<{
+      title: string;
+      menu: { enabled: boolean; items?: { en?: MenuItem[]; id?: MenuItem[] } } | null;
+      fallback: MenuItem[];
+    }> = [
+      { title: "About", menu: aboutMenu, fallback: defaultAbout },
+      { title: "Activities", menu: activitiesMenu, fallback: defaultActivities },
+      { title: "Quick Links", menu: quicklinksMenu, fallback: defaultQuicklinks },
+    ];
+    return columns.flatMap((col) => {
+      const links = resolveColumnItems(col.menu, col.fallback);
+      return links ? [{ title: col.title, links }] : [];
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menu, language]);
+  }, [aboutMenu, activitiesMenu, quicklinksMenu, language]);
 
   return (
     /*
@@ -162,16 +189,16 @@ export default function Footer() {
 
           {/* Links: each column is a leg of the chart, titled as a data label
               with a red tick, and its entries threaded on a rope rule. */}
-          {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
+          {footerLinks.map(({ title, links }) => (
+            <div key={title}>
               <p className="data-type flex items-center gap-2 text-[12px] font-bold uppercase text-white/80">
                 <span aria-hidden="true" className="h-px w-5 bg-[#E8231A]" />
-                {category}
+                {title}
               </p>
               <span aria-hidden="true" className="rope-rule mt-3 block opacity-60" />
               <ul className="mt-4 space-y-3">
                 {links.map((link) => (
-                  <li key={link.label}>
+                  <li key={`${title}-${link.label}-${link.href}`}>
                     <Link
                       href={link.href || "#"}
                       className="group inline-flex items-center gap-2 text-sm text-white/65 transition-colors hover:text-white"

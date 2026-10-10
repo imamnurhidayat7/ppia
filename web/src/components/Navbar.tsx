@@ -8,14 +8,16 @@ import { Menu, X, ChevronDown, User, UserCircle, LogOut } from "lucide-react";
 import GlobalSearch from "./GlobalSearch";
 import { useLanguage } from "@/lib/language-context";
 import { useMenuItems } from "@/lib/hooks/use-menu-items";
-import { useHasElections } from "@/lib/hooks/use-has-elections";
 import type { MenuItem } from "@/lib/api-types";
 
-/** A nav entry points at PEMIRA if it, or any of its children, links to /pemira. */
-function isPemiraItem(item: MenuItem): boolean {
-  if (item.href === "/pemira") return true;
-  return (item.children ?? []).some((child) => child.href === "/pemira");
-}
+/**
+ * Fallback navigation, only used while the CMS menu is loading or when the
+ * API is unreachable / the menu has never been seeded. Once `header_main`
+ * exists on the server it is the single source of truth: tambah, hapus, ubah,
+ * urutan, dan toggle "Show menu" semuanya langsung mengatur header —
+ * termasuk saat menu dikosongkan atau dimatikan (header tampil kosong,
+ * bukan kembali ke daftar bawaan ini).
+ */
 
 const getNavItems = (lang: string) => lang === "id" ? navItemsId : navItemsEn;
 
@@ -97,21 +99,20 @@ export default function Navbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const { language } = useLanguage();
-  const { menu } = useMenuItems("header_main");
-  const hasElections = useHasElections();
+  const { menu, loading: menuLoading } = useMenuItems("header_main");
 
-  // Use CMS menu items if available, otherwise fall back to hardcoded items.
-  // PEMIRA is dropped once we have confirmed there are no elections, so deleting
-  // the last election also removes it from the header (whichever source the
-  // menu comes from).
+  // Header 100% mengikuti setting "Header main menu" di
+  // Dashboard > System > Navigation menu.
+  // - menu === null (loading / API mati / belum di-seed) -> fallback bawaan
+  //   supaya header tidak kosong saat first paint.
+  // - menu.enabled === false (toggle "Show menu" mati) -> [] (sembunyikan nav).
+  // - menu ada -> pakai items sesuai bahasa, apa adanya (kosong = kosong),
+  //   sehingga hapus/ubah dari setting langsung terlihat di homepage.
   const navItems = useMemo<MenuItem[]>(() => {
-    const source =
-      menu?.items && menu.enabled !== false
-        ? (language === "id" ? menu.items.id : menu.items.en) || getNavItems(language)
-        : getNavItems(language);
-    const items = source.length > 0 ? source : getNavItems(language);
-    return hasElections === false ? items.filter((item) => !isPemiraItem(item)) : items;
-  }, [menu, language, hasElections]);
+    if (menuLoading || !menu) return getNavItems(language);
+    if (menu.enabled === false) return [];
+    return menu.items?.[language === "id" ? "id" : "en"] ?? [];
+  }, [menu, menuLoading, language]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);

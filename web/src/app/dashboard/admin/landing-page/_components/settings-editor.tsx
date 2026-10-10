@@ -12,6 +12,9 @@ import { useCallback, useEffect, useState } from 'react';
 import api from '@/lib/api';
 import type {
   ColorConfig,
+  ContactConfig,
+  ContactChannel,
+  ContactFAQ,
   FooterConfig,
   HeaderConfig,
   SiteConfigResponse,
@@ -43,13 +46,14 @@ import {
   PanelBottom,
   PanelTop,
   Palette,
+  Phone,
   Save,
   Share2,
   ThumbsUp,
   Video,
 } from 'lucide-react';
 
-type ConfigKey = 'header' | 'footer' | 'social' | 'colors' | 'ANNOUNCEMENT';
+type ConfigKey = 'header' | 'footer' | 'social' | 'colors' | 'ANNOUNCEMENT' | 'contact';
 
 /**
  * The slim strip above the navbar. It has always read SiteConfig key
@@ -63,7 +67,7 @@ interface AnnouncementConfig {
   variant?: 'info' | 'urgent';
 }
 
-type AnyConfig = HeaderConfig | FooterConfig | SocialConfig | ColorConfig | AnnouncementConfig;
+type AnyConfig = HeaderConfig | FooterConfig | SocialConfig | ColorConfig | AnnouncementConfig | ContactConfig;
 
 /** Shape of the admin site-config endpoint response, so there is no `any` in the component. */
 interface SiteConfigListResponse {
@@ -82,6 +86,7 @@ const CONFIG_TABS: { key: ConfigKey; label: string; icon: typeof PanelTop }[] = 
   { key: 'ANNOUNCEMENT', label: 'Announcement bar', icon: Megaphone },
   { key: 'social', label: 'Social media', icon: Share2 },
   { key: 'colors', label: 'Colours', icon: Palette },
+  { key: 'contact', label: 'Contact page', icon: Phone },
 ];
 
 const SAVE_LABEL: Record<ConfigKey, string> = {
@@ -90,6 +95,7 @@ const SAVE_LABEL: Record<ConfigKey, string> = {
   social: 'Social media links saved',
   colors: 'Brand colours saved',
   ANNOUNCEMENT: 'Announcement bar saved',
+  contact: 'Contact page settings saved',
 };
 
 const SOCIAL_PREVIEW: {
@@ -157,6 +163,7 @@ export default function SettingsEditor() {
   const [socialConfig, setSocialConfig] = useState<SocialConfig>({});
   const [colorConfig, setColorConfig] = useState<ColorConfig>({});
   const [announcementConfig, setAnnouncementConfig] = useState<AnnouncementConfig>({});
+  const [contactConfig, setContactConfig] = useState<ContactConfig>({});
 
   const loadConfigs = useCallback(async () => {
     try {
@@ -175,6 +182,7 @@ export default function SettingsEditor() {
         // palette.
         setColorConfig((map.colors?.config as ColorConfig) || {});
         setAnnouncementConfig((map.ANNOUNCEMENT?.config as AnnouncementConfig) || {});
+        setContactConfig((map.contact?.config as ContactConfig) || {});
       }
     } catch (err) {
       console.error(err);
@@ -699,6 +707,156 @@ export default function SettingsEditor() {
           </Button>
         </FormActions>
       </TabsContent>
+      <TabsContent value="contact" className="space-y-5">
+        <ContactEditor
+          config={contactConfig}
+          onChange={setContactConfig}
+          saving={saving}
+          onSave={() => saveConfig('contact', contactConfig)}
+        />
+      </TabsContent>
     </Tabs>
+  );
+}
+
+/* ─── Contact page editor ─── */
+
+const CHANNEL_DEFAULTS: ContactChannel = {
+  icon: 'Mail',
+  color: '#3B82F6',
+  label: '',
+  value: '',
+  sub: '',
+  href: '',
+};
+
+const FAQ_DEFAULTS: ContactFAQ = {
+  q: '',
+  a: '',
+};
+
+function ContactEditor({
+  config,
+  onChange,
+  saving,
+  onSave,
+}: {
+  config: ContactConfig;
+  onChange: (c: ContactConfig) => void;
+  saving: boolean;
+  onSave: () => void;
+}) {
+  const channels = config.channels ?? [];
+  const faqs = config.faqs ?? [];
+
+  const updateChannel = (idx: number, patch: Partial<ContactChannel>) => {
+    const next = [...channels];
+    next[idx] = { ...next[idx], ...patch };
+    onChange({ ...config, channels: next });
+  };
+
+  const addChannel = () => onChange({ ...config, channels: [...channels, { ...CHANNEL_DEFAULTS }] });
+  const removeChannel = (idx: number) => onChange({ ...config, channels: channels.filter((_, i) => i !== idx) });
+
+  const updateFAQ = (idx: number, patch: Partial<ContactFAQ>) => {
+    const next = [...faqs];
+    next[idx] = { ...next[idx], ...patch };
+    onChange({ ...config, faqs: next });
+  };
+  const addFAQ = () => onChange({ ...config, faqs: [...faqs, { ...FAQ_DEFAULTS }] });
+  const removeFAQ = (idx: number) => onChange({ ...config, faqs: faqs.filter((_, i) => i !== idx) });
+
+  const ICON_OPTIONS = ['Mail','MapPin','MessageCircle','Instagram','Send','HelpCircle','Briefcase','Users'];
+
+  return (
+    <>
+      <SectionCard
+        title="Contact channels"
+        description="The cards shown in the 'Rather connect directly?' section on /contact."
+        icon={Phone}
+      >
+        <div className="space-y-4">
+          {channels.map((ch, i) => (
+            <div key={i} className="rounded-[5px] border border-[#DCE7F1] p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-bold uppercase ink-muted">Channel {i + 1}</span>
+                <button type="button" onClick={() => removeChannel(i)} className="text-[12px] font-semibold text-rose-600 hover:text-rose-800">Remove</button>
+              </div>
+              <FormGrid columns={2}>
+                <Field label="Icon" htmlFor={`ch-icon-${i}`}>
+                  <select
+                    id={`ch-icon-${i}`}
+                    value={ch.icon}
+                    onChange={(e) => updateChannel(i, { icon: e.target.value })}
+                    className={FIELD_CLASS}
+                  >
+                    {ICON_OPTIONS.map((ic) => (<option key={ic} value={ic}>{ic}</option>))}
+                  </select>
+                </Field>
+                <Field label="Color" htmlFor={`ch-color-${i}`} hint="Hex e.g. #E8231A">
+                  <Input id={`ch-color-${i}`} value={ch.color} onChange={(e) => updateChannel(i, { color: e.target.value })} placeholder="#E8231A" />
+                </Field>
+              </FormGrid>
+              <FormGrid columns={2}>
+                <Field label="Label" htmlFor={`ch-label-${i}`}>
+                  <Input id={`ch-label-${i}`} value={ch.label} onChange={(e) => updateChannel(i, { label: e.target.value })} placeholder="Email Us" />
+                </Field>
+                <Field label="Value" htmlFor={`ch-value-${i}`}>
+                  <Input id={`ch-value-${i}`} value={ch.value} onChange={(e) => updateChannel(i, { value: e.target.value })} placeholder="ppiauckland@gmail.com" />
+                </Field>
+              </FormGrid>
+              <Field label="Sub line" htmlFor={`ch-sub-${i}`}>
+                <Input id={`ch-sub-${i}`} value={ch.sub} onChange={(e) => updateChannel(i, { sub: e.target.value })} placeholder="We reply within 1-2 business days" />
+              </Field>
+              <Field label="Link (href)" htmlFor={`ch-href-${i}`}>
+                <Input id={`ch-href-${i}`} value={ch.href} onChange={(e) => updateChannel(i, { href: e.target.value })} placeholder="mailto:ppiauckland@gmail.com" />
+              </Field>
+            </div>
+          ))}
+          <Button variant="outline" onClick={addChannel} leftIcon={<Share2 className="h-4 w-4" />}>
+            Add channel
+          </Button>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="FAQ items"
+        description="Expandable Q&A shown beside the contact form."
+        icon={ThumbsUp}
+      >
+        <div className="space-y-4">
+          {faqs.map((faq, i) => (
+            <div key={i} className="rounded-[5px] border border-[#DCE7F1] p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-bold uppercase ink-muted">FAQ {i + 1}</span>
+                <button type="button" onClick={() => removeFAQ(i)} className="text-[12px] font-semibold text-rose-600 hover:text-rose-800">Remove</button>
+              </div>
+              <Field label="Question" htmlFor={`faq-q-${i}`}>
+                <Input id={`faq-q-${i}`} value={faq.q} onChange={(e) => updateFAQ(i, { q: e.target.value })} placeholder="How do I join?" />
+              </Field>
+              <Field label="Answer (HTML supported)" htmlFor={`faq-a-${i}`}>
+                <textarea
+                  id={`faq-a-${i}`}
+                  value={faq.a}
+                  onChange={(e) => updateFAQ(i, { a: e.target.value })}
+                  rows={4}
+                  className={FIELD_CLASS}
+                  placeholder="Registration is free. Click Join in the nav..."
+                />
+              </Field>
+            </div>
+          ))}
+          <Button variant="outline" onClick={addFAQ} leftIcon={<Share2 className="h-4 w-4" />}>
+            Add FAQ
+          </Button>
+        </div>
+      </SectionCard>
+
+      <FormActions>
+        <Button variant="primary" leftIcon={<Save className="h-4 w-4" />} isLoading={saving} onClick={onSave}>
+          Save contact page
+        </Button>
+      </FormActions>
+    </>
   );
 }

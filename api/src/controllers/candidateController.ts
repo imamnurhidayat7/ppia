@@ -108,17 +108,23 @@ export const registerCandidate = async (req: Request, res: Response) => {
         value: responsesByFieldId.get(f.id) as any,
       }));
 
+    const baseData = hasCustomFields
+      ? { slogan, posterUrl, status: 'PENDING' as const }
+      : {
+          vision: vision ?? '',
+          mission: mission ?? '',
+          experience,
+          program,
+          slogan,
+          posterUrl,
+          status: 'PENDING' as const,
+        };
+
     const candidate = existing
       ? await prisma.candidate.update({
           where: { id: existing.id },
           data: {
-            vision: vision ?? '',
-            mission: mission ?? '',
-            experience,
-            program,
-            slogan,
-            posterUrl,
-            status: 'PENDING',
+            ...baseData,
             rejectionReason: null,
             approvedAt: null,
             approvedBy: null,
@@ -130,13 +136,7 @@ export const registerCandidate = async (req: Request, res: Response) => {
           data: {
             electionId,
             userId,
-            vision: vision ?? '',
-            mission: mission ?? '',
-            experience,
-            program,
-            slogan,
-            posterUrl,
-            status: 'PENDING',
+            ...baseData,
             formResponses: { create: responseData },
           },
           include: { formResponses: { include: { field: true } } },

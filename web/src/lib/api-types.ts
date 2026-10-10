@@ -697,7 +697,26 @@ export interface SiteConfigResponse {
   key: string;
   // COLORS is stored through the same site-config endpoint as HEADER/FOOTER/SOCIAL,
   // so its shape belongs in this union too.
-  config: HeaderConfig | FooterConfig | SocialConfig | ColorConfig;
+  config: HeaderConfig | FooterConfig | SocialConfig | ColorConfig | ContactConfig;
+}
+
+export interface ContactChannel {
+  icon: string; // lucide icon name
+  color: string;
+  label: string;
+  value: string;
+  sub: string;
+  href: string;
+}
+
+export interface ContactFAQ {
+  q: string;
+  a: string; // HTML string
+}
+
+export interface ContactConfig {
+  channels?: ContactChannel[];
+  faqs?: ContactFAQ[];
 }
 
 // Color configuration for landing page
@@ -749,8 +768,8 @@ export interface CandidateFormResponse {
 export interface Candidate {
   id: string;
   name: string;
-  vision: string;
-  mission: string[];
+  vision?: string;
+  mission?: string;
   photo?: string;
   voteCount?: number;
   createdAt: string;

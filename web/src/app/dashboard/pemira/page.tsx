@@ -405,8 +405,6 @@ function ElectionItem({
                   username: row.username,
                   avatar: row.avatar,
                 },
-                vision: '',
-                mission: '',
                 slogan: row.slogan,
                 status: 'APPROVED',
               }))}

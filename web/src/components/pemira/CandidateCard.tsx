@@ -8,8 +8,8 @@ interface Props {
     id: string;
     candidateNumber?: number;
     user: { id: string; name: string; avatar?: string; username: string; division?: { name: string; color?: string } };
-    vision: string;
-    mission: string;
+    vision?: string;
+    mission?: string;
     experience?: string;
     program?: string;
     slogan?: string;
@@ -118,15 +118,20 @@ export default function CandidateCard({ candidate, onSelect, selected }: Props) 
         </div>
 
         {/* Vision & Mission */}
+        {candidate.vision || candidate.mission ? (
         <div className="space-y-3 text-sm">
+          {candidate.vision ? (
           <div>
             <p className="font-black text-[12px] text-slate-600 uppercase tracking-widest mb-1">Vision</p>
             <p className="text-slate-700 line-clamp-3 leading-relaxed">{candidate.vision}</p>
           </div>
+          ) : null}
+          {candidate.mission ? (
           <div>
             <p className="font-black text-[12px] text-slate-600 uppercase tracking-widest mb-1">Mission</p>
             <p className="text-slate-700 line-clamp-3 leading-relaxed">{candidate.mission}</p>
           </div>
+          ) : null}
           {candidate.experience && (
             <div>
               <p className="font-black text-[12px] text-slate-600 uppercase tracking-widest mb-1">Experience</p>
@@ -134,6 +139,7 @@ export default function CandidateCard({ candidate, onSelect, selected }: Props) 
             </div>
           )}
         </div>
+        ) : null}
 
         {/* Selected state */}
         {selected && (
