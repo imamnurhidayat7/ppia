@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "postinstall": "prisma generate",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc && mkdir -p dist/data && cp src/data/youtube-feed.fallback.json dist/data/",
     "start": "node dist/index.js",
     "db:generate": "tsx scripts/prisma.ts generate",
     "db:push:all": "tsx scripts/prisma-all.ts",

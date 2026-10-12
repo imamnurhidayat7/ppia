@@ -35,6 +35,24 @@ function isFeedPayload(value: unknown): value is YouTubeFeedPayload {
   );
 }
 
+// Last-resort payload bundled with the deploy: if YouTube is unreachable AND
+// both caches are empty (first boot on ephemeral storage), the page still
+// renders the last-known-good feed instead of 502ing. Regenerate it whenever
+// the channel publishes something worth snapshotting — hit a healthy
+// /api/youtube/feed once and save `data` over src/data/youtube-feed.fallback.json
+// (the build script copies it into dist; the loader below tolerates absence).
+function loadStaticFallback(): YouTubeFeedPayload | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const data: unknown = require('../data/youtube-feed.fallback.json');
+    return isFeedPayload(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+const STATIC_FALLBACK = loadStaticFallback();
+
 async function readDiskCache(): Promise<YouTubeFeedPayload | null> {
   try {
     const raw = await fs.readFile(DISK_CACHE_PATH, 'utf8');
@@ -177,18 +195,121 @@ export function parseFeedXml(xml: string, channelId: string): YouTubeFeedPayload
 }
 
 /**
- * Public feed of the PPI Auckland YouTube channel.
- *
- * Reads YouTube's channel RSS (no API key, no quota) through a short
- * server-side cache, so the /videos page stays fast and a YouTube outage
- * degrades to the last good payload instead of a 500.
+ * Official YouTube Data API v3 source. Unlike the RSS endpoint this works
+ * from any IP (datacenters included) because the key identifies the caller
+ * instead of bot-mitigation guessing. Costs ~3 quota units per refresh —
+ * noise against the 10k daily free quota. Used first when YOUTUBE_API_KEY
+ * is set; the RSS endpoint stays as the keyless backup.
  */
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function asString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+async function fetchJson(url: string): Promise<unknown> {
+  const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+  if (!response.ok) {
+    throw new Error(`YouTube Data API answered ${response.status}`);
+  }
+  return (await response.json()) as unknown;
+}
+
+async function fetchViaDataApi(channelId: string, apiKey: string): Promise<YouTubeFeedPayload> {
+  // A channel's uploads live in the "UU…" playlist derived from its id —
+  // overridable for the day YouTube changes that convention.
+  const playlistId =
+    (process.env.YOUTUBE_UPLOADS_PLAYLIST_ID || '').trim() || `UU${channelId.slice(2)}`;
+  const key = `key=${encodeURIComponent(apiKey)}`;
+
+  const itemsJson = await fetchJson(
+    `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${encodeURIComponent(playlistId)}&maxResults=15&${key}`
+  );
+  const rawItems = asRecord(itemsJson)?.items;
+  const items = Array.isArray(rawItems) ? rawItems : [];
+  if (items.length === 0) {
+    throw new Error('YouTube Data API returned no uploads');
+  }
+
+  const parsed = items
+    .map((entry) => {
+      const item = asRecord(entry);
+      const snippet = asRecord(item?.snippet);
+      const details = asRecord(item?.contentDetails);
+      const id =
+        asString(details?.videoId) || asString(asRecord(snippet?.resourceId)?.videoId);
+      if (!id) return null;
+      const thumbnails = asRecord(snippet?.thumbnails);
+      const thumbnail =
+        asString(asRecord(thumbnails?.maxres)?.url) ||
+        asString(asRecord(thumbnails?.high)?.url) ||
+        asString(asRecord(thumbnails?.medium)?.url) ||
+        asString(asRecord(thumbnails?.default)?.url) ||
+        `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+      return {
+        id,
+        title: asString(snippet?.title) || id,
+        url: `https://www.youtube.com/watch?v=${id}`,
+        thumbnail,
+        publishedAt:
+          asString(details?.videoPublishedAt) || asString(snippet?.publishedAt),
+        description: asString(snippet?.description),
+      };
+    })
+    .filter((video): video is Omit<YouTubeFeedVideo, 'views'> => video !== null);
+
+  if (parsed.length === 0) {
+    throw new Error('YouTube Data API returned no parseable uploads');
+  }
+
+  // View counts are enrichment, not load-bearing: one batched call, and if it
+  // fails the feed still ships with views: null.
+  const views = new Map<string, number>();
+  try {
+    const ids = [...new Set(parsed.map((video) => video.id))].join(',');
+    const statsJson = await fetchJson(
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${encodeURIComponent(ids)}&${key}`
+    );
+    const statsItems = asRecord(statsJson)?.items;
+    if (Array.isArray(statsItems)) {
+      for (const entry of statsItems) {
+        const video = asRecord(entry);
+        const id = asString(video?.id);
+        const count = Number(asRecord(video?.statistics)?.viewCount);
+        if (id && Number.isFinite(count)) views.set(id, count);
+      }
+    }
+  } catch (error) {
+    console.error('YouTube Data API statistics lookup failed (continuing without views):', error);
+  }
+
+  const videos: YouTubeFeedVideo[] = parsed.map((video) => ({
+    ...video,
+    views: views.get(video.id) ?? null,
+  }));
+  const channelTitle = asString(
+    asRecord(asRecord(items[0])?.snippet)?.channelTitle
+  );
+
+  return {
+    channelId,
+    channelTitle: channelTitle || 'PPI Auckland',
+    channelUrl: `https://www.youtube.com/channel/${channelId}`,
+    videos,
+  };
+}
+
 /**
  * Public feed of the PPI Auckland YouTube channel.
  *
- * Reads YouTube's channel RSS (no API key, no quota) through a short
- * in-memory cache plus a last-good payload on disk, so the /videos page
- * stays fast and a YouTube outage degrades gracefully instead of 502ing.
+ * Source chain, first success wins: Data API (only when YOUTUBE_API_KEY is
+ * set — reliable from any IP) → channel RSS (keyless backup, flaky from
+ * datacenters) → in-memory cache → disk cache → repo-bundled snapshot.
+ * Only when every layer is empty does the route 502.
  */
 export const getYouTubeFeed = async (_req: Request, res: Response): Promise<void> => {
   const channelId = configuredChannelId();
@@ -199,18 +320,39 @@ export const getYouTubeFeed = async (_req: Request, res: Response): Promise<void
       return;
     }
 
-    const xml = await fetchFeedXml(
-      `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`
-    );
+    const failures: unknown[] = [];
+    let payload: YouTubeFeedPayload | null = null;
 
-    const payload = parseFeedXml(xml, channelId);
+    const apiKey = (process.env.YOUTUBE_API_KEY || '').trim();
+    if (apiKey) {
+      try {
+        payload = await fetchViaDataApi(channelId, apiKey);
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+
+    if (!payload) {
+      try {
+        const xml = await fetchFeedXml(
+          `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`
+        );
+        payload = parseFeedXml(xml, channelId);
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+
+    if (!payload) throw failures[failures.length - 1];
+
     cache = { expiresAt: now + FEED_TTL_MS, payload };
     await writeDiskCache(payload);
     res.json({ success: true, data: payload });
   } catch (error) {
     console.error(`Error fetching YouTube feed (channel ${channelId}):`, error);
     // Degrade gracefully, newest first: in-memory cache (even expired), then
-    // the last-good payload on disk (survives restarts), then 502.
+    // the last-good payload on disk (survives restarts), then the snapshot
+    // bundled with the deploy — only then 502.
     if (cache) {
       res.json({ success: true, data: cache.payload, cached: true, stale: true });
       return;
@@ -218,6 +360,10 @@ export const getYouTubeFeed = async (_req: Request, res: Response): Promise<void
     const diskPayload = await readDiskCache();
     if (diskPayload) {
       res.json({ success: true, data: diskPayload, cached: true, stale: true });
+      return;
+    }
+    if (STATIC_FALLBACK) {
+      res.json({ success: true, data: STATIC_FALLBACK, cached: true, stale: true, static: true });
       return;
     }
     res.status(502).json({
