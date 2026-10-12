@@ -85,6 +85,10 @@ const buildCsp = (): string => {
     'https://plus.unsplash.com',
     'https://picsum.photos',
     'https://*.ytimg.com',
+    // Transition fallback for Supabase-hosted files predating
+    // NEXT_PUBLIC_FILES_BASE_URL — mirrors the optimizer allowlist in
+    // next.config.ts. Member avatars and uploads break without this.
+    'https://*.supabase.co',
     API_ORIGIN,
     FILES_ORIGIN,
     ...EXTRA_IMAGE_HOSTS,
