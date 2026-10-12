@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
+import { readPublicCache, writePublicCache, fetchWithRetry } from '@/lib/client-cache';
 import type { HeaderConfig, FooterConfig } from '@/lib/api-types';
 
 /** Fallback brand mark while the CMS logo is loading or unset. */
@@ -36,10 +37,10 @@ interface SiteConfigEnvelope {
 /**
  * Read one site-config record (header, footer, …) from the CMS API.
  *
- * The public endpoint answers `{ success, data: { config } }` — unwrapped
- * here so callers always receive the config object itself. Resolves to
- * `null` while loading or when the API is unreachable, so callers render
- * their fallback content instead of hanging.
+ * Stale-while-revalidate like the menu hook: the last good config paints
+ * instantly (no wrong-logo flash on reload) while a background fetch
+ * refreshes it. Resolves to `null` while loading or when the API is
+ * unreachable, so callers render their fallback content instead of hanging.
  */
 export function useSiteConfig<T extends HeaderConfig | FooterConfig>(key: SiteConfigKey) {
   const [config, setConfig] = useState<T | null>(null);
@@ -47,20 +48,31 @@ export function useSiteConfig<T extends HeaderConfig | FooterConfig>(key: SiteCo
 
   useEffect(() => {
     let mounted = true;
+    const cacheKey = `config:${key}`;
 
     async function fetchConfig() {
       try {
-        const res = (await api.getSiteConfigByKey(key)) as SiteConfigEnvelope;
+        const res = (await fetchWithRetry(() =>
+          api.getSiteConfigByKey(key)
+        )) as SiteConfigEnvelope;
         const unwrapped = res?.data?.config ?? null;
-        if (mounted) setConfig((unwrapped as T) ?? null);
+        if (mounted && unwrapped) {
+          setConfig(unwrapped as T);
+          writePublicCache(cacheKey, unwrapped);
+        }
       } catch (err) {
-        // Silent fail — callers fall back to built-in branding.
+        // Silent fail — the cached config (or the caller's fallback) stays.
         console.warn(`Failed to fetch site config "${key}":`, err);
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
+    const cached = readPublicCache<T>(cacheKey);
+    if (cached) {
+      setConfig(cached);
+      setLoading(false);
+    }
     fetchConfig();
 
     return () => {
