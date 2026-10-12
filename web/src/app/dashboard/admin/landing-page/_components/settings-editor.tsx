@@ -30,6 +30,7 @@ import {
   TabsTrigger,
   Textarea,
   Toggle,
+  ImageUploader,
 } from '@/components/ui';
 import {
   Field,
@@ -246,14 +247,16 @@ export default function SettingsEditor() {
         >
           <div className="space-y-5">
             <FormGrid columns={2}>
-              <Field label="Logo URL" htmlFor="header-logo-url" hint="For example: /logo.svg.">
-                <Input
-                  id="header-logo-url"
+              {/*
+                Upload a file or paste a URL — the uploader stores the file
+                and hands back a URL either way, and the public header renders
+                it on the next visit.
+              */}
+              <Field label="Logo" htmlFor="header-logo-url" hint="Upload a PNG/SVG or paste a URL.">
+                <ImageUploader
                   value={headerConfig.logoUrl || ''}
-                  onChange={(event) =>
-                    setHeaderConfig({ ...headerConfig, logoUrl: event.target.value })
-                  }
-                  placeholder="/logo.svg"
+                  onChange={(url) => setHeaderConfig({ ...headerConfig, logoUrl: url })}
+                  placeholder="Upload logo…"
                 />
               </Field>
               <Field
@@ -404,14 +407,11 @@ export default function SettingsEditor() {
         >
           <div className="space-y-5">
             <FormGrid columns={2}>
-              <Field label="Footer logo URL" htmlFor="footer-logo-url">
-                <Input
-                  id="footer-logo-url"
+              <Field label="Footer logo" htmlFor="footer-logo-url" hint="Upload a PNG/SVG or paste a URL.">
+                <ImageUploader
                   value={footerConfig.logoUrl || ''}
-                  onChange={(event) =>
-                    setFooterConfig({ ...footerConfig, logoUrl: event.target.value })
-                  }
-                  placeholder="/logo.svg"
+                  onChange={(url) => setFooterConfig({ ...footerConfig, logoUrl: url })}
+                  placeholder="Upload logo…"
                 />
               </Field>
               <Field label="Logo alt text" htmlFor="footer-logo-alt">

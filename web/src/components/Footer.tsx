@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Anchor } from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
 import { useMenuItems } from "@/lib/hooks/use-menu-items";
+import { useSiteLogo } from "@/lib/hooks/use-site-config";
 import type { MenuItem } from "@/lib/api-types";
 
 const socials = [
@@ -61,6 +62,8 @@ export default function Footer() {
   const { menu: aboutMenu } = useMenuItems("footer_about");
   const { menu: activitiesMenu } = useMenuItems("footer_activities");
   const { menu: quicklinksMenu } = useMenuItems("footer_quicklinks");
+  // Brand mark follows Dashboard > System > Header, footer, and colours.
+  const logo = useSiteLogo("footer");
 
   const langKey = language === "id" ? "id" : "en";
 
@@ -156,11 +159,12 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="mb-5 inline-block">
               <Image
-                src="/Logo-PPIA-2025-White.png"
-                alt="PPIA Auckland"
+                src={logo.src}
+                alt={logo.alt}
                 width={140}
                 height={56}
                 style={{ height: 48, width: "auto" }}
+                unoptimized
               />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-white/70">
