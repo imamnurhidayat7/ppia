@@ -531,6 +531,41 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+// Scholarships managed by SUPER_ADMIN / BOARD, like articles and research.
+//
+// The public scholarship page reads `published: true` rows and falls back to
+// the legacy CMS page-content array when the table is still empty.
+model Scholarship {
+  id            String            @id @default(cuid())
+  slug          String            @unique
+  name          String
+  provider      String            @default("")
+  type          ScholarshipType   @default(UNIVERSITY)
+  color         String            @default("#3B82F6")
+  level         String[]          @default([])
+  coverage      String[]          @default([])
+  amount        String            @default("")
+  deadline      String            @default("")
+  deadlineDate  DateTime?
+  url           String            @default("")
+  desc          String            @default("") @db.Text
+  featured      Boolean           @default(false)
+  status        ScholarshipStatus @default(DRAFT)
+  published     Boolean           @default(false)
+  submittedById String?
+  submittedBy   User?             @relation("ScholarshipSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  reviewComments String?           @db.Text
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([published])
+  @@index([status])
+  @@index([type])
+  @@index([submittedById])
+}
+
 model Tag {
   id          String     @id @default(cuid())
   name        String     @unique
@@ -596,6 +631,7 @@ model User {
   division                              Division?           @relation("User_divisionIdToDivision", fields: [divisionId], references: [id])
   Research                              Research[]
   ResearchDownload                      ResearchDownload[]
+  submittedScholarships                 Scholarship[]       @relation("ScholarshipSubmitter")
   candidates                            Candidate[]
   votes                                 Vote[]
   electionsCreated                      Election[]          @relation("ElectionCreator")
@@ -694,6 +730,21 @@ enum ResearchStatus {
   APPROVED
   REJECTED
   PUBLISHED
+}
+
+enum ScholarshipStatus {
+  DRAFT
+  PENDING_REVIEW
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+enum ScholarshipType {
+  INDONESIAN_GOV
+  NZ_GOV
+  UNIVERSITY
 }
 
 enum ResearchType {

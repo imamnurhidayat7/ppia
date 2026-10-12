@@ -105,6 +105,25 @@ export interface PublicResearch {
   updatedAt?: string;
 }
 
+export interface PublicScholarship {
+  id: string;
+  slug: string;
+  name: string;
+  provider?: string;
+  type?: string;
+  color?: string;
+  level?: string[];
+  coverage?: string[];
+  amount?: string;
+  deadline?: string;
+  deadlineDate?: string | null;
+  url?: string;
+  desc?: string;
+  featured?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 async function getJson<T>(path: string): Promise<T | null> {
   try {
     const response = await fetch(`${API_BASE}/api${path}`, {
@@ -159,6 +178,27 @@ export async function fetchResearchForSitemap(): Promise<PublicResearch[]> {
     `/research?limit=${SITEMAP_PAGE_SIZE}`
   );
   return data?.researches ?? [];
+}
+
+export async function fetchScholarshipBySlug(slug: string): Promise<PublicScholarship | null> {
+  const data = await getJson<{ scholarship?: PublicScholarship }>(
+    `/scholarships/slug/${encodeURIComponent(slug)}`
+  );
+  return data?.scholarship ?? null;
+}
+
+export async function fetchScholarshipById(id: string): Promise<PublicScholarship | null> {
+  const data = await getJson<{ scholarship?: PublicScholarship }>(
+    `/scholarships/${encodeURIComponent(id)}`
+  );
+  return data?.scholarship ?? null;
+}
+
+export async function fetchScholarshipsForSitemap(): Promise<PublicScholarship[]> {
+  const data = await getJson<{ scholarships?: PublicScholarship[] }>(
+    `/scholarships?limit=${SITEMAP_PAGE_SIZE}`
+  );
+  return data?.scholarships ?? [];
 }
 
 /**

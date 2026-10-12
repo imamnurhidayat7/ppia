@@ -4,6 +4,7 @@ import {
   fetchArticlesForSitemap,
   fetchEventsForSitemap,
   fetchResearchForSitemap,
+  fetchScholarshipsForSitemap,
 } from "@/lib/server-api";
 
 const staticRoutes = [
@@ -45,10 +46,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // the API — at build time or on a revalidation — must not take the route (or
   // the production build) down with it, so failures degrade to static routes.
   try {
-    const [articles, events, researches] = await Promise.all([
+    const [articles, events, researches, scholarships] = await Promise.all([
       fetchArticlesForSitemap(),
       fetchEventsForSitemap(),
       fetchResearchForSitemap(),
+      fetchScholarshipsForSitemap(),
     ]);
 
     for (const article of articles) {
@@ -76,6 +78,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push({
         url: `${SITE.url}/activities/research-corner/${research.slug}`,
         lastModified: lastModified(research.updatedAt || research.createdAt),
+        changeFrequency: "monthly",
+        priority: 0.7,
+      });
+    }
+
+    for (const scholarship of scholarships) {
+      if (!scholarship.slug) continue;
+      entries.push({
+        url: `${SITE.url}/opportunities/scholarship/${scholarship.slug}`,
+        lastModified: lastModified(scholarship.updatedAt || scholarship.createdAt),
         changeFrequency: "monthly",
         priority: 0.7,
       });

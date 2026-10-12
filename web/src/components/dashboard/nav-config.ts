@@ -8,6 +8,7 @@ import {
   ClipboardList,
   FileEdit,
   FileText,
+  GraduationCap,
   Image as ImageIcon,
   LayoutDashboard,
   Layout,
@@ -140,6 +141,7 @@ export const ADMIN_NAV: NavSection[] = [
       { label: 'Articles', href: '/dashboard/admin/articles', icon: FileText, roles: CONTENT, description: 'News and articles' },
       { label: 'Events', href: '/dashboard/admin/events', icon: Calendar, roles: CONTENT, description: 'Event schedule' },
       { label: 'Research', href: '/dashboard/admin/research', icon: BookOpen, roles: CONTENT, description: 'Academic publications' },
+      { label: 'Scholarships', href: '/dashboard/admin/scholarships', icon: GraduationCap, roles: CONTENT, description: 'Review member proposals' },
       {
         label: 'Comments',
         href: '/dashboard/admin/comments',
@@ -216,6 +218,7 @@ export const SEGMENT_LABELS: Record<string, string> = {
   events: 'Events',
   articles: 'Articles',
   research: 'Research',
+  scholarships: 'Scholarships',
   divisions: 'Divisions',
   pages: 'Pages',
   analytics: 'Analytics',

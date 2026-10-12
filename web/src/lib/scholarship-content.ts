@@ -1,5 +1,6 @@
 export interface ScholarshipContent {
-  id: number;
+  id: number | string;
+  slug?: string;
   name: string;
   provider: string;
   type: string;
@@ -8,6 +9,7 @@ export interface ScholarshipContent {
   coverage: string[];
   amount: string;
   deadline: string;
+  deadlineDate?: string | null;
   url: string;
   desc: string;
   featured?: boolean;
@@ -55,7 +57,8 @@ export function toScholarshipContent(value: unknown): ScholarshipContent[] {
       if (typeof r.name !== 'string' || !r.name) return null;
 
       return {
-        id: typeof r.id === 'number' ? r.id : Number(r.id) || 0,
+        id: typeof r.id === 'number' ? r.id : typeof r.id === 'string' && r.id ? r.id : 0,
+        slug: typeof r.slug === 'string' && r.slug ? r.slug : undefined,
         name: r.name,
         provider: typeof r.provider === 'string' ? r.provider : '',
         type: typeof r.type === 'string' ? r.type : 'University',
@@ -64,9 +67,54 @@ export function toScholarshipContent(value: unknown): ScholarshipContent[] {
         coverage: toStringArray(r.coverage),
         amount: typeof r.amount === 'string' ? r.amount : '',
         deadline: typeof r.deadline === 'string' ? r.deadline : '',
+        deadlineDate: typeof r.deadlineDate === 'string' ? r.deadlineDate : null,
         url: typeof r.url === 'string' ? r.url : '',
         desc: typeof r.desc === 'string' ? r.desc : '',
         featured: !!r.featured,
+      };
+    })
+    .filter((s): s is ScholarshipContent => s !== null);
+}
+
+/** Display labels the public filter expects — mirrors the legacy CMS copy. */
+const API_TYPE_LABELS: Record<string, string> = {
+  INDONESIAN_GOV: 'Indonesian Gov',
+  NZ_GOV: 'NZ Gov',
+  UNIVERSITY: 'University',
+};
+
+/**
+ * Map first-class API rows (`GET /scholarships`, published only) onto the
+ * shape the public page renders. A missing display deadline falls back to the
+ * exact date so the day board and countdown still work.
+ */
+export function fromApiScholarships(rows: unknown): ScholarshipContent[] {
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((item): ScholarshipContent | null => {
+      if (!item || typeof item !== 'object') return null;
+      const r = item as Record<string, unknown>;
+      if (typeof r.name !== 'string' || !r.name) return null;
+      const deadlineDate = typeof r.deadlineDate === 'string' ? r.deadlineDate : null;
+      const deadline = typeof r.deadline === 'string' && r.deadline ? r.deadline : deadlineDate ?? '';
+      return {
+        id: typeof r.id === 'string' && r.id ? r.id : typeof r.slug === 'string' && r.slug ? r.slug : 0,
+        slug: typeof r.slug === 'string' && r.slug ? r.slug : undefined,
+        name: r.name,
+        provider: typeof r.provider === 'string' ? r.provider : '',
+        type:
+          typeof r.type === 'string'
+            ? (API_TYPE_LABELS[r.type] ?? r.type)
+            : 'University',
+        color: typeof r.color === 'string' && r.color ? r.color : '#3B82F6',
+        level: toStringArray(r.level),
+        coverage: toStringArray(r.coverage),
+        amount: typeof r.amount === 'string' ? r.amount : '',
+        deadline,
+        deadlineDate,
+        url: typeof r.url === 'string' ? r.url : '',
+        desc: typeof r.desc === 'string' ? r.desc : '',
+        featured: r.featured === true,
       };
     })
     .filter((s): s is ScholarshipContent => s !== null);

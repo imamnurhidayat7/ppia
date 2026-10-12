@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import WaveTransition from "@/components/sections/WaveTransition";
@@ -12,24 +14,9 @@ const ICON_MAP = { Star, BookOpen, Globe, DollarSign } as const;
 type TipIconName = keyof typeof ICON_MAP;
 const resolveTipIcon = (icon: unknown) =>
   typeof icon === "string" ? (ICON_MAP[icon as TipIconName] ?? Star) : (icon as typeof Star) ?? Star;
-import { toScholarshipContent, type ScholarshipContent } from "@/lib/scholarship-content";
+import { toScholarshipContent, fromApiScholarships, type ScholarshipContent } from "@/lib/scholarship-content";
 
 type ScholarshipFilter = "All" | "Indonesian Gov" | "NZ Gov" | "University";
-
-interface Scholarship {
-  id: number;
-  name: string;
-  provider: string;
-  type: ScholarshipFilter;
-  color: string;
-  level: string[];
-  coverage: string[];
-  amount: string;
-  deadline: string;
-  url: string;
-  desc: string;
-  featured?: boolean;
-}
 
 interface ScholarshipHeader {
   label: string;
@@ -153,6 +140,7 @@ function DeadlineCountdown({ deadline }: { deadline: string }) {
 }
 
 export default function ScholarshipPage() {
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<ScholarshipFilter>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [content, setContent] = useState<{ header: ScholarshipHeader } | null>(null);
@@ -160,25 +148,50 @@ export default function ScholarshipPage() {
   const [cmsTips, setCmsTips] = useState<typeof applicationTips | null>(null);
   const [cmsStats, setCmsStats] = useState<{ value: string; label: string }[] | null>(null);
 
+  /** Detail route for one card — slug for API rows, id for legacy CMS rows. */
+  const detailHref = (s: ScholarshipContent) =>
+    `/opportunities/scholarship/${s.slug || s.id}`;
+
   useEffect(() => {
-    api
-      .getPageBySlug("opportunities/scholarship")
-      .then((res) => {
-        const c = res?.page?.content as Record<string, any> | undefined;
-        if (c) {
-          setContent({ header: c.header });
-          setCmsScholarships(toScholarshipContent(c));
-          if (Array.isArray(c.applicationTips)) {
-            setCmsTips(c.applicationTips);
-          }
-          if (Array.isArray(c.stats)) {
-            setCmsStats(c.stats);
+    let cancelled = false;
+    Promise.allSettled([
+      api.getPageBySlug("opportunities/scholarship"),
+      api.getScholarships({ limit: 100 }),
+    ])
+      .then(([pageRes, apiRes]) => {
+        if (cancelled) return;
+        // First-class rows win when the table holds data; the CMS array stays
+        // as the fallback so older installs keep rendering.
+        const apiRows =
+          apiRes.status === 'fulfilled'
+            ? fromApiScholarships((apiRes.value as { scholarships?: unknown })?.scholarships)
+            : [];
+        if (apiRows.length > 0) {
+          setCmsScholarships(apiRows);
+        }
+        if (pageRes.status === 'fulfilled') {
+          const c = (pageRes.value as { page?: { content?: Record<string, any> } } | undefined)?.page
+            ?.content as Record<string, any> | undefined;
+          if (c) {
+            setContent({ header: c.header });
+            if (apiRows.length === 0) {
+              setCmsScholarships(toScholarshipContent(c));
+            }
+            if (Array.isArray(c.applicationTips)) {
+              setCmsTips(c.applicationTips);
+            }
+            if (Array.isArray(c.stats)) {
+              setCmsStats(c.stats);
+            }
           }
         }
       })
       .catch(() => {
         // Fall back to defaults
       });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!content) return <PublicPageSkeleton />;
@@ -319,8 +332,18 @@ export default function ScholarshipPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
                 transition={{ duration: 0.4, delay: i * 0.07 }}
-                className={`group overflow-hidden ${CARD}`}
+                className={`group overflow-hidden ${CARD} cursor-pointer`}
                 style={s.featured ? { borderColor: `${s.color}45` } : undefined}
+                role="link"
+                tabIndex={0}
+                aria-label={`${s.name} — view details`}
+                onClick={() => router.push(detailHref(s))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(detailHref(s));
+                  }
+                }}
               >
                 <div aria-hidden="true" className="h-[3px]" style={{ background: s.color }} />
                 <div className="p-6 md:p-8">
@@ -355,10 +378,16 @@ export default function ScholarshipPage() {
                       </div>
 
                       <h3
-                        className="font-black text-[#0F1B33] text-xl mb-1"
+                        className="font-black text-[#0F1B33] text-xl mb-1 transition-colors group-hover:text-[#E8231A]"
                         style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
                       >
-                        {s.name}
+                        <Link
+                          href={detailHref(s)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:underline"
+                        >
+                          {s.name}
+                        </Link>
                       </h3>
                       <p className="data-type mb-3 text-[12px] uppercase ink-muted">{s.provider}</p>
                       <p className="ink-body text-sm leading-relaxed mb-5">{s.desc}</p>
@@ -417,10 +446,18 @@ export default function ScholarshipPage() {
                         className="flex items-center justify-center gap-2 rounded-[4px] px-5 py-2.5 text-sm font-semibold transition-all duration-200 hover:gap-3"
                         style={{ background: `${s.color}15`, color: s.color }}
                         onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
                       >
                         Apply / Learn More
                         <ExternalLink size={13} aria-hidden="true" />
                       </a>
+                      <Link
+                        href={detailHref(s)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="data-type text-center text-[12px] font-bold uppercase text-[#0F1B33]/60 transition-colors hover:text-[#E8231A]"
+                      >
+                        View details →
+                      </Link>
                     </div>
                   </div>
                 </div>

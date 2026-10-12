@@ -25,6 +25,7 @@ import searchRoutes from './routes/search'
 import auditLogRoutes from './routes/auditLogs'
 import tagRoutes from './routes/tags'
 import researchRoutes from './routes/research'
+import scholarshipRoutes from './routes/scholarships'
 import commentRoutes from './routes/comments'
 import analyticsRoutes from './routes/analytics'
 import userRoutes from './routes/users'
@@ -173,6 +174,7 @@ app.use('/api/search', searchRoutes)
 app.use('/api/audit-logs', auditLogRoutes)
 app.use('/api/tags', tagRoutes)
 app.use('/api/research', researchRoutes)
+app.use('/api/scholarships', scholarshipRoutes)
 app.use('/api/comments', commentRoutes)
 app.use('/api', candidateRoutes)
 app.use('/api/elections', electionRoutes)

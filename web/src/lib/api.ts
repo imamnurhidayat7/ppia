@@ -6,6 +6,7 @@ import type {
   ArticleInput,
   TagInput,
   ResearchInput,
+  ScholarshipInput,
   PageInput,
   LandingSection,
   SectionInput,
@@ -374,6 +375,64 @@ class ApiClient {
 
   async deleteResearch(id: string) {
     const response = await this.client.delete(`/research/${id}`);
+    return response.data;
+  }
+
+  // ===========================================
+  // SCHOLARSHIPS
+  // ===========================================
+  // Member-proposed, board-published. The public endpoints only ever return
+  // `published: true` rows; the legacy CMS page-content array stays as the
+  // fallback until the table holds data.
+  async getScholarships(params?: { page?: number; limit?: number; search?: string; type?: string; featured?: boolean }) {
+    const response = await this.client.get('/scholarships', { params });
+    return response.data;
+  }
+
+  async getScholarshipById(id: string) {
+    const response = await this.client.get(`/scholarships/${id}`);
+    return response.data;
+  }
+
+  async getScholarshipBySlug(slug: string) {
+    const response = await this.client.get(`/scholarships/slug/${slug}`);
+    return response.data;
+  }
+
+  /**
+   * Board listing that includes drafts. The public `/scholarships` endpoint
+   * filters `published: true`, so management screens must use this one.
+   */
+  async getScholarshipsAdmin(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    type?: string;
+    status?: string;
+    published?: 'true' | 'false';
+  }) {
+    const response = await this.client.get('/scholarships/admin/all', { params });
+    return response.data;
+  }
+
+  /** Board fetch by id that also returns unpublished records. */
+  async getScholarshipAdminById(id: string) {
+    const response = await this.client.get(`/scholarships/admin/${id}`);
+    return response.data;
+  }
+
+  async createScholarship(data: ScholarshipInput) {
+    const response = await this.client.post('/scholarships', data);
+    return response.data;
+  }
+
+  async updateScholarship(id: string, data: Partial<ScholarshipInput>) {
+    const response = await this.client.put(`/scholarships/${id}`, data);
+    return response.data;
+  }
+
+  async deleteScholarship(id: string) {
+    const response = await this.client.delete(`/scholarships/${id}`);
     return response.data;
   }
 

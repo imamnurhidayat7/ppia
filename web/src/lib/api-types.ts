@@ -834,3 +834,59 @@ export interface OpportunityInput {
   status?: "open" | "closed" | "draft";
   tags?: string[];
 }
+
+// Scholarship types — first-class rows in the `Scholarship` table.
+// Members propose entries (PENDING_REVIEW); BOARD / SUPER_ADMIN publishes.
+export type ScholarshipType = "INDONESIAN_GOV" | "NZ_GOV" | "UNIVERSITY";
+export type ScholarshipStatus =
+  | "DRAFT"
+  | "PENDING_REVIEW"
+  | "UNDER_REVIEW"
+  | "APPROVED"
+  | "REJECTED"
+  | "PUBLISHED";
+
+export interface Scholarship {
+  id: string;
+  slug: string;
+  name: string;
+  provider: string;
+  type: ScholarshipType;
+  color: string;
+  level: string[];
+  coverage: string[];
+  amount: string;
+  deadline: string;
+  deadlineDate?: string | null;
+  url: string;
+  desc: string;
+  featured: boolean;
+  status: ScholarshipStatus;
+  published: boolean;
+  submittedById?: string | null;
+  submittedBy?: { id: string; name: string; avatar?: string | null } | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  reviewComments?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScholarshipInput {
+  name: string;
+  provider?: string;
+  type?: ScholarshipType;
+  color?: string;
+  level?: string[];
+  coverage?: string[];
+  amount?: string;
+  deadline?: string;
+  deadlineDate?: string | null;
+  url?: string;
+  desc?: string;
+  slug?: string;
+  featured?: boolean;
+  status?: ScholarshipStatus;
+  published?: boolean;
+  reviewComments?: string | null;
+}

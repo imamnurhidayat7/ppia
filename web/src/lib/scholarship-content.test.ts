@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { toScholarshipContent } from './scholarship-content';
+import { fromApiScholarships, toScholarshipContent } from './scholarship-content';
 
 const item = {
   id: 1,
@@ -51,9 +51,9 @@ test('accepts a comma-separated string for list fields', () => {
   assert.deepEqual(result.coverage, ['Tuition', 'Living costs', 'Travel']);
 });
 
-test('coerces a string id to a number', () => {
-  const [result] = toScholarshipContent({ scholarships: [{ ...item, id: '7' }] });
-  assert.equal(result.id, 7);
+test('preserves string ids (cuid / slug) instead of coercing', () => {
+  const [result] = toScholarshipContent({ scholarships: [{ ...item, id: 'cmv4ofeo40001' }] });
+  assert.equal(result.id, 'cmv4ofeo40001');
 });
 
 test('falls back to defaults for missing optional fields', () => {
@@ -79,4 +79,35 @@ test('returns an empty list for anything that is not a scholarship array', () =>
   assert.deepEqual(toScholarshipContent(undefined), []);
   assert.deepEqual(toScholarshipContent({}), []);
   assert.deepEqual(toScholarshipContent({ scholarships: 'nope' }), []);
+});
+
+test('maps API rows to display labels and date fallbacks', () => {
+  const [result] = fromApiScholarships([
+    {
+      id: 'cmv4ofeo40001',
+      slug: 'lpdp-scholarship',
+      name: 'LPDP Scholarship',
+      provider: 'LPDP',
+      type: 'INDONESIAN_GOV',
+      color: '#E8231A',
+      level: ['Masters'],
+      coverage: ['Full tuition'],
+      amount: 'Full funding',
+      deadline: '',
+      deadlineDate: '2026-03-15T00:00:00.000Z',
+      url: 'https://example.com',
+      desc: 'Description',
+      featured: true,
+    },
+  ]);
+
+  assert.equal(result.id, 'cmv4ofeo40001');
+  assert.equal(result.type, 'Indonesian Gov');
+  assert.equal(result.deadline, '2026-03-15T00:00:00.000Z');
+  assert.equal(result.featured, true);
+});
+
+test('fromApiScholarships drops nameless rows and non-arrays', () => {
+  assert.deepEqual(fromApiScholarships(null), []);
+  assert.deepEqual(fromApiScholarships([{ ...item, name: '' }]), []);
 });

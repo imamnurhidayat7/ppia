@@ -16,6 +16,7 @@
     "db:studio": "tsx scripts/prisma.ts studio",
     "db:seed-pages": "tsx prisma/seed-all-pages.ts",
     "db:seed-home": "tsx prisma/seed-landing-sections.ts",
+    "db:seed-scholarships": "tsx prisma/seed-scholarships.ts",
     "db:cleanup-template-blocks": "tsx prisma/cleanup-template-page-blocks.ts",
     "db:verify-content-contract": "tsx prisma/verify-page-content-contract.ts",
     "db:audit-public-content": "tsx prisma/audit-public-content-contract.ts",

@@ -624,6 +624,11 @@ export const CONTENT_SCHEMAS: Record<string, FieldSchema[]> = {
   ],
 
   // ── Scholarship — /opportunities/scholarship ───────────────────
+  // Scholarship entries are NOT edited here: they live in the `Scholarship`
+  // table and are managed at Dashboard → Scholarships (board only). The
+  // `scholarships` key may still exist in stored page content as a read-only
+  // fallback for the public page — the canvas save sends the whole content
+  // object, so removing this block never deletes that stored data.
   scholarship: [
     { key: 'header', label: 'Page header', type: 'group', fields: HEADER_FIELDS },
     {
@@ -634,35 +639,6 @@ export const CONTENT_SCHEMAS: Record<string, FieldSchema[]> = {
       itemSchema: [
         { key: 'value', label: 'Value', type: 'text', placeholder: '6+' },
         { key: 'label', label: 'Caption', type: 'text', placeholder: 'Listed scholarships' },
-      ],
-    },
-    {
-      key: 'scholarships',
-      label: 'Scholarships',
-      type: 'array',
-      itemSchema: [
-        { key: 'id', label: 'Number', type: 'number', placeholder: '1' },
-        { key: 'name', label: 'Scholarship name', type: 'text', placeholder: 'LPDP Scholarship' },
-        { key: 'provider', label: 'Provider', type: 'text', placeholder: 'Lembaga Pengelola Dana Pendidikan' },
-        {
-          key: 'type',
-          label: 'Category',
-          type: 'select',
-          help: 'Drives the filter on the public page.',
-          options: [
-            { value: 'Indonesian Gov', label: 'Indonesian government' },
-            { value: 'NZ Gov', label: 'New Zealand government' },
-            { value: 'University', label: 'University' },
-          ],
-        },
-        { key: 'color', label: 'Colour', type: 'color' },
-        { key: 'level', label: 'Study levels', type: 'stringList', help: 'e.g. Masters, PhD. One per line.' },
-        { key: 'coverage', label: 'What it covers', type: 'stringList', help: 'e.g. Full tuition. One per line.' },
-        { key: 'amount', label: 'Amount', type: 'text', placeholder: 'Full funding' },
-        { key: 'deadline', label: 'Deadline', type: 'text', placeholder: 'Multiple rounds annually' },
-        { key: 'url', label: 'Official link', type: 'url', placeholder: 'https://...' },
-        { key: 'desc', label: 'Description', type: 'textarea', rows: 3 },
-        { key: 'featured', label: 'Mark as featured', type: 'toggle' },
       ],
     },
     {
