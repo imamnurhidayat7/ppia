@@ -238,3 +238,31 @@ export async function fetchLandingSection(key: string): Promise<LandingSection |
 export async function fetchPageBySlug(slug: string): Promise<{ content?: unknown } | null> {
   return getJson<{ content?: unknown }>(`/pages/slug/${encodeURIComponent(slug)}`);
 }
+
+// ── YouTube channel feed ─────────────────────────────────────────────────
+//
+// Powers the public /videos page. The API reads the channel RSS server-side
+// (no key needed) and caches it for thirty minutes; this helper revalidates
+// on the same rhythm so the HTML ships with the latest uploads already in it.
+
+export interface YouTubeFeedVideo {
+  id: string;
+  title: string;
+  url: string;
+  thumbnail: string;
+  publishedAt: string;
+  description: string;
+  views: number | null;
+}
+
+export interface YouTubeFeed {
+  channelId: string;
+  channelTitle: string;
+  channelUrl: string;
+  videos: YouTubeFeedVideo[];
+}
+
+export async function fetchYouTubeFeed(): Promise<YouTubeFeed | null> {
+  const data = await getJson<{ success?: boolean; data?: YouTubeFeed }>(`/youtube/feed`);
+  return data?.data ?? null;
+}

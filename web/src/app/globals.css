@@ -1061,6 +1061,7 @@ html:not(.dark) .bg-\[\#0D1B33\] {
 
 /* ── Border colors ─────────────────────────────────────────────────── */
 .dark .border-\[\#DCE7F1\] { border-color: #1E3A52 !important; }
+.dark .border-\[\#C3D2E0\] { border-color: #2A4A66 !important; }
 .dark .border-\[\#E2E8F0\] { border-color: #1E3A52 !important; }
 .dark .border-\[\#CBD5E1\] { border-color: #2A4A66 !important; }
 .dark .border-\[\#F1F5F9\] { border-color: #1E3A52 !important; }

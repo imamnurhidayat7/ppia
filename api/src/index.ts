@@ -33,6 +33,7 @@ import candidateRoutes from './routes/candidates'
 import voteRoutes from './routes/votes'
 import blockDataRoutes from './routes/blockData'
 import faqRoutes from './routes/faqs'
+import youtubeRoutes from './routes/youtube'
 import bookmarkRoutes from './routes/bookmarks'
 import notificationRoutes from './routes/notifications'
 import privateFileRoutes from './routes/privateFiles'
@@ -180,6 +181,7 @@ app.use('/api/analytics', analyticsRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/blocks', blockDataRoutes)
 app.use('/api/faq', faqRoutes)
+app.use('/api/youtube', youtubeRoutes)
 app.use('/api/bookmarks', bookmarkRoutes)
 app.use('/api/notifications', notificationRoutes)
 // Signed reads of private documents. Active only under the local storage driver;

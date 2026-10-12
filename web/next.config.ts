@@ -102,6 +102,7 @@ const nextConfig: NextConfig = {
       // instead; this entry exists so existing rows keep optimising.
       { protocol: "https", hostname: "**.supabase.co", pathname: "/storage/v1/object/public/**" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "*.ytimg.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
       { protocol: "https", hostname: "picsum.photos" },
     ],
@@ -112,6 +113,12 @@ const nextConfig: NextConfig = {
     scrollRestoration: true,
   },
   async headers() {
+    // Long-lived immutable caching is a production optimisation. In
+    // development the `/_next/static` chunk URLs are STABLE across edits, so
+    // caching them for a year pins a stale stylesheet in the browser: new DOM
+    // with old CSS (unclamped text, stretched thumbnails) that survives server
+    // restarts and normal reloads. Dev already sends no-store by default.
+    if (process.env.NODE_ENV !== 'production') return [];
     return [
       {
         source: '/:all*(svg|jpg|jpeg|png|webp|avif|gif|ico|woff2|woff|ttf|eot)',

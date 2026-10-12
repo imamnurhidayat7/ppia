@@ -12,6 +12,7 @@ const PUBLIC_GET_PATHS = [
   /^\/api\/landing-sections(?:\/key\/[^/]+)?\/?$/,
   /^\/api\/(?:divisions|tags|faq)(?:\/[^/]+)?\/?$/,
   /^\/api\/(?:menus|config)(?:\/[^/]+)?\/?$/,
+  /^\/api\/youtube\/feed\/?$/,
   /^\/api\/settings\/?$/,
   /^\/api\/search\/?$/,
   /^\/api\/comments\/(?:article|research)\/[^/]+\/?$/,

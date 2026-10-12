@@ -73,6 +73,8 @@ const buildCsp = (): string => {
     'https://www.googletagmanager.com',
     'https://www.google.com',
     'https://www.gstatic.com',
+    // Lazily-loaded YouTube IFrame Player API (videos page theater player).
+    'https://www.youtube.com',
   ];
 
   const imgSrc = [
@@ -82,6 +84,7 @@ const buildCsp = (): string => {
     'https://images.unsplash.com',
     'https://plus.unsplash.com',
     'https://picsum.photos',
+    'https://*.ytimg.com',
     API_ORIGIN,
     FILES_ORIGIN,
     ...EXTRA_IMAGE_HOSTS,

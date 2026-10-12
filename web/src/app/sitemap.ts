@@ -14,6 +14,7 @@ const staticRoutes = [
   "/about/historical-archive",
   "/activities/events",
   "/activities/news-articles",
+  "/activities/videos",
   "/activities/research-corner",
   "/opportunities/wiki-ppia",
   "/opportunities/scholarship",
