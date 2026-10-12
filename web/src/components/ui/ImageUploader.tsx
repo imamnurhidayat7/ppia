@@ -25,8 +25,15 @@ export function ImageUploader({
   const [isUploading, setIsUploading] = React.useState(false);
   const [showUrlInput, setShowUrlInput] = React.useState(false);
   const [urlInputValue, setUrlInputValue] = React.useState('');
+  // A stored URL can rot (file deleted, host moved) — show an explicit
+  // failed state with recovery actions instead of a broken-image icon.
+  const [previewFailed, setPreviewFailed] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { showError } = useToast();
+
+  React.useEffect(() => {
+    setPreviewFailed(false);
+  }, [value]);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -161,13 +168,30 @@ export function ImageUploader({
               backgroundPosition: '0 0, 8px 8px',
             }}
           >
-            <img
-              src={getImageUrl(value)}
-              alt="Preview"
-              className="max-h-full max-w-full object-contain p-3"
-            />
+            {previewFailed ? (
+              <div className="flex flex-col items-center gap-1.5 p-3 text-center">
+                <p className="text-xs font-semibold text-gray-700 dark:text-slate-200">
+                  Couldn&apos;t load this image
+                </p>
+                <p className="max-w-full truncate font-mono text-[11px] text-gray-400 dark:text-slate-500">
+                  {value}
+                </p>
+                <p className="text-[11px] text-gray-500 dark:text-slate-400">
+                  Replace it below, or remove it to fall back to the default.
+                </p>
+              </div>
+            ) : (
+              <img
+                src={getImageUrl(value)}
+                alt="Preview"
+                onError={() => setPreviewFailed(true)}
+                className="max-h-full max-w-full object-contain p-3"
+              />
+            )}
           </div>
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-2 p-2">
+          {/* When the preview itself failed, keep the recovery actions
+              visible instead of hiding them behind hover. */}
+          <div className={`absolute inset-0 bg-black/50 transition-opacity flex flex-wrap items-center justify-center gap-2 p-2 ${previewFailed ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"}`}>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}

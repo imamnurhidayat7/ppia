@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import api from '@/lib/api';
+import { normalizeLogoUrl } from '@/lib/hooks/use-site-config';
 import type {
   ColorConfig,
   ContactConfig,
@@ -176,9 +177,14 @@ export default function SettingsEditor() {
         (res.data || []).forEach((entry) => {
           map[entry.key] = entry;
         });
-        setHeaderConfig((map.header?.config as HeaderConfig) || {});
-        setFooterConfig((map.footer?.config as FooterConfig) || {});
-        setSocialConfig((map.social?.config as SocialConfig) || {});
+        // Legacy seed wrote `/logo.svg` as the logo while no such file was
+        // ever served — normalise it away so the uploader opens empty
+        // instead of previewing a dead URL. The next save persists the
+        // cleanup to the stored row.
+        const loadedHeader = (map.header?.config as HeaderConfig) || {};
+        const loadedFooter = (map.footer?.config as FooterConfig) || {};
+        setHeaderConfig({ ...loadedHeader, logoUrl: normalizeLogoUrl(loadedHeader.logoUrl) });
+        setFooterConfig({ ...loadedFooter, logoUrl: normalizeLogoUrl(loadedFooter.logoUrl) });        setSocialConfig((map.social?.config as SocialConfig) || {});
         // Colours were never loaded from the server before, so this tab always
         // showed the fallback values and saving would overwrite the stored
         // palette.
