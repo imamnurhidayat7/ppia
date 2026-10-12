@@ -368,16 +368,15 @@ export default function EventRegistrationsPage() {
   };
 
   const handleCancel = async (row: RegistrationRow) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Cancel registration?',
-      message: `The registration for ${attendeeOf(row)?.name || 'this attendee'} will be marked as cancelled.`,
-      confirmLabel: 'Yes, cancel',
-      variant: 'danger',
-    });
-    if (!ok) return;
     setBusyRow(row.id);
     try {
-      await api.updateRegistrationStatus(row.id, 'CANCELLED');
+      const ok = await confirmCtx.confirmTask({
+        title: 'Cancel registration?',
+        message: `The registration for ${attendeeOf(row)?.name || 'this attendee'} will be marked as cancelled.`,
+        confirmLabel: 'Yes, cancel',
+        variant: 'danger',
+      }, () => api.updateRegistrationStatus(row.id, 'CANCELLED'));
+      if (!ok) return;
       showSuccess('Registration cancelled');
       await fetchData();
     } catch (error) {

@@ -164,14 +164,16 @@ export default function AdminScholarshipsPage() {
   };
 
   const handleApprove = async (item: Scholarship) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Publish scholarship?',
-      message: `${item.name} will go live on the public scholarship page.`,
-      confirmLabel: 'Yes, publish',
-    });
-    if (!ok) return;
     try {
-      await api.updateScholarship(item.id, { status: 'PUBLISHED' });
+      const done = await confirmCtx.confirmTask(
+        {
+          title: 'Publish scholarship?',
+          message: `${item.name} will go live on the public scholarship page.`,
+          confirmLabel: 'Yes, publish',
+        },
+        () => api.updateScholarship(item.id, { status: 'PUBLISHED' })
+      );
+      if (!done) return;
       showSuccess('Scholarship published');
       await fetchData();
     } catch (error) {
@@ -180,15 +182,17 @@ export default function AdminScholarshipsPage() {
   };
 
   const handleDelete = async (item: Scholarship) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete scholarship?',
-      message: `${item.name} will be deleted permanently and cannot be restored.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteScholarship(item.id);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: 'Delete scholarship?',
+          message: `${item.name} will be deleted permanently and cannot be restored.`,
+          confirmLabel: 'Yes, delete',
+          variant: 'danger',
+        },
+        () => api.deleteScholarship(item.id)
+      );
+      if (!done) return;
       showSuccess('Scholarship deleted');
       await fetchData();
     } catch (error) {

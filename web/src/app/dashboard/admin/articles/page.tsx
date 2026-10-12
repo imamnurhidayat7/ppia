@@ -217,15 +217,17 @@ export default function AdminArticlesPage() {
   };
 
   const handleDelete = async (article: AdminArticle) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete post?',
-      message: `${article.title} will be deleted permanently and cannot be restored.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteArticle(article.id);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: 'Delete post?',
+          message: `${article.title} will be deleted permanently and cannot be restored.`,
+          confirmLabel: 'Yes, delete',
+          variant: 'danger',
+        },
+        () => api.deleteArticle(article.id)
+      );
+      if (!done) return;
       showSuccess('Post deleted');
       if (selectedArticle?.id === article.id) setSelectedArticle(null);
       await fetchData();

@@ -205,15 +205,14 @@ export default function ManageElectionPage() {
   };
 
   const handlePublish = async () => {
-    const ok = await confirmCtx.confirm({
-      title: 'Publish the election results?',
-      message: 'Voting will be closed and the results announced. This action cannot be undone.',
-      confirmLabel: 'Yes, publish',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.updateElection(electionId, { status: 'PUBLISHED' });
+      const ok = await confirmCtx.confirmTask({
+        title: 'Publish the election results?',
+        message: 'Voting will be closed and the results announced. This action cannot be undone.',
+        confirmLabel: 'Yes, publish',
+        variant: 'danger',
+      }, () => api.updateElection(electionId, { status: 'PUBLISHED' }));
+      if (!ok) return;
       showSuccess('Election results published');
       await loadElection();
     } catch (error) {
@@ -223,16 +222,15 @@ export default function ManageElectionPage() {
   };
 
   const handleDelete = async () => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete this election?',
-      message:
-        'The election, along with every candidate and vote in it, will be permanently removed. This cannot be undone. If no elections remain, PEMIRA disappears from the public menu.',
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteElection(electionId);
+      const ok = await confirmCtx.confirmTask({
+        title: 'Delete this election?',
+        message:
+          'The election, along with every candidate and vote in it, will be permanently removed. This cannot be undone. If no elections remain, PEMIRA disappears from the public menu.',
+        confirmLabel: 'Yes, delete',
+        variant: 'danger',
+      }, () => api.deleteElection(electionId));
+      if (!ok) return;
       showSuccess('Election deleted');
       router.push('/dashboard/admin/pemira');
     } catch (error) {

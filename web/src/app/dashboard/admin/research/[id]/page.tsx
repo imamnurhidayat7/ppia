@@ -113,16 +113,20 @@ export default function AdminResearchDetailPage() {
 
   const handleDelete = async () => {
     if (!research) return;
-    const ok = await confirmCtx.confirm({
-      title: 'Delete research?',
-      message: `${research.title} will be deleted permanently and cannot be restored.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
-    setBusy(true);
     try {
-      await api.deleteResearch(id);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: 'Delete research?',
+          message: `${research.title} will be deleted permanently and cannot be restored.`,
+          confirmLabel: 'Yes, delete',
+          variant: 'danger',
+        },
+        async () => {
+          setBusy(true);
+          await api.deleteResearch(id);
+        }
+      );
+      if (!done) return;
       showSuccess('Research deleted');
       router.push('/dashboard/admin/research');
     } catch (error) {

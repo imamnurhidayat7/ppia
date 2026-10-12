@@ -172,15 +172,14 @@ export default function AdminDivisionsPage() {
   };
 
   const handleDelete = async (division: Division) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete division?',
-      message: `${division.name} will be permanently deleted. This action cannot be undone.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteDivision(division.id);
+      const done = await confirmCtx.confirmTask({
+        title: 'Delete division?',
+        message: `${division.name} will be permanently deleted. This action cannot be undone.`,
+        confirmLabel: 'Yes, delete',
+        variant: 'danger',
+      }, () => api.deleteDivision(division.id));
+      if (!done) return;
       showSuccess('Division deleted');
       await fetchData();
     } catch (error) {

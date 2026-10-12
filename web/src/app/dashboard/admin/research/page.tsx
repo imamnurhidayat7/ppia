@@ -168,15 +168,17 @@ export default function AdminResearchPage() {
   };
 
   const handleDelete = async (item: ResearchListItem) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete research?',
-      message: `${item.title} will be deleted permanently and cannot be restored.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteResearch(item.id);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: 'Delete research?',
+          message: `${item.title} will be deleted permanently and cannot be restored.`,
+          confirmLabel: 'Yes, delete',
+          variant: 'danger',
+        },
+        () => api.deleteResearch(item.id)
+      );
+      if (!done) return;
       showSuccess('Research deleted');
       await fetchData();
     } catch (error) {

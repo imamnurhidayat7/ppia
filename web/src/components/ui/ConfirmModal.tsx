@@ -5,6 +5,8 @@ import { useState } from 'react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
+  /** A confirmed task is running: spin, lock dismissal, announce. */
+  busy?: boolean;
   title: string;
   message: string;
   confirmLabel?: string;
@@ -18,6 +20,7 @@ interface ConfirmModalProps {
 
 export function ConfirmModal({
   isOpen,
+  busy = false,
   title,
   message,
   confirmLabel = 'Yes, continue',
@@ -31,11 +34,13 @@ export function ConfirmModal({
   const [reason, setReason] = useState(defaultReason);
 
   const handleConfirm = () => {
+    if (busy) return;
     onConfirm(showReasonInput ? reason : undefined);
     setReason('');
   };
 
   const handleCancel = () => {
+    if (busy) return;
     setReason('');
     onCancel();
   };
@@ -58,7 +63,13 @@ export function ConfirmModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+            aria-busy={busy || undefined}
           >
+            {busy && (
+              <p aria-live="polite" className="sr-only">
+                Working, please wait…
+              </p>
+            )}
             {/* Header */}
             <div className={`flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 ${
               variant === 'danger' ? 'bg-red-50 dark:bg-red-950/30' : 'bg-amber-50 dark:bg-amber-950/30'
@@ -73,7 +84,9 @@ export function ConfirmModal({
               </div>
               <button
                 onClick={handleCancel}
-                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                disabled={busy}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Close dialog"
               >
                 <X size={18} className="text-slate-400" />
               </button>
@@ -105,18 +118,26 @@ export function ConfirmModal({
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
               <button
                 onClick={handleCancel}
-                className="px-5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm hover:bg-slate-50 dark:bg-slate-900/50 transition-colors"
+                disabled={busy}
+                className="px-5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm hover:bg-slate-50 dark:bg-slate-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cancelLabel}
               </button>
               <button
                 onClick={handleConfirm}
-                className={`px-5 py-2 rounded-xl text-white font-bold text-sm transition-colors ${
+                disabled={busy}
+                className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl text-white font-bold text-sm transition-colors disabled:cursor-wait disabled:opacity-80 ${
                   variant === 'danger'
                     ? 'bg-red-500 hover:bg-red-600'
                     : 'bg-amber-500 hover:bg-amber-600'
                 }`}
               >
+                {busy && (
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-white"
+                  />
+                )}
                 {confirmLabel}
               </button>
             </div>

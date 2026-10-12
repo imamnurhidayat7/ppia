@@ -266,15 +266,14 @@ export default function AdminCommentsPage() {
   };
 
   const handleDelete = async (comment: AdminComment) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete comment?',
-      message: 'The comment and all its replies will be permanently deleted.',
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteComment(comment.id);
+      const done = await confirmCtx.confirmTask({
+        title: 'Delete comment?',
+        message: 'The comment and all its replies will be permanently deleted.',
+        confirmLabel: 'Yes, delete',
+        variant: 'danger',
+      }, () => api.deleteComment(comment.id));
+      if (!done) return;
       showSuccess('Comment deleted');
       await fetchData();
     } catch (error) {

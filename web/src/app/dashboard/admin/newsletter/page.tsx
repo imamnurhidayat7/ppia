@@ -163,17 +163,24 @@ export default function AdminNewsletterPage() {
       showError('There are no active subscribers to send to');
       return;
     }
-    const ok = await confirmCtx.confirm({
-      title: 'Send newsletter?',
-      message: `This email will be sent to ${stats.active} active subscribers. This action cannot be undone.`,
-      confirmLabel: 'Yes, send',
-      variant: 'warning',
-    });
-    if (!ok) return;
-
-    setSending(true);
+    let sendResult: { message?: string; sent?: number; failed?: number } | undefined;
     try {
-      const result = await api.sendNewsletter(subject.trim(), content) as {
+      const done = await confirmCtx.confirmTask({
+        title: 'Send newsletter?',
+        message: `This email will be sent to ${stats.active} active subscribers. This action cannot be undone.`,
+        confirmLabel: 'Yes, send',
+        variant: 'warning',
+      }, async () => {
+        sendResult = await api.sendNewsletter(subject.trim(), content) as {
+          message?: string;
+          sent?: number;
+          failed?: number;
+        };
+      });
+      if (!done) return;
+
+      setSending(true);
+      const result = sendResult as {
         message?: string;
         sent?: number;
         failed?: number;

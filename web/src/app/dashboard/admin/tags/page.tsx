@@ -187,15 +187,14 @@ export default function AdminTagsPage() {
   };
 
   const handleDelete = async (tag: Tag) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete tag?',
-      message: `${tag.name} will be deleted and removed from all content that uses it.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteTag(tag.id);
+      const done = await confirmCtx.confirmTask({
+        title: 'Delete tag?',
+        message: `${tag.name} will be deleted and removed from all content that uses it.`,
+        confirmLabel: 'Yes, delete',
+        variant: 'danger',
+      }, () => api.deleteTag(tag.id));
+      if (!done) return;
       showSuccess('Tag deleted');
       await fetchTags();
     } catch (error) {

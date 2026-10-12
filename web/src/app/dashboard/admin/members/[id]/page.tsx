@@ -331,16 +331,20 @@ export default function MemberDetailPage() {
 
   const handleApprove = async () => {
     if (!member) return;
-    const ok = await confirmCtx.confirm({
-      title: status === 'PENDING' ? 'Approve member?' : 'Approve member again?',
-      message: `${member.name || member.username} will be able to log in and access member features right away.`,
-      confirmLabel: 'Yes, approve',
-      variant: 'warning',
-    });
-    if (!ok) return;
-    setActionLoading(true);
     try {
-      await api.approveMember(member.id);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: status === 'PENDING' ? 'Approve member?' : 'Approve member again?',
+          message: `${member.name || member.username} will be able to log in and access member features right away.`,
+          confirmLabel: 'Yes, approve',
+          variant: 'warning',
+        },
+        async () => {
+          setActionLoading(true);
+          await api.approveMember(member.id);
+        }
+      );
+      if (!done) return;
       showSuccess('Member approved');
       await fetchMember();
     } catch (requestError) {
@@ -356,17 +360,21 @@ export default function MemberDetailPage() {
 
   const handleDeactivate = async () => {
     if (!member) return;
-    const ok = await confirmCtx.confirm({
-      title: `Deactivate ${member.name || member.username}?`,
-      message:
-        'Their account will no longer be able to sign in and they disappear from the directory. The record stays and can be reactivated anytime.',
-      confirmLabel: 'Yes, deactivate',
-      variant: 'danger',
-    });
-    if (!ok) return;
-    setActionLoading(true);
     try {
-      await api.deactivateMember(member.id);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: `Deactivate ${member.name || member.username}?`,
+          message:
+            'Their account will no longer be able to sign in and they disappear from the directory. The record stays and can be reactivated anytime.',
+          confirmLabel: 'Yes, deactivate',
+          variant: 'danger',
+        },
+        async () => {
+          setActionLoading(true);
+          await api.deactivateMember(member.id);
+        }
+      );
+      if (!done) return;
       showSuccess('Member deactivated');
       await fetchMember();
     } catch (requestError) {

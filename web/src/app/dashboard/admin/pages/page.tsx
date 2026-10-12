@@ -301,15 +301,14 @@ function AdminPagesView() {
   };
 
   const handleDelete = async (page: CmsPage) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete page?',
-      message: `${page.title} will be permanently deleted. This action cannot be undone.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deletePage(page.id);
+      const done = await confirmCtx.confirmTask({
+        title: 'Delete page?',
+        message: `${page.title} will be permanently deleted. This action cannot be undone.`,
+        confirmLabel: 'Yes, delete',
+        variant: 'danger',
+      }, () => api.deletePage(page.id));
+      if (!done) return;
       showSuccess('Page deleted');
       await fetchPages();
     } catch (error) {

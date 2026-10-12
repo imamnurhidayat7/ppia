@@ -254,16 +254,15 @@ export default function AdminDashboardPage() {
   const showSkeleton = loading && canView;
 
   const handleApprove = async (member: PendingMember) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Approve member?',
-      message: `${member.name} will be able to log in and access member features right away.`,
-      confirmLabel: 'Yes, approve',
-      variant: 'warning',
-    });
-    if (!ok) return;
     setBusyMember(member.id);
     try {
-      await api.approveMember(member.id);
+      const ok = await confirmCtx.confirmTask({
+        title: 'Approve member?',
+        message: `${member.name} will be able to log in and access member features right away.`,
+        confirmLabel: 'Yes, approve',
+        variant: 'warning',
+      }, () => api.approveMember(member.id));
+      if (!ok) return;
       showSuccess(`${member.name} approved as a member`);
       setPending((list) => list.filter((item) => item.id !== member.id));
       setPendingTotal((total) => Math.max(0, total - 1));

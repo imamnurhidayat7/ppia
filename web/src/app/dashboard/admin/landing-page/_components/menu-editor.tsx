@@ -200,18 +200,19 @@ export default function MenuEditor() {
 
   const deleteItem = async (lang: MenuLang, path: number[], item: MenuItem) => {
     if (!activeMenu) return;
-    const ok = await confirmCtx.confirm({
+    const ok = await confirmCtx.confirmTask({
       title: 'Delete menu item?',
       message: `"${item.label}" and its subitems will be removed from this menu.`,
       confirmLabel: 'Yes, delete',
       variant: 'danger',
+    }, async () => {
+      const items = structuredClone(activeMenu.items[lang] ?? []) as MenuItem[];
+      const siblings = resolveSiblings(items, path);
+      if (!siblings) return;
+      siblings.splice(path[path.length - 1], 1);
+      await saveMenu(activeMenu, { ...activeMenu.items, [lang]: items }, activeMenu.enabled, 'Menu item deleted');
     });
     if (!ok) return;
-    const items = structuredClone(activeMenu.items[lang] ?? []) as MenuItem[];
-    const siblings = resolveSiblings(items, path);
-    if (!siblings) return;
-    siblings.splice(path[path.length - 1], 1);
-    saveMenu(activeMenu, { ...activeMenu.items, [lang]: items }, activeMenu.enabled, 'Menu item deleted');
   };
 
   const moveItem = (lang: MenuLang, path: number[], direction: 'up' | 'down') => {

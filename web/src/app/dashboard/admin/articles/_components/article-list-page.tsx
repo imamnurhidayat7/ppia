@@ -166,15 +166,17 @@ export function ArticleListPage({
   };
 
   const handleDelete = async (item: AdminArticle) => {
-    const ok = await confirmCtx.confirm({
-      title: `Delete ${noun}?`,
-      message: `${item.title} will be deleted permanently and cannot be restored.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await deleteItem(item);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: `Delete ${noun}?`,
+          message: `${item.title} will be deleted permanently and cannot be restored.`,
+          confirmLabel: 'Yes, delete',
+          variant: 'danger',
+        },
+        () => deleteItem(item)
+      );
+      if (!done) return;
       showSuccess(`${noun.charAt(0).toUpperCase()}${noun.slice(1)} deleted`);
       await loadItems();
     } catch (error) {

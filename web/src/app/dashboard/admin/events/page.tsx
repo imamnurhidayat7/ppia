@@ -244,15 +244,14 @@ export default function AdminEventsPage() {
   };
 
   const handleDelete = async (event: AdminEvent) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete event?',
-      message: `${event.title} will be permanently deleted along with its registrations and documentation.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteEvent(event.id);
+      const ok = await confirmCtx.confirmTask({
+        title: 'Delete event?',
+        message: `${event.title} will be permanently deleted along with its registrations and documentation.`,
+        confirmLabel: 'Yes, delete',
+        variant: 'danger',
+      }, () => api.deleteEvent(event.id));
+      if (!ok) return;
       showSuccess('Event deleted');
       await fetchData();
     } catch (error) {

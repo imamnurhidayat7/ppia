@@ -415,19 +415,27 @@ function MembersManager() {
 
   const handleBulkApprove = async () => {
     if (selectablePending.length === 0) return;
-    const ok = await confirmCtx.confirm({
-      title: `Setujui ${selectablePending.length} anggota?`,
-      message: 'Anggota terpilih akan langsung bisa masuk dan mengakses fitur member.',
-      confirmLabel: 'Ya, setujui',
-    });
-    if (!ok) return;
-
-    setBulkBusy(true);
-    const results = await Promise.allSettled(
-      selectablePending.map((member) => api.approveMember(member.id))
+    let results: PromiseSettledResult<unknown>[] = [];
+    const done = await confirmCtx.confirmTask(
+      {
+        title: `Setujui ${selectablePending.length} anggota?`,
+        message: 'Anggota terpilih akan langsung bisa masuk dan mengakses fitur member.',
+        confirmLabel: 'Ya, setujui',
+      },
+      async () => {
+        setBulkBusy(true);
+        try {
+          results = await Promise.allSettled(
+            selectablePending.map((member) => api.approveMember(member.id))
+          );
+        } finally {
+          setBulkBusy(false);
+        }
+      }
     );
+    if (!done) return;
+
     const failed = results.filter((result) => result.status === 'rejected').length;
-    setBulkBusy(false);
     setSelected(new Set());
     if (failed === 0) {
       showSuccess(`${selectablePending.length} anggota disetujui`);
@@ -438,16 +446,18 @@ function MembersManager() {
   };
 
   const handleDeactivate = async (member: AdminMember) => {
-    const ok = await confirmCtx.confirm({
-      title: `Nonaktifkan ${member.name}?`,
-      message:
-        'Akunnya tidak bisa masuk lagi dan hilang dari direktori, tapi datanya tetap tersimpan dan bisa diaktifkan lagi kapan saja.',
-      confirmLabel: 'Ya, nonaktifkan',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deactivateMember(member.id);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: `Nonaktifkan ${member.name}?`,
+          message:
+            'Akunnya tidak bisa masuk lagi dan hilang dari direktori, tapi datanya tetap tersimpan dan bisa diaktifkan lagi kapan saja.',
+          confirmLabel: 'Ya, nonaktifkan',
+          variant: 'danger',
+        },
+        () => api.deactivateMember(member.id)
+      );
+      if (!done) return;
       showSuccess(`${member.name} dinonaktifkan`);
       await afterMutation();
     } catch (error) {
@@ -458,20 +468,28 @@ function MembersManager() {
 
   const handleBulkDeactivate = async () => {
     if (selectableActive.length === 0) return;
-    const ok = await confirmCtx.confirm({
-      title: `Nonaktifkan ${selectableActive.length} anggota?`,
-      message: 'Akun mereka tidak bisa masuk lagi, tapi data tetap tersimpan dan bisa diaktifkan lagi.',
-      confirmLabel: 'Ya, nonaktifkan',
-      variant: 'danger',
-    });
-    if (!ok) return;
-
-    setBulkBusy(true);
-    const results = await Promise.allSettled(
-      selectableActive.map((member) => api.deactivateMember(member.id))
+    let results: PromiseSettledResult<unknown>[] = [];
+    const done = await confirmCtx.confirmTask(
+      {
+        title: `Nonaktifkan ${selectableActive.length} anggota?`,
+        message: 'Akun mereka tidak bisa masuk lagi, tapi data tetap tersimpan dan bisa diaktifkan lagi.',
+        confirmLabel: 'Ya, nonaktifkan',
+        variant: 'danger',
+      },
+      async () => {
+        setBulkBusy(true);
+        try {
+          results = await Promise.allSettled(
+            selectableActive.map((member) => api.deactivateMember(member.id))
+          );
+        } finally {
+          setBulkBusy(false);
+        }
+      }
     );
+    if (!done) return;
+
     const failed = results.filter((result) => result.status === 'rejected').length;
-    setBulkBusy(false);
     setSelected(new Set());
     if (failed === 0) {
       showSuccess(`${selectableActive.length} anggota dinonaktifkan`);
@@ -482,15 +500,17 @@ function MembersManager() {
   };
 
   const handleDelete = async (member: AdminMember) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Hapus anggota?',
-      message: `Data ${member.name} akan dihapus permanen dan tidak bisa dibatalkan.`,
-      confirmLabel: 'Ya, hapus',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteMember(member.id);
+      const done = await confirmCtx.confirmTask(
+        {
+          title: 'Hapus anggota?',
+          message: `Data ${member.name} akan dihapus permanen dan tidak bisa dibatalkan.`,
+          confirmLabel: 'Ya, hapus',
+          variant: 'danger',
+        },
+        () => api.deleteMember(member.id)
+      );
+      if (!done) return;
       showSuccess('Anggota dihapus');
       setSelected((current) => {
         const next = new Set(current);
@@ -506,20 +526,28 @@ function MembersManager() {
 
   const handleBulkDelete = async () => {
     if (selectedMembers.length === 0) return;
-    const ok = await confirmCtx.confirm({
-      title: `Hapus ${selectedMembers.length} anggota?`,
-      message: 'Semua data anggota terpilih akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
-      confirmLabel: 'Ya, hapus semua',
-      variant: 'danger',
-    });
-    if (!ok) return;
-
-    setBulkBusy(true);
-    const results = await Promise.allSettled(
-      selectedMembers.map((member) => api.deleteMember(member.id))
+    let results: PromiseSettledResult<unknown>[] = [];
+    const done = await confirmCtx.confirmTask(
+      {
+        title: `Hapus ${selectedMembers.length} anggota?`,
+        message: 'Semua data anggota terpilih akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+        confirmLabel: 'Ya, hapus semua',
+        variant: 'danger',
+      },
+      async () => {
+        setBulkBusy(true);
+        try {
+          results = await Promise.allSettled(
+            selectedMembers.map((member) => api.deleteMember(member.id))
+          );
+        } finally {
+          setBulkBusy(false);
+        }
+      }
     );
+    if (!done) return;
+
     const failed = results.filter((result) => result.status === 'rejected').length;
-    setBulkBusy(false);
     setSelected(new Set());
     if (failed === 0) {
       showSuccess(`${selectedMembers.length} anggota dihapus`);

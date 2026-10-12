@@ -177,16 +177,15 @@ export default function DashboardEventDetailPage() {
 
   const handleCancel = async () => {
     if (!myRegistration) return;
-    const ok = await confirmCtx.confirm({
-      title: 'Cancel your registration?',
-      message: 'You can register again later if there is still room.',
-      confirmLabel: 'Yes, cancel',
-      variant: 'danger',
-    });
-    if (!ok) return;
     setCancelling(true);
     try {
-      await api.cancelRegistration(myRegistration.id);
+      const ok = await confirmCtx.confirmTask({
+        title: 'Cancel your registration?',
+        message: 'You can register again later if there is still room.',
+        confirmLabel: 'Yes, cancel',
+        variant: 'danger',
+      }, () => api.cancelRegistration(myRegistration.id));
+      if (!ok) return;
       showSuccess('Registration cancelled');
       setMyRegistration(null);
     } catch (err) {

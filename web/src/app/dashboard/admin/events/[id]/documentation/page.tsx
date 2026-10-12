@@ -252,15 +252,14 @@ export default function EventDocumentationPage() {
   };
 
   const handleDelete = async (doc: EventDocumentation) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete documentation?',
-      message: `${doc.title || TYPE_LABEL[doc.type]} will be permanently deleted from the event documentation.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteEventDocumentation(doc.id);
+      const ok = await confirmCtx.confirmTask({
+        title: 'Delete documentation?',
+        message: `${doc.title || TYPE_LABEL[doc.type]} will be permanently deleted from the event documentation.`,
+        confirmLabel: 'Yes, delete',
+        variant: 'danger',
+      }, () => api.deleteEventDocumentation(doc.id));
+      if (!ok) return;
       showSuccess('Documentation deleted');
       await fetchData();
     } catch (error) {

@@ -178,15 +178,14 @@ export default function MediaLibraryPage() {
   };
 
   const handleDelete = async (item: Media) => {
-    const ok = await confirmCtx.confirm({
-      title: 'Delete file?',
-      message: `${item.filename} will be permanently deleted, and its links will break in any content that uses it.`,
-      confirmLabel: 'Yes, delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
-      await api.deleteMedia(item.id);
+      const done = await confirmCtx.confirmTask({
+        title: 'Delete file?',
+        message: `${item.filename} will be permanently deleted, and its links will break in any content that uses it.`,
+        confirmLabel: 'Yes, delete',
+        variant: 'danger',
+      }, () => api.deleteMedia(item.id));
+      if (!done) return;
       showSuccess('File deleted');
       await fetchMedia();
     } catch (error) {
