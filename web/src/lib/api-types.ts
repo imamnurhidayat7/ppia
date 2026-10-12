@@ -28,7 +28,7 @@ export interface ApiError {
 }
 
 // Auth types
-export type MembershipStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type MembershipStatus = "PENDING" | "APPROVED" | "REJECTED" | "INACTIVE";
 
 export interface RegisterData {
   email: string;

@@ -676,6 +676,7 @@ enum MembershipStatus {
   PENDING
   APPROVED
   REJECTED
+  INACTIVE
 }
 
 enum Position {
@@ -696,6 +697,7 @@ enum NotificationType {
   EVENT_REGISTRATION
   MEMBERSHIP_APPROVED
   MEMBERSHIP_REJECTED
+  MEMBERSHIP_DEACTIVATED
   SYSTEM
 }
 

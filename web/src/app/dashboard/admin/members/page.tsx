@@ -25,7 +25,9 @@ import {
   RefreshCw,
   Search,
   Trash2,
+  UserCheck,
   Users,
+  UserX,
   X,
 } from 'lucide-react';
 
@@ -44,7 +46,7 @@ const ROLES = [
   { value: 'SUPER_ADMIN', label: 'Super Admin' },
 ];
 
-type MembershipStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+type MembershipStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'INACTIVE';
 type SortKey = 'name' | 'role' | 'status' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
@@ -71,6 +73,7 @@ const STATUS_ORDER: Record<MembershipStatus, number> = {
   PENDING: 0,
   APPROVED: 1,
   REJECTED: 2,
+  INACTIVE: 3,
 };
 
 const ROLE_ORDER: Record<string, number> = {
@@ -101,13 +104,19 @@ function StatusPill({ status }: { status: MembershipStatus }) {
       className:
         'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800/60',
       dot: 'bg-emerald-500',
-      label: 'Approved',
+      label: 'Disetujui',
     },
     REJECTED: {
       className:
         'bg-danger-50 text-danger-700 ring-danger-200 dark:bg-danger-900/30 dark:text-danger-300 dark:ring-danger-800/60',
       dot: 'bg-danger-500',
-      label: 'Rejected',
+      label: 'Ditolak',
+    },
+    INACTIVE: {
+      className:
+        'bg-slate-100 text-slate-600 ring-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700',
+      dot: 'bg-slate-400',
+      label: 'Nonaktif',
     },
   };
   const style = styles[status];
@@ -203,7 +212,7 @@ function MembersManager() {
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState(() => {
     const status = searchParams.get('status');
-    return status === 'PENDING' || status === 'APPROVED' || status === 'REJECTED' ? status : '';
+    return status === 'PENDING' || status === 'APPROVED' || status === 'REJECTED' || status === 'INACTIVE' ? status : '';
   });
   const [divisionFilter, setDivisionFilter] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('createdAt');
@@ -258,7 +267,7 @@ function MembersManager() {
   const showSkeleton = (isLoading || loading) && (isLoading || isSuperAdmin);
 
   const counts = useMemo(() => {
-    const result = { all: members.length, PENDING: 0, APPROVED: 0, REJECTED: 0 };
+    const result = { all: members.length, PENDING: 0, APPROVED: 0, REJECTED: 0, INACTIVE: 0 };
     members.forEach((member) => {
       result[statusOf(member)] += 1;
     });
@@ -316,6 +325,9 @@ function MembersManager() {
     [members, selected]
   );
   const selectablePending = selectedMembers.filter((member) => statusOf(member) === 'PENDING');
+  const selectableActive = selectedMembers.filter(
+    (member) => statusOf(member) === 'APPROVED' && member.id !== user?.id
+  );
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -421,6 +433,50 @@ function MembersManager() {
       showSuccess(`${selectablePending.length} anggota disetujui`);
     } else {
       showError(`${failed} dari ${selectablePending.length} persetujuan gagal`);
+    }
+    await afterMutation();
+  };
+
+  const handleDeactivate = async (member: AdminMember) => {
+    const ok = await confirmCtx.confirm({
+      title: `Nonaktifkan ${member.name}?`,
+      message:
+        'Akunnya tidak bisa masuk lagi dan hilang dari direktori, tapi datanya tetap tersimpan dan bisa diaktifkan lagi kapan saja.',
+      confirmLabel: 'Ya, nonaktifkan',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await api.deactivateMember(member.id);
+      showSuccess(`${member.name} dinonaktifkan`);
+      await afterMutation();
+    } catch (error) {
+      const err = error as { message?: string };
+      showError(err.message || 'Gagal menonaktifkan anggota');
+    }
+  };
+
+  const handleBulkDeactivate = async () => {
+    if (selectableActive.length === 0) return;
+    const ok = await confirmCtx.confirm({
+      title: `Nonaktifkan ${selectableActive.length} anggota?`,
+      message: 'Akun mereka tidak bisa masuk lagi, tapi data tetap tersimpan dan bisa diaktifkan lagi.',
+      confirmLabel: 'Ya, nonaktifkan',
+      variant: 'danger',
+    });
+    if (!ok) return;
+
+    setBulkBusy(true);
+    const results = await Promise.allSettled(
+      selectableActive.map((member) => api.deactivateMember(member.id))
+    );
+    const failed = results.filter((result) => result.status === 'rejected').length;
+    setBulkBusy(false);
+    setSelected(new Set());
+    if (failed === 0) {
+      showSuccess(`${selectableActive.length} anggota dinonaktifkan`);
+    } else {
+      showError(`${failed} dari ${selectableActive.length} penonaktifan gagal`);
     }
     await afterMutation();
   };
@@ -555,6 +611,7 @@ function MembersManager() {
     { key: 'PENDING', label: 'Pending', count: counts.PENDING, dot: 'bg-amber-500', active: 'bg-amber-50 dark:bg-amber-900/25' },
     { key: 'APPROVED', label: 'Disetujui', count: counts.APPROVED, dot: 'bg-emerald-500', active: 'bg-emerald-50 dark:bg-emerald-900/25' },
     { key: 'REJECTED', label: 'Ditolak', count: counts.REJECTED, dot: 'bg-danger-500', active: 'bg-danger-50 dark:bg-danger-900/25' },
+    { key: 'INACTIVE', label: 'Nonaktif', count: counts.INACTIVE, dot: 'bg-slate-400', active: 'bg-slate-100 dark:bg-slate-800' },
   ];
 
   return (
@@ -596,7 +653,7 @@ function MembersManager() {
       </div>
 
       {/* Status tabs */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         {statusTabs.map((tab) => {
           const active = statusFilter === tab.key;
           return (
@@ -748,6 +805,15 @@ function MembersManager() {
             </Button>
             <Button
               size="sm"
+              variant="secondary"
+              leftIcon={<UserX className="h-4 w-4" />}
+              disabled={selectableActive.length === 0 || bulkBusy}
+              onClick={handleBulkDeactivate}
+            >
+              Nonaktifkan
+            </Button>
+            <Button
+              size="sm"
               variant="danger"
               leftIcon={<Trash2 className="h-4 w-4" />}
               disabled={bulkBusy}
@@ -858,7 +924,17 @@ function MembersManager() {
                         <div className="flex items-center gap-3">
                           <Avatar src={member.avatar} name={member.name} size="md" />
                           <div className="min-w-0">
-                            <Link
+                          {status === 'INACTIVE' && (
+                            <Button
+                              size="xs"
+                              variant="success"
+                              leftIcon={<UserCheck className="h-3.5 w-3.5" />}
+                              onClick={() => handleApprove(member)}
+                            >
+                              Aktifkan
+                            </Button>
+                          )}
+                          <Link
                               href={`/dashboard/admin/members/${member.id}`}
                               className="block truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
                             >
@@ -939,6 +1015,16 @@ function MembersManager() {
                           >
                             <Edit className="h-4 w-4" />
                           </button>
+                          {status === 'APPROVED' && member.id !== user?.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeactivate(member)}
+                              title="Nonaktifkan anggota"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-amber-600 dark:hover:bg-slate-800 dark:hover:text-amber-400"
+                            >
+                              <UserX className="h-4 w-4" />
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => handleDelete(member)}
@@ -957,6 +1043,13 @@ function MembersManager() {
           </div>
         )}
 
+        {/* Always-visible count, so the list size is clear even on a single page. */}
+        {filteredMembers.length > 0 && (
+          <div className="border-t border-slate-100 px-4 py-2.5 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            Menampilkan {paginatedMembers.length} dari {filteredMembers.length} anggota
+            {itemsPerPage < filteredMembers.length && ` • ${itemsPerPage} per halaman`}
+          </div>
+        )}
         {filteredMembers.length > 0 && (
           <Pagination
             currentPage={page}

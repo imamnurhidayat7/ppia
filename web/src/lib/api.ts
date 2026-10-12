@@ -514,7 +514,7 @@ class ApiClient {
     return response.data;
   }
 
-  async getMembers(params?: { page?: number; limit?: number; role?: string; search?: string; membershipStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' }) {
+  async getMembers(params?: { page?: number; limit?: number; role?: string; search?: string; membershipStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INACTIVE' }) {
     const response = await this.client.get('/members', { params });
     return response.data;
   }
@@ -552,6 +552,11 @@ class ApiClient {
 
   async rejectMember(id: string, reason?: string) {
     const response = await this.client.patch(`/members/${id}/reject`, { reason });
+    return response.data;
+  }
+
+  async deactivateMember(id: string) {
+    const response = await this.client.patch(`/members/${id}/deactivate`);
     return response.data;
   }
 

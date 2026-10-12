@@ -428,6 +428,81 @@ export const rejectMember = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+// Deactivate a member who is no longer part of PPIA (SUPER_ADMIN only).
+//
+// Unlike delete, the record stays: history (approvals, divisions, audit trail)
+// keeps pointing at a real person. INACTIVE members cannot sign in — both the
+// login gate and the auth middleware only let APPROVED through — and they
+// disappear from the member directory. Reactivation is just approveMember.
+export const deactivateMember = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const adminId = req.user?.userId;
+
+    if (!adminId) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { id } = req.params as { id: string };
+
+    if (id === adminId) {
+      res.status(400).json({ error: 'You cannot deactivate your own account' });
+      return;
+    }
+
+    const existing = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, membershipStatus: true },
+    });
+    if (!existing) {
+      res.status(404).json({ error: 'Member not found' });
+      return;
+    }
+    if (existing.membershipStatus === 'INACTIVE') {
+      res.status(400).json({ error: 'Member is already inactive' });
+      return;
+    }
+
+    const member = await prisma.user.update({
+      where: { id },
+      data: {
+        membershipStatus: 'INACTIVE',
+        rejectionReason: null,
+      },
+      select: USER_SAFE_SELECT_WITH_DIVISION,
+    });
+
+    const html = renderEmailLayout(
+      `
+        ${renderEmailHeading('About your membership')}
+        <p style="margin:0 0 16px;">Hi ${escapeHtml(member.name)},</p>
+        <p style="margin:0 0 16px;">Your PPIA Auckland membership has been marked inactive, so your account can no longer sign in. If you believe you should still be listed as an active member, reply to this e-mail or contact the committee and we will take another look.</p>
+      `,
+      { preheader: 'Your PPIA Auckland membership is now inactive.' }
+    );
+
+    await sendEmail({
+      to: member.email,
+      subject: 'Your PPIA Auckland membership is now inactive',
+      html,
+      category: 'membership-deactivated',
+    });
+
+    await notify({
+      userId: member.id,
+      type: NotificationType.MEMBERSHIP_DEACTIVATED,
+      title: 'Your membership is now inactive',
+      body: 'Your account can no longer sign in. Contact the committee if this is a mistake.',
+      link: '/dashboard/profile',
+    });
+
+    res.json({ message: 'Member deactivated', member });
+  } catch (error) {
+    console.error('Deactivate member error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // ===========================================
 // MEMBER DIRECTORY
 // ===========================================

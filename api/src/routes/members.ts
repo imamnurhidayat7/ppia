@@ -7,6 +7,7 @@ import {
   getMembersStats,
   approveMember,
   rejectMember,
+  deactivateMember,
   getMemberDirectory,
   getMemberDocumentUrl
 } from '../controllers/memberController';
@@ -30,6 +31,7 @@ router.get('/:id/document-url', authenticate, authorize('SUPER_ADMIN'), getMembe
 router.put('/:id', authenticate, authorize('SUPER_ADMIN'), updateMember);
 router.patch('/:id/approve', authenticate, authorize('SUPER_ADMIN'), approveMember);
 router.patch('/:id/reject', authenticate, authorize('SUPER_ADMIN'), rejectMember);
+router.patch('/:id/deactivate', authenticate, authorize('SUPER_ADMIN'), deactivateMember);
 router.delete('/:id', authenticate, authorize('SUPER_ADMIN'), deleteMember);
 
 export default router;

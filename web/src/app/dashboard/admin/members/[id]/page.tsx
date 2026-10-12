@@ -36,6 +36,7 @@ import {
   Phone,
   UserCircle,
   Users,
+  UserX,
   Wallet,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -49,7 +50,7 @@ const DATE_OPTS = {
 } as const;
 
 
-type MembershipStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+type MembershipStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'INACTIVE';
 
 interface UploadedFile {
   label: string;
@@ -64,6 +65,7 @@ const STATUS_LABEL: Record<MembershipStatus, string> = {
   PENDING: 'Pending approval',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
+  INACTIVE: 'Inactive',
 };
 
 function isImageUrl(url: string): boolean {
@@ -352,6 +354,32 @@ export default function MemberDetailPage() {
     }
   };
 
+  const handleDeactivate = async () => {
+    if (!member) return;
+    const ok = await confirmCtx.confirm({
+      title: `Deactivate ${member.name || member.username}?`,
+      message:
+        'Their account will no longer be able to sign in and they disappear from the directory. The record stays and can be reactivated anytime.',
+      confirmLabel: 'Yes, deactivate',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    setActionLoading(true);
+    try {
+      await api.deactivateMember(member.id);
+      showSuccess('Member deactivated');
+      await fetchMember();
+    } catch (requestError) {
+      const err = requestError as {
+        response?: { data?: { error?: string } };
+        message?: string;
+      };
+      showError(err.response?.data?.error || err.message || 'Could not deactivate member');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const submitReject = async () => {
     if (!member) return;
     setActionLoading(true);
@@ -407,7 +435,7 @@ export default function MemberDetailPage() {
   }
 
   const statusBadgeVariant =
-    status === 'PENDING' ? 'warning' : status === 'REJECTED' ? 'danger' : 'success';
+    status === 'PENDING' ? 'warning' : status === 'REJECTED' ? 'danger' : status === 'INACTIVE' ? 'default' : 'success';
 
   return (
     <PageStack>
@@ -418,7 +446,18 @@ export default function MemberDetailPage() {
         backLabel="Back to members"
         icon={Users}
         actions={
-          status !== 'APPROVED' ? (
+          status === 'APPROVED' ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<UserX className="h-4 w-4" />}
+              isLoading={actionLoading}
+              disabled={actionLoading || member?.id === user?.id}
+              onClick={handleDeactivate}
+            >
+              Deactivate
+            </Button>
+          ) : (
             <>
               <Button
                 variant="success"
@@ -429,19 +468,20 @@ export default function MemberDetailPage() {
               >
                 {status === 'PENDING' ? 'Approve' : 'Approve again'}
               </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<Ban className="h-4 w-4" />}
-                disabled={actionLoading}
-                onClick={() => setRejectOpen(true)}
-              >
-                Reject
-              </Button>
+              {status !== 'INACTIVE' && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Ban className="h-4 w-4" />}
+                  disabled={actionLoading}
+                  onClick={() => setRejectOpen(true)}
+                >
+                  Reject
+                </Button>
+              )}
             </>
-          ) : undefined
-        }
-      />
+          )}
+        />
 
       <PageHero
         title={member.name || member.username || 'Member'}
@@ -510,6 +550,22 @@ export default function MemberDetailPage() {
                 No reason was recorded. You can still approve this member again.
               </p>
             )}
+          </div>
+        </div>
+      )}
+
+      {status === 'INACTIVE' && (
+        <div className="flex items-start gap-3 rounded-[5px] border border-slate-300 bg-slate-100 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+            <UserX className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              Member inactive
+            </p>
+            <p className="mt-0.5 text-[12px] text-slate-600 dark:text-slate-300">
+              This account cannot sign in and is hidden from the directory. Use “Approve again” above to reactivate.
+            </p>
           </div>
         </div>
       )}

@@ -259,6 +259,14 @@ export const login = async (req: LoginRequest, res: Response): Promise<void> => 
       return;
     }
 
+    if (user.membershipStatus === 'INACTIVE') {
+      res.status(403).json({
+        error: 'Your membership is no longer active. Please contact the committee if you believe this is a mistake.',
+        status: 'INACTIVE'
+      });
+      return;
+    }
+
     // Generate JWT with divisionId
     const token = jwt.sign(
       { userId: user.id, role: user.role, divisionId: user.divisionId },
