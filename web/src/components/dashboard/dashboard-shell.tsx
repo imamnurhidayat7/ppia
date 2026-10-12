@@ -33,6 +33,7 @@ import { CommandPalette } from './command-palette';
 import { DashboardDataProvider } from './dashboard-data-context';
 import { NotificationCenter } from './notification-center';
 import { ThemeToggleButton } from './theme-toggle';
+import { useSiteLogo } from '@/lib/hooks/use-site-config';
 import { requestWorkspaceTransition } from './workspace-transition';
 import {
   ADMIN_NAV,
@@ -254,6 +255,9 @@ function ShellBody({ children, view: forcedView, maxWidth = 'default' }: Dashboa
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  // Same brand mark as the public header — changing the header logo in
+  // settings updates the dashboard bar too.
+  const logo = useSiteLogo("header");
 
   const closeUserMenu = useCallback(() => setUserMenuOpen(false), []);
   useOutsideClose(userMenuOpen, userMenuRef, closeUserMenu);
@@ -323,12 +327,13 @@ function ShellBody({ children, view: forcedView, maxWidth = 'default' }: Dashboa
           <div className="flex shrink-0 items-center gap-3 sm:gap-6">
             <Link href="/dashboard" aria-label="PPIA Auckland">
               <Image
-                src="/Logo-PPIA-2025-White.png"
-                alt="PPIA Auckland"
+                src={logo.src}
+                alt={logo.alt}
                 width={120}
                 height={48}
                 className="h-8 w-auto"
                 priority
+                unoptimized
               />
             </Link>
 

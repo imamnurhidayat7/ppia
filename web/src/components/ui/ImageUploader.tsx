@@ -67,10 +67,19 @@ export function ImageUploader({
         onChange?.(storedValue);
         return;
       }
-      throw new Error('Upload failed');
+      // Surface the server's reason (unsupported type, too large, storage
+      // unconfigured) instead of a generic failure so the admin knows why.
+      let reason = 'Failed to upload image. Make sure the API server is running.';
+      try {
+        const data = await response.json();
+        if (typeof data?.error === 'string' && data.error.trim()) reason = data.error;
+      } catch {
+        // Non-JSON error body — keep the generic message.
+      }
+      throw new Error(reason);
     } catch (error) {
       console.error('Upload failed:', error);
-      showError('Failed to upload image. Make sure the API server is running.');
+      showError(error instanceof Error ? error.message : 'Failed to upload image.');
     } finally {
       setIsUploading(false);
     }

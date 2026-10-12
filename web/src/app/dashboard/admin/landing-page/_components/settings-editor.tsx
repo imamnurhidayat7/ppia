@@ -258,7 +258,7 @@ export default function SettingsEditor() {
                 and hands back a URL either way, and the public header renders
                 it on the next visit.
               */}
-              <Field label="Logo" htmlFor="header-logo-url" hint="Upload a PNG/SVG or paste a URL.">
+              <Field label="Logo" htmlFor="header-logo-url" hint="Upload a PNG, JPEG, GIF, or WebP file — or paste any image URL (SVG URLs also work).">
                 <ImageUploader
                   value={headerConfig.logoUrl || ''}
                   onChange={(url) => setHeaderConfig({ ...headerConfig, logoUrl: url })}
@@ -413,7 +413,7 @@ export default function SettingsEditor() {
         >
           <div className="space-y-5">
             <FormGrid columns={2}>
-              <Field label="Footer logo" htmlFor="footer-logo-url" hint="Upload a PNG/SVG or paste a URL.">
+              <Field label="Footer logo" htmlFor="footer-logo-url" hint="Upload a PNG, JPEG, GIF, or WebP file — or paste any image URL (SVG URLs also work).">
                 <ImageUploader
                   value={footerConfig.logoUrl || ''}
                   onChange={(url) => setFooterConfig({ ...footerConfig, logoUrl: url })}
