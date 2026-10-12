@@ -18,8 +18,8 @@
  * metadata scale used decoratively elsewhere.
  */
 
-import Image from 'next/image';
 import Link from 'next/link';
+import SiteLogo from '@/components/SiteLogo';
 import { ArrowLeft } from 'lucide-react';
 
 interface AuthShellProps {
@@ -86,14 +86,7 @@ export default function AuthShell({
 
             <div className="relative">
               <Link href="/" className="inline-block">
-                <Image
-                  src="/Logo-PPIA-2025-White.png"
-                  alt="PPIA Auckland"
-                  width={200}
-                  height={80}
-                  className="h-9 w-auto"
-                  priority
-                />
+                <SiteLogo width={200} height={80} displayHeight={36} priority />
               </Link>
 
               <p className="data-type accent-label mt-8 text-[12px] font-bold uppercase lg:mt-12">

@@ -8,6 +8,7 @@ import { notify } from '../lib/notify';
 import {
   sendEmail,
   renderEmailLayout,
+  resolveBrandLogoUrl,
   renderEmailButton,
   renderEmailHeading,
   renderEmailDetails,
@@ -113,6 +114,7 @@ const confirmRegistration = async (params: {
       preheader: params.waitlisted
         ? `Waitlisted for ${params.eventTitle}`
         : `You are registered for ${params.eventTitle}`,
+      logoUrl: await resolveBrandLogoUrl(),
     }
   );
 

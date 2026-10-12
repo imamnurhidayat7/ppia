@@ -6,6 +6,7 @@ import { USER_DIRECTORY_SELECT, USER_SAFE_SELECT_WITH_DIVISION } from '../lib/us
 import {
   sendEmail,
   renderEmailLayout,
+  resolveBrandLogoUrl,
   renderEmailButton,
   renderWhatsAppButton,
   renderEmailHeading,
@@ -342,7 +343,7 @@ export const approveMember = async (req: AuthRequest, res: Response): Promise<vo
         ${renderEmailButton(`${FRONTEND_URL}/login`, 'Sign in to your dashboard')}
         ${whatsappBlock}
       `,
-      { preheader: 'Your PPIA Auckland membership has been approved. Sign in any time.' }
+      { preheader: 'Your PPIA Auckland membership has been approved. Sign in any time.', logoUrl: await resolveBrandLogoUrl() }
     );
 
     await sendEmail({
@@ -403,7 +404,7 @@ export const rejectMember = async (req: AuthRequest, res: Response): Promise<voi
         ${reasonBlock}
         <p style="margin:0;">If you think this is a mistake, or you have updated details to share, get in touch with the committee through the contact form on our website and we'll take another look.</p>
       `,
-      { preheader: 'An update on your PPIA Auckland registration.' }
+      { preheader: 'An update on your PPIA Auckland registration.', logoUrl: await resolveBrandLogoUrl() }
     );
 
     await sendEmail({
@@ -478,7 +479,7 @@ export const deactivateMember = async (req: AuthRequest, res: Response): Promise
         <p style="margin:0 0 16px;">Hi ${escapeHtml(member.name)},</p>
         <p style="margin:0 0 16px;">Your PPIA Auckland membership has been marked inactive, so your account can no longer sign in. If you believe you should still be listed as an active member, reply to this e-mail or contact the committee and we will take another look.</p>
       `,
-      { preheader: 'Your PPIA Auckland membership is now inactive.' }
+      { preheader: 'Your PPIA Auckland membership is now inactive.', logoUrl: await resolveBrandLogoUrl() }
     );
 
     await sendEmail({

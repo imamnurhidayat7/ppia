@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
+import SiteLogo from '@/components/SiteLogo';
 
 export const metadata: Metadata = {
   title: 'Site maintenance',
@@ -11,14 +11,7 @@ export default function MaintenancePage() {
   return (
     <main className="min-h-screen mesh-gradient flex items-center justify-center px-6">
       <div className="max-w-lg text-center">
-        <Image
-          src="/Logo-PPIA-2025-White.png"
-          alt="PPIA Auckland"
-          width={180}
-          height={72}
-          className="mx-auto h-14 w-auto"
-          priority
-        />
+        <SiteLogo width={180} height={72} displayHeight={56} priority className="mx-auto" />
         <p className="mt-10 text-xs font-bold uppercase tracking-[0.2em] text-[#E8231A]">
           Scheduled maintenance
         </p>

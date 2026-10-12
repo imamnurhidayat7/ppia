@@ -6,6 +6,7 @@ import prisma from '../lib/prisma';
 import {
   sendEmail,
   renderEmailLayout,
+  resolveBrandLogoUrl,
   renderEmailButton,
   renderWhatsAppButton,
   renderEmailHeading,
@@ -193,7 +194,7 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
         ${renderEmailFallbackLink(verifyUrl)}
         <p style="margin:0;">You won't be able to sign in until your membership has been approved.</p>
       `,
-        { preheader: 'Confirm your address — we have received your registration and will review it shortly.' }
+        { preheader: 'Confirm your address — we have received your registration and will review it shortly.', logoUrl: await resolveBrandLogoUrl() }
       ),
       category: 'registration-received',
     });
@@ -624,7 +625,7 @@ export const forgotPassword = async (req: ForgotPasswordRequest, res: Response):
         <p style="margin:0 0 16px;">This link expires in <strong>1 hour</strong> and can only be used once.</p>
         <p style="margin:0;">If you didn't request this, you can safely ignore this e-mail — your password stays unchanged.</p>
       `,
-      { preheader: 'Reset your PPIA Auckland password. This link expires in 1 hour.' }
+      { preheader: 'Reset your PPIA Auckland password. This link expires in 1 hour.', logoUrl: await resolveBrandLogoUrl() }
     );
 
     // Best effort: a provider outage must not reveal whether the address exists.
@@ -771,7 +772,7 @@ const sendVerifiedWelcomeEmail = async (member: {
         ${inviteBlock}
         ${nextStep}
       `,
-      { preheader: 'Your e-mail is confirmed. Here is the WhatsApp community invite.' }
+      { preheader: 'Your e-mail is confirmed. Here is the WhatsApp community invite.', logoUrl: await resolveBrandLogoUrl() }
     ),
     category: 'email-verified-welcome',
   });
@@ -883,7 +884,7 @@ export const resendVerification = async (req: ResendVerificationRequest, res: Re
         ${renderEmailFallbackLink(verifyUrl)}
         <p style="margin:0;">This link expires in <strong>24 hours</strong>.</p>
       `,
-      { preheader: 'Confirm your e-mail address to finish setting up your PPIA Auckland account.' }
+      { preheader: 'Confirm your e-mail address to finish setting up your PPIA Auckland account.', logoUrl: await resolveBrandLogoUrl() }
     );
 
     const result = await sendEmail({

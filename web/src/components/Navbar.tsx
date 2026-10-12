@@ -8,7 +8,7 @@ import { Menu, X, ChevronDown, User, UserCircle, LogOut } from "lucide-react";
 import GlobalSearch from "./GlobalSearch";
 import { useLanguage } from "@/lib/language-context";
 import { useMenuItems } from "@/lib/hooks/use-menu-items";
-import { useSiteLogo } from "@/lib/hooks/use-site-config";
+import SiteLogo from "@/components/SiteLogo";
 import { ThemeToggleButton } from "@/components/dashboard/theme-toggle";
 import type { MenuItem } from "@/lib/api-types";
 
@@ -102,10 +102,6 @@ export default function Navbar() {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const { language } = useLanguage();
   const { menu, loading: menuLoading } = useMenuItems("header_main");
-  // Brand mark follows Dashboard > System > Header, footer, and colours.
-  // `unoptimized` so an uploaded file on any host renders without touching
-  // the image-optimizer allowlist.
-  const logo = useSiteLogo("header");
 
   // Header 100% mengikuti setting "Header main menu" di
   // Dashboard > System > Navigation menu.
@@ -159,15 +155,7 @@ export default function Navbar() {
       <div className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-4" ref={dropdownRef}>
         {/* Logo */}
         <Link href="/" className="flex items-center group">
-          <Image
-            src={logo.src}
-            alt={logo.alt}
-            width={120}
-            height={48}
-            style={{ height: 40, width: "auto" }}
-            priority
-            unoptimized
-          />
+          <SiteLogo width={120} height={48} displayHeight={40} priority />
         </Link>
 
         {/* Desktop Nav */}

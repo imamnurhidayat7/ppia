@@ -2,11 +2,10 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Anchor } from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
 import { useMenuItems } from "@/lib/hooks/use-menu-items";
-import { useSiteLogo } from "@/lib/hooks/use-site-config";
+import SiteLogo from "@/components/SiteLogo";
 import type { MenuItem } from "@/lib/api-types";
 
 const socials = [
@@ -62,8 +61,6 @@ export default function Footer() {
   const { menu: aboutMenu } = useMenuItems("footer_about");
   const { menu: activitiesMenu } = useMenuItems("footer_activities");
   const { menu: quicklinksMenu } = useMenuItems("footer_quicklinks");
-  // Brand mark follows Dashboard > System > Header, footer, and colours.
-  const logo = useSiteLogo("footer");
 
   const langKey = language === "id" ? "id" : "en";
 
@@ -158,14 +155,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="mb-5 inline-block">
-              <Image
-                src={logo.src}
-                alt={logo.alt}
-                width={140}
-                height={56}
-                style={{ height: 48, width: "auto" }}
-                unoptimized
-              />
+              <SiteLogo location="footer" width={140} height={56} displayHeight={48} />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-white/70">
               {t("footer.tagline")}

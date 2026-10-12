@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { createAuditLog } from './auditLogController';
-import { sendEmail, renderEmailLayout, renderEmailHeading, escapeHtml } from '../lib/mailer';
+import { sendEmail, renderEmailLayout, resolveBrandLogoUrl, renderEmailHeading, escapeHtml } from '../lib/mailer';
 import { unsubscribeUrl, verifyUnsubscribeToken } from '../lib/newsletter-token';
 
 // Subscribe to newsletter
@@ -166,6 +166,7 @@ const renderNewsletterHtml = (params: {
   content: string;
   recipientName?: string | null;
   unsubscribeLink: string;
+  logoUrl?: string;
 }): string => {
   const looksLikeHtml = /<[a-z][\s\S]*>/i.test(params.content);
   const body = looksLikeHtml
@@ -190,7 +191,7 @@ const renderNewsletterHtml = (params: {
         <a href="${params.unsubscribeLink}" style="color:#64748B;text-decoration:underline;">Unsubscribe from this newsletter</a>
       </p>
     `,
-    { preheader: params.subject }
+    { preheader: params.subject, logoUrl: params.logoUrl }
   );
 };
 
@@ -245,6 +246,9 @@ export const sendNewsletter = async (req: Request, res: Response): Promise<void>
 
     const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split('#')[0].trim();
 
+    // Brand mark resolved once for the whole blast (cached in-process).
+    const brandLogoUrl = await resolveBrandLogoUrl();
+
     const failures: string[] = [];
     let sent = 0;
 
@@ -263,6 +267,7 @@ export const sendNewsletter = async (req: Request, res: Response): Promise<void>
               content,
               recipientName: subscriber.name,
               unsubscribeLink: unsubscribeUrl(subscriber.email, frontendUrl),
+              logoUrl: brandLogoUrl,
             }),
             category: 'newsletter',
           }).then((result) => ({ email: subscriber.email, result }))

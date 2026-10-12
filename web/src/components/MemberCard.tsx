@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
+import SiteLogo from '@/components/SiteLogo';
 import { QRCodeSVG } from 'qrcode.react';
 import { Download, Sailboat } from 'lucide-react';
 
@@ -268,14 +269,7 @@ export default function MemberCard({ member, variant = 'default', showDownload =
         <div className="bg-[#0F1B33]">
           <div aria-hidden="true" className="h-1 bg-[#E8231A]" />
           <div className="flex items-center justify-between gap-4 px-6 py-4">
-            <Image
-              src="/Logo-PPIA-2025-White.png"
-              alt="PPIA Auckland"
-              width={200}
-              height={80}
-              priority
-              className="h-7 w-auto"
-            />
+            <SiteLogo width={200} height={80} displayHeight={28} />
             <span className="data-type text-[12px] font-bold uppercase text-white/70">Member card</span>
           </div>
         </div>

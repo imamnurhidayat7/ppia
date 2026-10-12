@@ -18,6 +18,9 @@
  * Instead every send resolves to a SendResult the caller may inspect or ignore.
  */
 
+import prisma from './prisma';
+import { publicUrlForKey } from './storage';
+
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 
 /** How long to wait for Resend before giving up on a single message. */
@@ -262,16 +265,51 @@ const siteUrl = (): string =>
   (process.env.FRONTEND_URL || 'http://localhost:3000').split('#')[0].trim().replace(/\/+$/, '');
 
 /**
- * Absolute URL of the wordmark.
+ * Absolute URL of the built-in wordmark.
  *
- * E-mail clients fetch images over the public internet, so this has to be a
- * reachable absolute URL — a relative path or a localhost address renders as a
- * broken image. In development that means the logo will not load, which is
- * expected; the layout is built so the alt text carries the header on its own.
+ * E-mail clients fetch images over the public internet, so the logo has to be
+ * a reachable absolute URL — a relative path or a localhost address renders
+ * as a broken image. In development that means the logo will not load, which
+ * is expected; the layout is built so the alt text carries the header on its
+ * own.
  *
  * The white wordmark is used because it sits on the navy header band.
  */
-const logoUrl = (): string => `${siteUrl()}/Logo-PPIA-2025-White.png`;
+const defaultLogoUrl = (): string => `${siteUrl()}/Logo-PPIA-2025-White.png`;
+
+/** Logo values that look set but never resolved to a file (see web hook). */
+const LEGACY_PLACEHOLDER_LOGOS = new Set(['/logo.svg']);
+
+/** In-process brand-logo cache: e-mails are rare, newsletter blasts are not. */
+const BRAND_LOGO_TTL_MS = 5 * 60 * 1000;
+let brandLogoCache: { expiresAt: number; url: string } | null = null;
+
+/**
+ * Brand logo for outgoing mail, from the same header setting that drives the
+ * website chrome — so changing the logo in the dashboard rebrands the next
+ * e-mail too. Resolved to an absolute URL (storage key → files host,
+ * absolute URL → untouched); any failure or missing value falls back to the
+ * built-in wordmark rather than breaking the send.
+ */
+export const resolveBrandLogoUrl = async (): Promise<string> => {
+  const fallback = defaultLogoUrl();
+  try {
+    const now = Date.now();
+    if (brandLogoCache && brandLogoCache.expiresAt > now) return brandLogoCache.url;
+    const record = await prisma.siteConfig.findUnique({ where: { key: 'header' } });
+    const raw = (record?.config as { logoUrl?: unknown } | null)?.logoUrl;
+    const trimmed = typeof raw === 'string' ? raw.trim() : '';
+    const url =
+      !trimmed || LEGACY_PLACEHOLDER_LOGOS.has(trimmed)
+        ? fallback
+        : publicUrlForKey(trimmed);
+    brandLogoCache = { expiresAt: now + BRAND_LOGO_TTL_MS, url };
+    return url;
+  } catch (error) {
+    console.error('[mailer] Could not resolve brand logo, using default:', error);
+    return fallback;
+  }
+};
 
 /**
  * Shared chrome for every outgoing message: logo, body, footer.
@@ -291,8 +329,15 @@ const logoUrl = (): string => `${siteUrl()}/Logo-PPIA-2025-White.png`;
  * `bodyHtml` is trusted markup composed by this API. Anything user-supplied that
  * reaches it must go through `escapeHtml` at the call site.
  */
-export const renderEmailLayout = (bodyHtml: string, options?: { preheader?: string }): string => {
+export const renderEmailLayout = (
+  bodyHtml: string,
+  options?: { preheader?: string; logoUrl?: string }
+): string => {
   const site = siteUrl();
+  // A caller-resolved brand mark (see resolveBrandLogoUrl), else the
+  // built-in wordmark. Stays a parameter — never a DB read — so this
+  // function (and its unit tests) never needs a database connection.
+  const logo = options?.logoUrl?.trim() || defaultLogoUrl();
 
   /**
    * Preheader: the grey text a client shows after the subject in the inbox list.
@@ -362,7 +407,7 @@ export const renderEmailLayout = (bodyHtml: string, options?: { preheader?: stri
           <tr>
             <td align="left" class="px" bgcolor="${BRAND.navy}" style="background-color:${BRAND.navy};padding:24px 32px;border-radius:12px 12px 0 0;">
               <a href="${site}" style="text-decoration:none;">
-                <img src="${logoUrl()}" width="150" height="49" alt="PPIA Auckland"
+                <img src="${logo}" width="150" height="49" alt="PPIA Auckland"
                      style="display:block;width:150px;max-width:150px;height:auto;border:0;color:${BRAND.white};font-family:${FONT_STACK};font-size:18px;font-weight:bold;line-height:49px;" />
               </a>
             </td>
