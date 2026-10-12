@@ -632,16 +632,6 @@ export const CONTENT_SCHEMAS: Record<string, FieldSchema[]> = {
   scholarship: [
     { key: 'header', label: 'Page header', type: 'group', fields: HEADER_FIELDS },
     {
-      key: 'stats',
-      label: 'Summary numbers',
-      type: 'array',
-      help: 'Four numbers on the dark panel under the header.',
-      itemSchema: [
-        { key: 'value', label: 'Value', type: 'text', placeholder: '6+' },
-        { key: 'label', label: 'Caption', type: 'text', placeholder: 'Listed scholarships' },
-      ],
-    },
-    {
       key: 'applicationTips',
       label: 'Application tips',
       type: 'array',

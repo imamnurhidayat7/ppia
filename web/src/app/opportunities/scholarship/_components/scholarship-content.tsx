@@ -146,7 +146,6 @@ export default function ScholarshipPage() {
   const [content, setContent] = useState<{ header: ScholarshipHeader } | null>(null);
   const [cmsScholarships, setCmsScholarships] = useState<ScholarshipContent[] | null>(null);
   const [cmsTips, setCmsTips] = useState<typeof applicationTips | null>(null);
-  const [cmsStats, setCmsStats] = useState<{ value: string; label: string }[] | null>(null);
 
   /** Detail route for one card — slug for API rows, id for legacy CMS rows. */
   const detailHref = (s: ScholarshipContent) =>
@@ -180,9 +179,6 @@ export default function ScholarshipPage() {
             if (Array.isArray(c.applicationTips)) {
               setCmsTips(c.applicationTips);
             }
-            if (Array.isArray(c.stats)) {
-              setCmsStats(c.stats);
-            }
           }
         }
       })
@@ -198,14 +194,6 @@ export default function ScholarshipPage() {
 
   const activeScholarships = cmsScholarships ?? [];
   const activeTips = cmsTips ?? applicationTips;
-  // Summary numbers are CMS-managed; the literals below are only a fallback for
-  // installations whose page content predates the `stats` field.
-  const activeStats = cmsStats ?? [
-    { value: "6+", label: "Listed scholarships" },
-    { value: "3", label: "Scholarship types" },
-    { value: "Full", label: "LPDP & Manaaki coverage" },
-    { value: "Free", label: "To apply" },
-  ];
 
   const filtered = activeScholarships.filter((s) => {
     const matchesFilter = activeFilter === "All" || s.type === activeFilter;
@@ -231,49 +219,6 @@ export default function ScholarshipPage() {
         description={content.header.description}
         breadcrumbs={content.header.breadcrumbs}
       />
-
-      {/* Stats — still below the waterline, read as bridge instruments. */}
-      <section className="sea-deep relative overflow-hidden py-16">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div
-            className="sea-chart-light absolute inset-0 opacity-[0.05]"
-            style={{
-              maskImage: "radial-gradient(ellipse 78% 68% at 50% 50%, transparent 20%, black 85%)",
-              WebkitMaskImage: "radial-gradient(ellipse 78% 68% at 50% 50%, transparent 20%, black 85%)",
-            }}
-          />
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: `radial-gradient(circle at 20% 50%, #E8231A, transparent 50%),
-                radial-gradient(circle at 80% 50%, #10B981, transparent 50%)`,
-            }}
-          />
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {activeStats.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="text-center"
-              >
-                <p
-                  className="font-black text-white text-4xl md:text-5xl"
-                  style={{ fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
-                >
-                  {s.value}
-                </p>
-                <span aria-hidden="true" className="rope-rule mx-auto mt-3 block w-8 opacity-70" />
-                <p className="data-type mt-2 text-[12px] uppercase ink-muted">{s.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <WaveTransition from={DEEP} to={SHORE} />
 
