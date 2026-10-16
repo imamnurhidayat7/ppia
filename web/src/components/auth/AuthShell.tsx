@@ -56,6 +56,7 @@ export default function AuthShell({
   formWidth = 'md',
   children,
 }: AuthShellProps) {
+  const isWide = formWidth === 'lg';
   return (
     <div className="sea-deep relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-10 sm:px-6">
       {/* Depth behind the card, so it sits in water rather than on a flat fill. */}
@@ -74,9 +75,9 @@ export default function AuthShell({
       </div>
 
       <main
-        className={`relative w-full ${formWidth === 'lg' ? 'max-w-5xl' : 'max-w-4xl'}`}
+        className={`relative w-full ${isWide ? 'max-w-6xl' : 'max-w-4xl'}`}
       >
-        <div className="overflow-hidden rounded-[6px] shadow-[0_50px_100px_-40px_rgba(0,0,0,0.75)] lg:grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div className={`overflow-hidden rounded-[6px] shadow-[0_50px_100px_-40px_rgba(0,0,0,0.75)] lg:grid ${isWide ? 'lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)]' : 'lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]'}`}>
           {/* ── Left column: the brief ─────────────────────────────────── */}
           <aside className="relative flex flex-col justify-between gap-8 bg-[#0B1C2E] p-7 sm:p-9">
             <div
@@ -112,7 +113,7 @@ export default function AuthShell({
           </aside>
 
           {/* ── Right column: the form, on paper ───────────────────────── */}
-          <div className="chart-paper p-7 sm:p-9">{children}</div>
+          <div className={`chart-paper ${isWide ? 'p-7 sm:p-10 lg:p-12' : 'p-7 sm:p-9'}`}>{children}</div>
         </div>
 
         <div className="mt-6 text-center">
