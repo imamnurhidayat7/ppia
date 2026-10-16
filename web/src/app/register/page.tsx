@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { DatePicker } from '@/components/ui/DatePicker';
 import {
   AlertCircle,
   ArrowLeft,
@@ -34,6 +33,32 @@ const FUNDINGS = [
   { value: 'OTHER', label: 'Other' },
 ];
 
+/** Universities with a campus in Auckland, plus a free-text fallback. */
+const UNIVERSITIES = [
+  'University of Auckland',
+  'Auckland University of Technology',
+  'Massey University',
+  'Unitec',
+  'Manukau Institute of Technology',
+];
+const OTHER_UNIVERSITY = 'Other';
+
+const GRAD_MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+/** Graduation years on offer: recent alumni through students just starting. */
+const GRAD_YEAR_MIN_OFFSET = -6;
+const GRAD_YEAR_COUNT = 15;
+const GRAD_YEARS: string[] = (() => {
+  const current = new Date().getFullYear();
+  return Array.from(
+    { length: GRAD_YEAR_COUNT },
+    (_, i) => String(current + GRAD_YEAR_MIN_OFFSET + i)
+  );
+})();
+
 const STEPS = ['Account', 'Personal', 'University', 'Confirm'] as const;
 type Step = 0 | 1 | 2 | 3;
 
@@ -62,8 +87,10 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: '', username: '', password: '', confirmPassword: '',
     firstName: '', lastName: '', phone: '',
-    studentId: '', university: '', universityEmail: '', upi: '',
+    studentId: '', university: '', universityOther: '',
+    universityEmail: '', upi: '',
     degree: 'BACHELOR', major: '', graduationDate: undefined as Date | undefined,
+    gradMonth: '', gradYear: '',
     funding: 'SELF_FUNDED', consent: false, confirmation: false,
   });
   const [loaCoeFile, setLoaCoeFile] = useState<File | null>(null);
@@ -90,6 +117,24 @@ export default function RegisterPage() {
     setFormData((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
   };
 
+  /** Graduation needs only month precision — day pickers overshoot the ask. */
+  const setGraduation = (field: 'gradMonth' | 'gradYear', value: string) => {
+    setFormData((p) => {
+      const next = { ...p, [field]: value };
+      next.graduationDate =
+        next.gradMonth !== '' && next.gradYear !== ''
+          ? new Date(Number(next.gradYear), Number(next.gradMonth), 1)
+          : undefined;
+      return next;
+    });
+  };
+
+  /** The university string that is validated, reviewed and submitted. */
+  const resolvedUniversity =
+    formData.university === OTHER_UNIVERSITY
+      ? formData.universityOther.trim()
+      : formData.university;
+
   const handleLoaCoe = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; setLoaCoeError('');
     if (!file) { setLoaCoeFile(null); return; }
@@ -101,7 +146,7 @@ export default function RegisterPage() {
   const canAdvance = (): boolean => {
     if (step === 0) return !!(formData.username && formData.password && formData.confirmPassword && formData.password === formData.confirmPassword);
     if (step === 1) return !!(formData.firstName && formData.email && formData.phone);
-    if (step === 2) return !!(formData.studentId && formData.university && formData.universityEmail && formData.upi && formData.major && formData.graduationDate && loaCoeFile);
+    if (step === 2) return !!(formData.studentId && resolvedUniversity && formData.universityEmail && formData.upi && formData.major && formData.graduationDate && loaCoeFile);
     return formData.confirmation;
   };
 
@@ -116,7 +161,7 @@ export default function RegisterPage() {
       await register({
         email: formData.email, username: formData.username, password: formData.password,
         firstName: formData.firstName, lastName: formData.lastName, phone: formData.phone,
-        studentId: formData.studentId, university: formData.university,
+        studentId: formData.studentId, university: resolvedUniversity,
         universityEmail: formData.universityEmail, upi: formData.upi,
         degree: formData.degree, major: formData.major,
         graduationDate: formData.graduationDate!.toISOString(),
@@ -136,6 +181,7 @@ export default function RegisterPage() {
     // into a completely different layout.
     return (
       <AuthShell
+        formWidth="lg"
         eyebrow="Join the crew"
         headline={
           <>
@@ -165,6 +211,7 @@ export default function RegisterPage() {
   if (!registrationOpen) {
     return (
       <AuthShell
+        formWidth="lg"
         eyebrow="Registration"
         headline={<>Boarding is closed for now</>}
         blurb="Public membership applications are paused. The committee can still help you directly."
@@ -238,6 +285,7 @@ export default function RegisterPage() {
 
   return (
     <AuthShell
+      formWidth="lg"
       eyebrow="Join the crew"
       headline={
         <>
@@ -296,17 +344,17 @@ export default function RegisterPage() {
 
           {/* Step 1: Personal */}
           {step === 1 && (<>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><label htmlFor="firstName" className={labelCls}>First name <Req /></label><input id="firstName" name="firstName" required value={formData.firstName} onChange={set} className={inputCls} placeholder="As on ID" autoComplete="given-name" /></div><div><label htmlFor="lastName" className={labelCls}>Last name</label><input id="lastName" name="lastName" value={formData.lastName} onChange={set} className={inputCls} placeholder="Optional" autoComplete="family-name" /></div></div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>div]:min-w-0"><div><label htmlFor="firstName" className={labelCls}>First name <Req /></label><input id="firstName" name="firstName" required value={formData.firstName} onChange={set} className={inputCls} placeholder="As on ID" autoComplete="given-name" /></div><div><label htmlFor="lastName" className={labelCls}>Last name</label><input id="lastName" name="lastName" value={formData.lastName} onChange={set} className={inputCls} placeholder="Optional" autoComplete="family-name" /></div></div>
             <div><label htmlFor="email" className={labelCls}>Personal email <Req /></label><input id="email" name="email" type="email" required value={formData.email} onChange={set} className={inputCls} placeholder="you@gmail.com" autoComplete="email" /></div>
             <div><label htmlFor="phone" className={labelCls}>Phone <Req /></label><input id="phone" name="phone" type="tel" required value={formData.phone} onChange={set} className={inputCls} placeholder="+64 or +62" autoComplete="tel" /></div>
           </>)}
 
           {/* Step 2: University */}
           {step === 2 && (<>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><label htmlFor="studentId" className={labelCls}>Student ID <Req /></label><input id="studentId" name="studentId" required value={formData.studentId} onChange={set} className={inputCls} placeholder="12345678" /></div><div><label htmlFor="university" className={labelCls}>University <Req /></label><input id="university" name="university" required value={formData.university} onChange={set} className={inputCls} placeholder="University of Auckland" /></div></div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><label htmlFor="universityEmail" className={labelCls}>Uni email <Req /></label><input id="universityEmail" name="universityEmail" type="email" required value={formData.universityEmail} onChange={set} className={inputCls} placeholder="upi@aucklanduni.ac.nz" /></div><div><label htmlFor="upi" className={labelCls}>UPI <Req /></label><input id="upi" name="upi" required value={formData.upi} onChange={set} className={inputCls} placeholder="abc123" /></div></div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><label htmlFor="degree" className={labelCls}>Degree <Req /></label><select id="degree" name="degree" value={formData.degree} onChange={set} className={selectCls}>{DEGREES.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}</select></div><div><label htmlFor="major" className={labelCls}>Major <Req /></label><input id="major" name="major" required value={formData.major} onChange={set} className={inputCls} placeholder="Computer Science" /></div></div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><DatePicker label="Graduation date *" value={formData.graduationDate} onChange={(d) => setFormData(p=>({...p, graduationDate: d}))} placeholder="Select" /></div><div><label htmlFor="funding" className={labelCls}>Funding</label><select id="funding" name="funding" value={formData.funding} onChange={set} className={selectCls}>{FUNDINGS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}</select></div></div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>div]:min-w-0"><div><label htmlFor="studentId" className={labelCls}>Student ID <Req /></label><input id="studentId" name="studentId" required value={formData.studentId} onChange={set} className={inputCls} placeholder="12345678" /></div><div><label htmlFor="university" className={labelCls}>University <Req /></label><select id="university" name="university" required value={formData.university} onChange={set} className={selectCls}><option value="">Select university…</option>{UNIVERSITIES.map((u) => <option key={u} value={u}>{u}</option>)}<option value={OTHER_UNIVERSITY}>Other</option></select>{formData.university === OTHER_UNIVERSITY && (<input id="universityOther" name="universityOther" required value={formData.universityOther} onChange={set} className={`${inputCls} mt-3`} placeholder="Your university name" autoComplete="organization" />)}</div></div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>div]:min-w-0"><div><label htmlFor="universityEmail" className={labelCls}>Uni email <Req /></label><input id="universityEmail" name="universityEmail" type="email" required value={formData.universityEmail} onChange={set} className={inputCls} placeholder="upi@aucklanduni.ac.nz" /></div><div><label htmlFor="upi" className={labelCls}>UPI <Req /></label><input id="upi" name="upi" required value={formData.upi} onChange={set} className={inputCls} placeholder="abc123" /></div></div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>div]:min-w-0"><div><label htmlFor="degree" className={labelCls}>Degree <Req /></label><select id="degree" name="degree" value={formData.degree} onChange={set} className={selectCls}>{DEGREES.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}</select></div><div><label htmlFor="major" className={labelCls}>Major <Req /></label><input id="major" name="major" required value={formData.major} onChange={set} className={inputCls} placeholder="Computer Science" /></div></div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>div]:min-w-0"><div><span id="graduation-label" className={labelCls}>Graduation date <Req /></span><div className="grid grid-cols-2 gap-3" role="group" aria-labelledby="graduation-label"><select id="gradMonth" name="gradMonth" required aria-label="Graduation month" value={formData.gradMonth} onChange={(e) => setGraduation('gradMonth', e.target.value)} className={selectCls}><option value="">Month…</option>{GRAD_MONTHS.map((m, i) => <option key={m} value={String(i)}>{m}</option>)}</select><select id="gradYear" name="gradYear" required aria-label="Graduation year" value={formData.gradYear} onChange={(e) => setGraduation('gradYear', e.target.value)} className={selectCls}><option value="">Year…</option>{GRAD_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}</select></div></div><div><label htmlFor="funding" className={labelCls}>Funding</label><select id="funding" name="funding" value={formData.funding} onChange={set} className={selectCls}>{FUNDINGS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}</select></div></div>
 
             {/* LoA upload */}
             <div>
@@ -340,7 +388,7 @@ export default function RegisterPage() {
                   ['Username', formData.username],
                   ['Name', `${formData.firstName} ${formData.lastName}`.trim()],
                   ['Email', formData.email],
-                  ['University', formData.university],
+                  ['University', resolvedUniversity],
                   ['Degree', `${formData.degree} — ${formData.major}`],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-baseline justify-between gap-4">
