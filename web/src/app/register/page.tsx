@@ -34,12 +34,20 @@ const FUNDINGS = [
 ];
 
 /** Universities with a campus in Auckland, plus a free-text fallback. */
+/** Full list carried over from the legacy ppiaucland.org registration form. */
 const UNIVERSITIES = [
   'University of Auckland',
   'Auckland University of Technology',
   'Massey University',
-  'Unitec',
+  'Unitec Institute of Technology',
   'Manukau Institute of Technology',
+  'Media Design School',
+  'SAE Institute Auckland',
+  'Auckland Institute of Studies',
+  'Whitecliffe College',
+  'Crown Institute of Studies',
+  'Yoobee College',
+  'Ardmore Flying School',
 ];
 const OTHER_UNIVERSITY = 'Other';
 
