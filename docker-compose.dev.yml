@@ -1,11 +1,13 @@
-# Local development database.
+# Local development databases.
 #
-# Only Postgres runs here — the API and web app stay on the host so hot reload
-# keeps working. Start it with:
+# Postgres is the legacy engine (kept so existing setups keep working); MySQL
+# is the current default for local work (`DATA_SOURCE=mysql` in api/.env).
+# The API and web app stay on the host so hot reload keeps working. Start
+# only the engine you need, e.g.:
 #
-#   docker compose -f docker-compose.dev.yml up -d
+#   docker compose -f docker-compose.dev.yml up -d mysql
 #
-# The data lives in a named volume, so `down` keeps it and `down -v` wipes it.
+# The data lives in named volumes, so `down` keeps it and `down -v` wipes it.
 services:
   postgres:
     image: postgres:16-alpine
@@ -27,5 +29,28 @@ services:
       timeout: 5s
       retries: 10
 
+  mysql:
+    image: mysql:8.0
+    container_name: ppia-mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ppia_root_dev
+      MYSQL_DATABASE: ppia
+      MYSQL_USER: ppia
+      MYSQL_PASSWORD: ppia_local_dev
+    ports:
+      # 3307 on the host on purpose: it will not collide with a MySQL a
+      # developer already runs on the default 3306.
+      - '3307:3306'
+    volumes:
+      - ppia_mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h localhost -u ppia -pppia_local_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
 volumes:
   ppia_pgdata:
+  ppia_mysqldata:

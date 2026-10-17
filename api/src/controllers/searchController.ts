@@ -22,9 +22,9 @@ export const globalSearch = async (req: Request, res: Response): Promise<void> =
             where: {
               published: true,
               OR: [
-                { title: { contains: searchTerm, mode: 'insensitive' } },
-                { description: { contains: searchTerm, mode: 'insensitive' } },
-                { location: { contains: searchTerm, mode: 'insensitive' } }
+                { title: { contains: searchTerm } },
+                { description: { contains: searchTerm } },
+                { location: { contains: searchTerm } }
               ]
             },
             select: {
@@ -48,8 +48,8 @@ export const globalSearch = async (req: Request, res: Response): Promise<void> =
             where: {
               published: true,
               OR: [
-                { title: { contains: searchTerm, mode: 'insensitive' } },
-                { excerpt: { contains: searchTerm, mode: 'insensitive' } }
+                { title: { contains: searchTerm } },
+                { excerpt: { contains: searchTerm } }
               ]
             },
             select: {
@@ -77,9 +77,9 @@ export const globalSearch = async (req: Request, res: Response): Promise<void> =
           const members = await prisma.user.findMany({
             where: {
               OR: [
-                { name: { contains: searchTerm, mode: 'insensitive' } },
-                { university: { contains: searchTerm, mode: 'insensitive' } },
-                { major: { contains: searchTerm, mode: 'insensitive' } }
+                { name: { contains: searchTerm } },
+                { university: { contains: searchTerm } },
+                { major: { contains: searchTerm } }
               ]
             },
             select: {
@@ -103,14 +103,19 @@ export const globalSearch = async (req: Request, res: Response): Promise<void> =
       }
     }
 
-    // Search all types
+    // Search all types.
+    //
+    // MySQL collations (utf8mb4_unicode_ci) already compare
+    // case-insensitively, so plain `contains` matches what Postgres needed
+    // `mode: 'insensitive'` for. That filter is Postgres-only and does not
+    // exist on the MySQL connector.
     const [events, articles, members] = await Promise.all([
       prisma.event.findMany({
         where: {
           published: true,
           OR: [
-            { title: { contains: searchTerm, mode: 'insensitive' } },
-            { description: { contains: searchTerm, mode: 'insensitive' } }
+            { title: { contains: searchTerm } },
+            { description: { contains: searchTerm } }
           ]
         },
         select: {
@@ -129,8 +134,8 @@ export const globalSearch = async (req: Request, res: Response): Promise<void> =
         where: {
           published: true,
           OR: [
-            { title: { contains: searchTerm, mode: 'insensitive' } },
-            { excerpt: { contains: searchTerm, mode: 'insensitive' } }
+            { title: { contains: searchTerm } },
+            { excerpt: { contains: searchTerm } }
           ]
         },
         select: {
@@ -148,8 +153,8 @@ export const globalSearch = async (req: Request, res: Response): Promise<void> =
       prisma.user.findMany({
         where: {
           OR: [
-            { name: { contains: searchTerm, mode: 'insensitive' } },
-            { university: { contains: searchTerm, mode: 'insensitive' } }
+            { name: { contains: searchTerm } },
+            { university: { contains: searchTerm } }
           ]
         },
         select: {

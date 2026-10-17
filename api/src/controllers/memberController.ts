@@ -57,10 +57,10 @@ export const getAllMembers = async (req: AuthRequest, res: Response): Promise<vo
       ...(membershipStatus && { membershipStatus: membershipStatus as any }),
       ...(search && {
         OR: [
-          { name: { contains: search as string, mode: 'insensitive' } },
-          { email: { contains: search as string, mode: 'insensitive' } },
-          { username: { contains: search as string, mode: 'insensitive' } },
-          { university: { contains: search as string, mode: 'insensitive' } }
+          { name: { contains: search as string } },
+          { email: { contains: search as string } },
+          { username: { contains: search as string } },
+          { university: { contains: search as string } }
         ]
       })
     };
@@ -551,11 +551,13 @@ export const getMemberDirectory = async (req: AuthRequest, res: Response): Promi
       ...(degree && degree in Degree ? { degree: degree as Degree } : {}),
       ...(search
         ? {
+            // Plain `contains`: MySQL's utf8mb4_unicode_ci collation is
+            // already case-insensitive (Postgres needed `mode` for this).
             OR: [
-              { name: { contains: search, mode: 'insensitive' as const } },
-              { username: { contains: search, mode: 'insensitive' as const } },
-              { university: { contains: search, mode: 'insensitive' as const } },
-              { major: { contains: search, mode: 'insensitive' as const } },
+              { name: { contains: search } },
+              { username: { contains: search } },
+              { university: { contains: search } },
+              { major: { contains: search } },
               // `position` is an enum, not free text, so it cannot take part in
               // a substring search — it is offered as a filter instead.
             ],

@@ -3,24 +3,21 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  // Runtime queries use the pooled (PgBouncer, port 6543) connection so
-  // serverless/multiple instances do not exhaust Postgres connections.
+  provider  = "mysql"
+  // MySQL handles concurrent connections far better than Postgres, so no
+  // pooler dance is needed: DATABASE_URL is used for everything, and
+  // DIRECT_URL only matters when a proxy sits in front of MySQL.
   url       = env("DATABASE_URL")
-  // Schema changes (`prisma db push` / `migrate`) need a direct (port 5432)
-  // connection, since DDL and prepared statements do not work through the
-  // transaction pooler. DIRECT_URL is therefore required whenever DATABASE_URL
-  // points at a pooled connection; locally it can contain the same direct URL.
   directUrl = env("DIRECT_URL")
 }
 
 model Article {
   id                   String     @id @default(cuid())
-  title                String
+  title                String     @db.Text
   slug                 String     @unique
-  excerpt              String?
+  excerpt              String?    @db.Text
   content              Json
-  imageUrl             String?
+  imageUrl             String?    @db.Text
   divisionId           String?
   published            Boolean    @default(false)
   createdAt            DateTime   @default(now())
@@ -35,9 +32,9 @@ model Article {
   isFeatured           Boolean    @default(false)
   featuredOrder        Int?
   readingTime          Int        @default(0)
-  metaTitle            String?
-  metaDescription      String?
-  metaKeywords         String?
+  metaTitle            String?    @db.Text
+  metaDescription      String?    @db.Text
+  metaKeywords         String?    @db.Text
   User                 User       @relation(fields: [authorId], references: [id])
   Division             Division?  @relation(fields: [divisionId], references: [id])
   Comment              Comment[]
@@ -73,8 +70,8 @@ model Notification {
   id        String           @id @default(cuid())
   userId    String
   type      NotificationType
-  title     String
-  body      String?
+  title     String           @db.Text
+  body      String?          @db.Text
   /// In-app destination, e.g. /dashboard/articles/some-slug. Relative by
   /// convention so a notification stays valid across environments.
   link      String?
@@ -94,7 +91,7 @@ model AuditLog {
   entityId  String
   details   Json?
   ipAddress String?
-  userAgent String?
+  userAgent String?          @db.Text
   createdAt DateTime @default(now())
   User      User?    @relation(fields: [userId], references: [id])
 }
@@ -131,7 +128,7 @@ model ElectionFormField {
   electionId    String
   /// FIELD_TEXT | FIELD_RICHTEXT | FIELD_SINGLE_CHOICE | FIELD_MULTIPLE_CHOICE | FIELD_IMAGE | FIELD_VIDEO_LINK
   type          String
-  label         String
+  label         String                  @db.Text
   description   String?                 @db.Text
   /// For choice fields: array of options as JSON string. e.g. '["Yes","No"]'
   options       Json?
@@ -169,7 +166,7 @@ model CandidateFormResponse {
 
 model Comment {
   id         String    @id @default(cuid())
-  content    String
+  content    String    @db.Text
   articleId  String?
   researchId String?
   userId     String?
@@ -190,7 +187,7 @@ model Division {
   id                                String     @id @default(cuid())
   name                              String
   slug                              String     @unique
-  description                       String?
+  description                       String?    @db.Text
   color                             String?
   order                             Int        @default(0)
   isActive                          Boolean    @default(true)
@@ -206,7 +203,7 @@ model Division {
 
 model Election {
   id                String              @id @default(cuid())
-  title             String
+  title             String              @db.Text
   description       String?             @db.Text
   registrationStart DateTime
   registrationEnd   DateTime
@@ -229,17 +226,17 @@ model Election {
 
 model Event {
   id                   String               @id @default(cuid())
-  title                String
+  title                String               @db.Text
   slug                 String               @unique
-  description          String
+  description          String               @db.Text
   content              Json?
-  imageUrl             String?
+  imageUrl             String?              @db.Text
   startDate            DateTime
   endDate              DateTime?
-  location             String?
+  location             String?              @db.Text
   /// Google Maps embed URL (the `src` from Maps' "Share > Embed a map"), shown
   /// on the public event page. Null means no map is shown.
-  locationMapUrl       String?
+  locationMapUrl       String?              @db.Text
   divisionId           String?
   published            Boolean              @default(false)
   createdAt            DateTime             @default(now())
@@ -263,9 +260,9 @@ model EventDocumentation {
   id          String            @id @default(cuid())
   eventId     String
   type        DocumentationType
-  url         String
-  title       String?
-  description String?
+  url         String            @db.Text
+  title       String?           @db.Text
+  description String?           @db.Text
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   Event       Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -289,6 +286,7 @@ model EventRegistration {
 
   /// Postgres treats NULLs as distinct, so this still guards one-per-member
   /// while leaving guests unconstrained; guests are de-duplicated by e-mail.
+  /// (MySQL/InnoDB treats NULLs as distinct too, so the semantics carry over.)
   @@unique([eventId, userId])
   @@index([eventId, guestEmail])
 }
@@ -296,7 +294,7 @@ model EventRegistration {
 model Media {
   id        String   @id @default(cuid())
   filename  String
-  url       String
+  url       String   @db.Text
   mimetype  String
   size      Int
   createdAt DateTime @default(now())
@@ -315,13 +313,13 @@ model NewsletterSubscriber {
 
 model Page {
   id              String      @id @default(cuid())
-  title           String
+  title           String      @db.Text
   slug            String      @unique
   content         Json // Legacy raw content (kept for backward compat)
-  excerpt         String? // Short description for SEO & previews
-  metaTitle       String? // SEO meta title
-  metaDescription String? // SEO meta description
-  featuredImage   String? // Hero/banner image URL
+  excerpt         String?     @db.Text // Short description for SEO & previews
+  metaTitle       String?     @db.Text // SEO meta title
+  metaDescription String?     @db.Text // SEO meta description
+  featuredImage   String?     @db.Text // Hero/banner image URL
   pageType        String      @default("standard") // standard | landing | custom (legacy)
   template        String      @default("default") // default | landing | cabinet | timeline | event_list | division_grid
   published       Boolean     @default(false)
@@ -341,16 +339,16 @@ model PageBlock {
   pageId     String
   page       Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
   type       BlockType
-  title      String?
-  titleId    String? // Indonesian
-  subtitle   String?
-  subtitleId String? // Indonesian
-  content    String?
-  contentId  String? // Indonesian HTML content
-  linkUrl    String?
-  linkText   String?
-  linkTextId String?
-  imageUrl   String?
+  title      String?    @db.Text
+  titleId    String?    @db.Text // Indonesian
+  subtitle   String?    @db.Text
+  subtitleId String?    @db.Text // Indonesian
+  content    String?    @db.Text
+  contentId  String?    @db.Text // Indonesian HTML content
+  linkUrl    String?    @db.Text
+  linkText   String?    @db.Text
+  linkTextId String?    @db.Text
+  imageUrl   String?    @db.Text
   iconName   String? // Lucide icon name
   color      String? // Hex color
   order      Int       @default(0)
@@ -366,12 +364,12 @@ model PageBlock {
 model LandingSection {
   id            String         @id @default(cuid())
   key           String         @unique // "hero", "about", "video", "events", "articles", "membership"
-  title         String?
-  titleId       String? // Indonesian title
-  subtitle      String?
-  subtitleId    String? // Indonesian subtitle
-  description   String?
-  descriptionId String? // Indonesian description
+  title         String?        @db.Text
+  titleId       String?        @db.Text // Indonesian title
+  subtitle      String?        @db.Text
+  subtitleId    String?        @db.Text // Indonesian subtitle
+  description   String?        @db.Text
+  descriptionId String?        @db.Text // Indonesian description
   enabled       Boolean        @default(true)
   order         Int            @default(0)
   config        Json? // Section-specific configuration
@@ -388,16 +386,16 @@ model SectionBlock {
   sectionId  String
   section    LandingSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   type       BlockType
-  title      String?
-  titleId    String? // Indonesian
-  subtitle   String?
-  subtitleId String? // Indonesian
-  content    String?
-  contentId  String? // Indonesian HTML content
-  linkUrl    String?
-  linkText   String?
-  linkTextId String?
-  imageUrl   String?
+  title      String?         @db.Text
+  titleId    String?         @db.Text // Indonesian
+  subtitle   String?         @db.Text
+  subtitleId String?         @db.Text // Indonesian
+  content    String?         @db.Text
+  contentId  String?         @db.Text // Indonesian HTML content
+  linkUrl    String?         @db.Text
+  linkText   String?         @db.Text
+  linkTextId String?         @db.Text
+  imageUrl   String?         @db.Text
   iconName   String? // Lucide icon name
   color      String? // Hex color
   order      Int            @default(0)
@@ -462,14 +460,14 @@ model SiteConfig {
 
 model Research {
   id                 String             @id @default(cuid())
-  title              String
-  titleIndonesian    String?
+  title              String             @db.Text
+  titleIndonesian    String?            @db.Text
   slug               String             @unique
-  abstract           String
-  abstractIndonesian String?
+  abstract           String             @db.Text
+  abstractIndonesian String?            @db.Text
   researchType       ResearchType       @default(RESEARCH_PROJECT)
   researchStatus     ResearchStatus     @default(DRAFT)
-  authors            String
+  authors            String             @db.Text
   mainAuthorId       String?
   publicationDate    DateTime?
   venue              String?
@@ -480,14 +478,14 @@ model Research {
   doi                String?
   issn               String?
   isbn               String?
-  url                String?
-  keywords           String?
+  url                String?            @db.Text
+  keywords           String?            @db.Text
   citationFormat     String?
-  citationText       String?
-  generatedCitation  String?
-  pdfUrl             String?
+  citationText       String?            @db.Text
+  generatedCitation  String?            @db.Text
+  pdfUrl             String?            @db.Text
   pdfSize            Int?
-  imageUrl           String?
+  imageUrl           String?            @db.Text
   supplementalFiles  Json?
   divisionId         String?
   downloadCount      Int                @default(0)
@@ -495,13 +493,13 @@ model Research {
   citationsCount     Int                @default(0)
   published          Boolean            @default(false)
   featuredOrder      Int?
-  metaTitle          String?
-  metaDescription    String?
-  metaKeywords       String?
+  metaTitle          String?            @db.Text
+  metaDescription    String?            @db.Text
+  metaKeywords       String?            @db.Text
   scheduledPublishAt DateTime?
   reviewedBy         String?
   reviewedAt         DateTime?
-  reviewComments     String?
+  reviewComments     String?            @db.Text
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   Division           Division?          @relation(fields: [divisionId], references: [id])
@@ -527,7 +525,7 @@ model ResearchDownload {
 
 model Setting {
   key       String   @id
-  value     String
+  value     String   @db.Text
   updatedAt DateTime @updatedAt
 }
 
@@ -542,8 +540,11 @@ model Scholarship {
   provider      String            @default("")
   type          ScholarshipType   @default(UNIVERSITY)
   color         String            @default("#3B82F6")
-  level         String[]          @default([])
-  coverage      String[]          @default([])
+  // MySQL has no array columns: string lists live in JSON instead. Reads
+  // stay arrays (the web app already tolerates both shapes), so only the
+  // column type changes — no API or web logic changes with it.
+  level         Json              @default("[]")
+  coverage      Json              @default("[]")
   amount        String            @default("")
   deadline      String            @default("")
   deadlineDate  DateTime?
@@ -571,7 +572,7 @@ model Tag {
   name        String     @unique
   slug        String     @unique
   color       String?
-  description String?
+  description String?    @db.Text
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   articles    Article[]  @relation("ArticleTags")
@@ -587,7 +588,7 @@ model User {
   role                                  Role                @default(MEMBER)
   position                              Position?
   divisionId                            String?
-  avatar                                String?
+  avatar                                String?             @db.Text
   personalEmail                         String?             @unique
   firstName                             String?
   lastName                              String?
@@ -605,11 +606,11 @@ model User {
   confirmation                          Boolean             @default(false)
   createdAt                             DateTime            @default(now())
   updatedAt                             DateTime            @updatedAt
-  bio                                   String?
+  bio                                   String?             @db.Text
   instagram                             String?
   isVerified                            Boolean             @default(false)
   linkedIn                              String?
-  memberCardUrl                         String?
+  memberCardUrl                         String?             @db.Text
   resetToken                            String?
   resetTokenExpiry                      DateTime?
   twitter                               String?
@@ -618,7 +619,7 @@ model User {
   membershipStatus                      MembershipStatus    @default(APPROVED)
   approvedAt                            DateTime?
   approvedBy                            String?
-  rejectionReason                       String?
+  rejectionReason                       String?             @db.Text
   Article                               Article[]
   AuditLog                              AuditLog[]
   Bookmark                              Bookmark[]
@@ -773,8 +774,8 @@ enum VerificationStatus {
 
 model Faq {
   id        Int      @id @default(autoincrement())
-  question  String
-  answer    String
+  question  String   @db.Text
+  answer    String   @db.Text
   category  String?
   order     Int      @default(0)
   published Boolean  @default(true)

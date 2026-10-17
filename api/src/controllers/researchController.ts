@@ -23,9 +23,9 @@ export const getAllResearch = async (req: Request, res: Response): Promise<void>
 
     if (search) {
       where.OR = [
-        { title: { contains: search as string, mode: 'insensitive' as const } },
-        { abstract: { contains: search as string, mode: 'insensitive' as const } },
-        { keywords: { contains: search as string, mode: 'insensitive' as const } }
+        { title: { contains: search as string } },
+        { abstract: { contains: search as string } },
+        { keywords: { contains: search as string } }
       ];
     }
 
@@ -86,9 +86,9 @@ export const getAllResearchAdmin = async (req: Request, res: Response): Promise<
     if (published === 'false') where.published = false;
     if (search) {
       where.OR = [
-        { title: { contains: search as string, mode: 'insensitive' as const } },
-        { abstract: { contains: search as string, mode: 'insensitive' as const } },
-        { keywords: { contains: search as string, mode: 'insensitive' as const } }
+        { title: { contains: search as string } },
+        { abstract: { contains: search as string } },
+        { keywords: { contains: search as string } }
       ];
     }
     if (type) where.researchType = type;

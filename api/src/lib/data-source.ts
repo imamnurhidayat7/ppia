@@ -1,5 +1,5 @@
 /**
- * One switch for where data lives: `DATA_SOURCE=local | supabase`.
+ * One switch for where data lives: `DATA_SOURCE=local | supabase | mysql`.
  *
  * Both the database and file storage used to be configured by hand, which meant
  * moving between a local machine and the hosted project involved editing
@@ -9,8 +9,9 @@
  *
  * So the choice is made once:
  *
- *   DATA_SOURCE=local     → LOCAL_DATABASE_URL     + storage on disk
+ *   DATA_SOURCE=local     → LOCAL_DATABASE_URL     + storage on disk (Postgres)
  *   DATA_SOURCE=supabase  → SUPABASE_DATABASE_URL  + Supabase Storage
+ *   DATA_SOURCE=mysql     → MYSQL_DATABASE_URL     + storage on disk (MySQL)
  *
  * Existing setups keep working: `STORAGE_DRIVER` always wins over the inferred
  * driver, and `DATABASE_URL` is used whenever the variable for the selected
@@ -26,7 +27,7 @@
  */
 import 'dotenv/config';
 
-export type DataSource = 'local' | 'supabase';
+export type DataSource = 'local' | 'supabase' | 'mysql';
 
 /** Read an env var, tolerating dotenv keeping inline `# comments`. */
 function read(name: string): string {
@@ -36,16 +37,25 @@ function read(name: string): string {
 /** Default local connection: a native Postgres on the standard port. */
 const DEFAULT_LOCAL_URL = 'postgresql://postgres:postgres@localhost:5432/ppia?schema=public';
 
+/** Default local connection: MySQL in Docker on host port 3307. */
+const DEFAULT_MYSQL_URL = 'mysql://ppia:ppia@localhost:3307/ppia';
+
 function resolveDataSource(): DataSource {
   const configured = read('DATA_SOURCE').toLowerCase();
-  if (configured === 'local' || configured === 'supabase') return configured;
+  if (configured === 'local' || configured === 'supabase' || configured === 'mysql') {
+    return configured;
+  }
 
   // Not set: infer from what is actually present, preferring an explicit
   // DATABASE_URL so nothing changes for existing setups and hosted deployments.
   if (read('DATABASE_URL')) {
-    return read('DATABASE_URL').includes('supabase.') ? 'supabase' : 'local';
+    const url = read('DATABASE_URL');
+    if (url.includes('supabase.')) return 'supabase';
+    if (url.startsWith('mysql://')) return 'mysql';
+    return 'local';
   }
   if (read('SUPABASE_DATABASE_URL')) return 'supabase';
+  if (read('MYSQL_DATABASE_URL')) return 'mysql';
   return 'local';
 }
 
@@ -70,6 +80,13 @@ function resolveDatabaseUrls(): { url: string; directUrl: string } {
         'DATA_SOURCE=supabase but no connection string found. Set SUPABASE_DATABASE_URL (and SUPABASE_DIRECT_URL for migrations).'
       );
     }
+    return { url, directUrl };
+  }
+
+  if (DATA_SOURCE === 'mysql') {
+    const url = read('MYSQL_DATABASE_URL') || explicit || DEFAULT_MYSQL_URL;
+    // Like a local Postgres, a local MySQL is never pooled.
+    const directUrl = read('LOCAL_DIRECT_URL') || url;
     return { url, directUrl };
   }
 
@@ -100,7 +117,8 @@ if (!read('STORAGE_DRIVER')) {
 export function describeDatabase(): string {
   try {
     const parsed = new URL(url);
-    return `${parsed.hostname}:${parsed.port || '5432'}${parsed.pathname}`;
+    const defaultPort = parsed.protocol === 'mysql:' ? '3306' : '5432';
+    return `${parsed.hostname}:${parsed.port || defaultPort}${parsed.pathname}`;
   } catch {
     return '(unparseable connection string)';
   }
