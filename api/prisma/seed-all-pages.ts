@@ -18,7 +18,6 @@
  *   cd api && npx tsx prisma/seed-all-pages.ts
  */
 
-import '../src/lib/data-source';
 import { PrismaClient } from '@prisma/client';
 import { PAGE_CONTENT } from './page-content';
 
